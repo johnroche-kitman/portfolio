@@ -978,6 +978,139 @@
     .vt-3 { background: linear-gradient(135deg, #1a0a2a, #3d0060); }
     .vt-4 { background: linear-gradient(135deg, #2a1a0a, #603000); }
 
+    .video-thumb .yt-badge {
+      position: absolute;
+      top: 6px;
+      right: 7px;
+      background: rgba(255,0,0,0.85);
+      border-radius: 4px;
+      padding: 2px 5px;
+      font-size: 9px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+
+    /* ---- Video Modal ---- */
+    .video-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .video-modal.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .video-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+    }
+
+    .video-modal-sheet {
+      position: relative;
+      background: #0f1628;
+      border-radius: 24px 24px 0 0;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      overflow: hidden;
+    }
+
+    .video-modal.open .video-modal-sheet {
+      transform: translateY(0);
+    }
+
+    .video-modal-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 10px auto 0;
+    }
+
+    .video-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px 10px;
+    }
+
+    .video-modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.2px;
+    }
+
+    .video-modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    .video-modal-player {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+    }
+
+    .video-modal-player iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .video-modal-footer {
+      padding: 14px 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .video-modal-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .video-yt-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: rgba(255,0,0,0.15);
+      border: 1px solid rgba(255,0,0,0.4);
+      color: #ff4444;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
     /* Bottom pad */
     .bottom-pad { height: 28px; }
 
@@ -1702,42 +1835,68 @@
         <div class="psection" style="border-bottom:none;">
           <div class="psection-title">Video Highlights</div>
           <div class="video-grid">
-            <div class="video-thumb vt-1" onclick="showToast('Opening Goals 22/23...')">
+            <div class="video-thumb vt-1" onclick="openVideo('Goals 22/23','https://www.youtube.com/embed/videoseries?list=PL3dOkA7_HGvS_Bkg9MmZnH8Z0LkV7vFWV','https://www.youtube.com/results?search_query=man+city+u21+goals+compilation+2022+2023','Man City U21 · Season 2022/23')">
               <div class="video-overlay">
                 <div class="play-btn">
                   <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
                 </div>
               </div>
               <div class="video-label">Goals 22/23</div>
+              <span class="yt-badge">YT</span>
             </div>
-            <div class="video-thumb vt-2" onclick="showToast('Opening FA Youth Cup...')">
+            <div class="video-thumb vt-2" onclick="openVideo('FA Youth Cup Final','https://www.youtube.com/embed/iSCsuJUlfSk','https://www.youtube.com/watch?v=iSCsuJUlfSk','FA Youth Cup · Man City vs Liverpool 2022')">
               <div class="video-overlay">
                 <div class="play-btn">
                   <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
                 </div>
               </div>
               <div class="video-label">FA Youth Cup Final</div>
+              <span class="yt-badge">YT</span>
             </div>
-            <div class="video-thumb vt-3" onclick="showToast('Opening England U18...')">
+            <div class="video-thumb vt-3" onclick="openVideo('England U18 Highlights','https://www.youtube.com/embed/kkgeV-NLqQA','https://www.youtube.com/watch?v=kkgeV-NLqQA','England U18 · International Duty 2022–23')">
               <div class="video-overlay">
                 <div class="play-btn">
                   <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
                 </div>
               </div>
               <div class="video-label">England U18</div>
+              <span class="yt-badge">YT</span>
             </div>
-            <div class="video-thumb vt-4" onclick="showToast('Opening Wigan loan reel...')">
+            <div class="video-thumb vt-4" onclick="openVideo('Wigan Loan 2024','https://www.youtube.com/embed/results?search_query=wigan+athletic+highlights+2024','https://www.youtube.com/results?search_query=wigan+athletic+highlights+jan+2024','Wigan Athletic · Loan Spell Jan–May 2024')">
               <div class="video-overlay">
                 <div class="play-btn">
                   <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
                 </div>
               </div>
               <div class="video-label">Wigan Loan 2024</div>
+              <span class="yt-badge">YT</span>
             </div>
           </div>
         </div>
 
         <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal">
+      <div class="video-modal-backdrop" onclick="closeVideo()"></div>
+      <div class="video-modal-sheet">
+        <div class="video-modal-handle"></div>
+        <div class="video-modal-header">
+          <span class="video-modal-title" id="videoTitle"></span>
+          <button class="video-modal-close" onclick="closeVideo()">✕</button>
+        </div>
+        <div class="video-modal-player">
+          <iframe id="videoFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <div class="video-modal-footer">
+          <span class="video-modal-meta" id="videoMeta"></span>
+          <a class="video-yt-btn" id="videoYtLink" href="#" target="_blank" rel="noopener">
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><path d="M13.7 1.6A1.76 1.76 0 0 0 12.46.34C11.37 0 7 0 7 0S2.63 0 1.54.34A1.76 1.76 0 0 0 .3 1.6C0 2.7 0 5 0 5s0 2.3.3 3.4a1.76 1.76 0 0 0 1.24 1.26C2.63 10 7 10 7 10s4.37 0 5.46-.34a1.76 1.76 0 0 0 1.24-1.26C14 7.3 14 5 14 5s0-2.3-.3-3.4z"/><path d="M5.6 7.1V2.9L9.24 5 5.6 7.1z" fill="#0f1628"/></svg>
+            Watch on YouTube
+          </a>
+        </div>
       </div>
     </div>
 
@@ -1793,6 +1952,20 @@
     t.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  function openVideo(title, embedUrl, ytUrl, meta) {
+    document.getElementById('videoTitle').textContent = title;
+    document.getElementById('videoMeta').textContent = meta;
+    document.getElementById('videoYtLink').href = ytUrl;
+    document.getElementById('videoFrame').src = embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+    document.getElementById('videoModal').classList.add('open');
+  }
+
+  function closeVideo() {
+    document.getElementById('videoModal').classList.remove('open');
+    // Stop video by clearing src after transition
+    setTimeout(() => { document.getElementById('videoFrame').src = ''; }, 300);
   }
 
   // Swipe-back gesture
