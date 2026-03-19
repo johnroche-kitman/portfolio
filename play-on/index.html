@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#080d1a">
+  <title>PLAY ON</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #080d1a;
+      --surface: #0f1628;
+      --card: #141e35;
+      --card2: #1a2640;
+      --accent: #00e676;
+      --accent-bg: rgba(0,230,118,0.12);
+      --blue: #4facfe;
+      --blue-bg: rgba(79,172,254,0.12);
+      --purple: #b388ff;
+      --purple-bg: rgba(179,136,255,0.12);
+      --orange: #ffb74d;
+      --orange-bg: rgba(255,183,77,0.12);
+      --red: #ff6b6b;
+      --text: #e8eaf6;
+      --muted: #6b7db3;
+      --border: rgba(255,255,255,0.07);
+    }
+
+    html, body {
+      height: 100%;
+      background: #030509;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px 0 40px;
+      background: radial-gradient(ellipse at 30% 20%, rgba(0,230,118,0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 80%, rgba(79,172,254,0.06) 0%, transparent 60%),
+                  linear-gradient(135deg, #030509 0%, #080d1a 100%);
+    }
+
+    #phone {
+      width: 390px;
+      height: 844px;
+      background: var(--bg);
+      border-radius: 44px;
+      overflow: hidden;
+      position: relative;
+      box-shadow:
+        0 50px 100px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(255,255,255,0.08),
+        inset 0 0 0 1px rgba(255,255,255,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 430px) {
+      #app { padding: 0; }
+      #phone { width: 100%; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
+    }
+
+    /* ---- Screen system ---- */
+    .screen {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s;
+      overflow: hidden;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(0);
+    }
+
+    .screen.slide-out {
+      transform: translateX(-25%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ---- Header ---- */
+    .header {
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      background: rgba(8,13,26,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    .header-logo {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #00e676 0%, #4facfe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 0;
+      font-family: inherit;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .avatar-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00e676, #4facfe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      color: #080d1a;
+      border: none;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .avatar-btn:active { transform: scale(0.93); }
+
+    /* ---- HOME SCREEN ---- */
+    .home-welcome {
+      padding: 24px 20px 16px;
+    }
+
+    .home-greeting {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .home-name {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.8px;
+      line-height: 1.1;
+    }
+
+    .home-name span {
+      background: linear-gradient(135deg, #00e676, #4facfe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .home-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .hero-banner {
+      margin: 4px 20px 24px;
+      background: linear-gradient(135deg, #00b956 0%, #0070c0 100%);
+      border-radius: 22px;
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      right: -30px;
+      top: -30px;
+      width: 130px;
+      height: 130px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+
+    .hero-banner::after {
+      content: '⚽';
+      position: absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 52px;
+      opacity: 0.25;
+    }
+
+    .hero-banner h2 {
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 5px;
+      letter-spacing: -0.3px;
+    }
+
+    .hero-banner p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .hero-stat {
+      display: inline-block;
+      background: rgba(0,0,0,0.2);
+      color: rgba(255,255,255,0.9);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-top: 12px;
+    }
+
+    /* Navigation Cards */
+    .nav-cards {
+      padding: 0 20px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .nav-card {
+      background: var(--card);
+      border-radius: 22px;
+      padding: 20px 16px 18px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+      min-height: 148px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .nav-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card-green::before { background: radial-gradient(circle at top left, rgba(0,230,118,0.12), transparent 70%); }
+    .card-blue::before  { background: radial-gradient(circle at top left, rgba(79,172,254,0.12), transparent 70%); }
+    .card-purple::before { background: radial-gradient(circle at top left, rgba(179,136,255,0.12), transparent 70%); }
+    .card-orange::before { background: radial-gradient(circle at top left, rgba(255,183,77,0.12), transparent 70%); }
+
+    .nav-card:hover::before { opacity: 1; }
+    .nav-card:active { transform: scale(0.96); }
+
+    .nav-card-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .card-green .nav-card-icon { background: var(--accent-bg); }
+    .card-blue  .nav-card-icon { background: var(--blue-bg); }
+    .card-purple .nav-card-icon { background: var(--purple-bg); }
+    .card-orange .nav-card-icon { background: var(--orange-bg); }
+
+    .nav-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      letter-spacing: -0.2px;
+    }
+
+    .nav-card p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 11px;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Section labels */
+    .section-label {
+      padding: 20px 20px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+    }
+
+    /* ---- EVENT CARDS ---- */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+
+    .filter-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .filter-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #080d1a;
+    }
+
+    .event-card {
+      margin: 0 20px 10px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+    }
+
+    .event-card:active { transform: scale(0.98); }
+
+    .event-date-box {
+      width: 50px;
+      height: 54px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .event-date-box.green  { background: var(--accent-bg); }
+    .event-date-box.blue   { background: var(--blue-bg); }
+    .event-date-box.purple { background: var(--purple-bg); }
+    .event-date-box.orange { background: var(--orange-bg); }
+
+    .event-date-month {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .event-date-day {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .col-green { color: var(--accent); }
+    .col-blue  { color: var(--blue); }
+    .col-purple { color: var(--purple); }
+    .col-orange { color: var(--orange); }
+
+    .event-info { flex: 1; min-width: 0; }
+
+    .event-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+
+    .event-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .event-dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; flex-shrink: 0; }
+
+    .event-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .badge-trial    { background: var(--accent-bg);  color: var(--accent); }
+    .badge-event    { background: var(--blue-bg);    color: var(--blue); }
+    .badge-job      { background: var(--orange-bg);  color: var(--orange); }
+    .badge-workshop { background: var(--purple-bg);  color: var(--purple); }
+
+    /* ---- CONNECTIONS ---- */
+    .search-wrap {
+      padding: 12px 20px 4px;
+      flex-shrink: 0;
+    }
+
+    .search-bar {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .search-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+
+    .category-chips {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+    }
+    .category-chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .chip.active {
+      background: var(--blue-bg);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .contact-card {
+      margin: 0 20px 10px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .contact-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .contact-info { flex: 1; min-width: 0; }
+    .contact-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .contact-role { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .contact-org  { font-size: 12px; font-weight: 600; margin-top: 3px; }
+
+    .connect-btn {
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--accent);
+      background: var(--accent-bg);
+      color: var(--accent);
+      white-space: nowrap;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .connect-btn:active { background: rgba(0,230,118,0.25); }
+
+    /* ---- EDUCATION ---- */
+    .course-card {
+      margin: 0 20px 10px;
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .course-card:active { opacity: 0.85; }
+
+    .course-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .course-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+      padding-right: 10px;
+      line-height: 1.35;
+    }
+
+    .price-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .price-free { background: var(--accent-bg); color: var(--accent); }
+    .price-paid { background: var(--orange-bg); color: var(--orange); }
+
+    .course-provider {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .course-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .course-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .course-tag {
+      padding: 3px 9px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .apply-btn {
+      margin-left: auto;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--blue);
+      background: var(--blue-bg);
+      color: var(--blue);
+      font-family: inherit;
+    }
+
+    /* ---- MENTORS ---- */
+    .ama-banner {
+      margin: 16px 20px 8px;
+      background: linear-gradient(135deg, rgba(79,172,254,0.18), rgba(0,230,118,0.12));
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(79,172,254,0.3);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .ama-banner.purple {
+      background: linear-gradient(135deg, rgba(179,136,255,0.18), rgba(79,172,254,0.1));
+      border-color: rgba(179,136,255,0.3);
+    }
+
+    .ama-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .ama-icon.blue   { background: var(--blue-bg); }
+    .ama-icon.purple { background: var(--purple-bg); }
+
+    .ama-info { flex: 1; min-width: 0; }
+    .ama-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .ama-time  { font-size: 12px; margin-top: 3px; font-weight: 500; }
+    .ama-time.blue   { color: var(--blue); }
+    .ama-time.purple { color: var(--purple); }
+
+    .ama-join-btn {
+      padding: 9px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-family: inherit;
+    }
+    .ama-join-btn.blue   { background: var(--blue);   color: #080d1a; }
+    .ama-join-btn.purple { background: var(--purple); color: #080d1a; }
+
+    .mentor-card {
+      margin: 0 20px 10px;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
+
+    .mentor-top {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .mentor-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .mentor-info { flex: 1; }
+    .mentor-name  { font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+    .mentor-title { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    .avail-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .avail-open { background: var(--accent-bg); color: var(--accent); }
+    .avail-ama  { background: var(--blue-bg);   color: var(--blue); }
+    .avail-purple { background: var(--purple-bg); color: var(--purple); }
+
+    .mentor-bio {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .mentor-actions { display: flex; gap: 10px; }
+
+    .btn-msg {
+      flex: 1;
+      padding: 11px 10px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, #00e676, #4facfe);
+      color: #080d1a;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn-msg:active { opacity: 0.85; }
+
+    .btn-ama {
+      flex: 1;
+      padding: 11px 10px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--blue);
+      background: var(--blue-bg);
+      color: var(--blue);
+      font-family: inherit;
+    }
+
+    /* ---- PROFILE ---- */
+    .profile-hero {
+      background: linear-gradient(180deg, rgba(0,230,118,0.15) 0%, transparent 100%);
+      padding: 28px 20px 22px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-pic {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      background: linear-gradient(135deg, #00e676, #4facfe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 900;
+      color: #080d1a;
+      border: 3px solid rgba(0,230,118,0.35);
+      box-shadow: 0 0 0 6px rgba(0,230,118,0.08);
+    }
+
+    .profile-player-name {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.6px;
+    }
+
+    .profile-position {
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .profile-pills {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .profile-pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Profile sections */
+    .psection {
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .psection-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    /* Club history */
+    .club-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      position: relative;
+      padding-bottom: 14px;
+    }
+
+    .club-item:last-child { padding-bottom: 0; }
+
+    .club-item::after {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 42px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .club-item:last-child::after { display: none; }
+
+    .club-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .club-name  { font-size: 15px; font-weight: 700; color: var(--text); }
+    .club-years { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .club-role  { font-size: 12px; color: var(--accent); margin-top: 2px; font-weight: 500; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Achievements */
+    .achievement-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .achievement-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .achievement-item:first-child { padding-top: 0; }
+
+    .achievement-icon { font-size: 26px; width: 36px; text-align: center; flex-shrink: 0; }
+    .achievement-text { flex: 1; }
+    .achievement-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .achievement-year { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Videos */
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .video-thumb {
+      border-radius: 14px;
+      aspect-ratio: 16/9;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .play-btn {
+      width: 34px;
+      height: 34px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+    }
+
+    .video-label {
+      position: absolute;
+      bottom: 7px;
+      left: 9px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+
+    .vt-1 { background: linear-gradient(135deg, #0a2a1a, #003d1a); }
+    .vt-2 { background: linear-gradient(135deg, #0a1a2a, #003d60); }
+    .vt-3 { background: linear-gradient(135deg, #1a0a2a, #3d0060); }
+    .vt-4 { background: linear-gradient(135deg, #2a1a0a, #603000); }
+
+    /* Bottom pad */
+    .bottom-pad { height: 28px; }
+
+    /* Toast */
+    .toast {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(20,30,53,0.98);
+      color: var(--text);
+      padding: 11px 20px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div id="phone">
+
+    <!-- ========== HOME ========== -->
+    <div id="screen-home" class="screen active">
+      <div class="header">
+        <div class="header-logo">PLAY ON</div>
+        <button class="avatar-btn" onclick="nav('profile')">MT</button>
+      </div>
+      <div class="scroll-area">
+
+        <div class="home-welcome">
+          <div class="home-greeting">Welcome back</div>
+          <div class="home-name">Marcus <span>Thompson</span></div>
+          <div class="home-subtitle">Keep moving forward. Your journey continues.</div>
+        </div>
+
+        <div class="hero-banner">
+          <h2>3 New Opportunities</h2>
+          <p>Trials and events near you this week</p>
+          <span class="hero-stat">📍 Manchester &amp; London</span>
+        </div>
+
+        <div class="nav-cards">
+
+          <div class="nav-card card-green" onclick="nav('opportunities')">
+            <div>
+              <div class="nav-card-icon">📅</div>
+              <h3>Opportunities</h3>
+              <p>Trials, events &amp; job listings</p>
+            </div>
+            <div class="nav-badge" style="background:var(--accent);color:#080d1a;">3</div>
+          </div>
+
+          <div class="nav-card card-blue" onclick="nav('connections')">
+            <div>
+              <div class="nav-card-icon">🤝</div>
+              <h3>Connections</h3>
+              <p>Clubs, agents &amp; support</p>
+            </div>
+          </div>
+
+          <div class="nav-card card-purple" onclick="nav('education')">
+            <div>
+              <div class="nav-card-icon">🎓</div>
+              <h3>Education</h3>
+              <p>Courses &amp; qualifications</p>
+            </div>
+          </div>
+
+          <div class="nav-card card-orange" onclick="nav('mentors')">
+            <div>
+              <div class="nav-card-icon">💬</div>
+              <h3>Mentors</h3>
+              <p>Ask questions &amp; get guidance</p>
+            </div>
+            <div class="nav-badge" style="background:var(--blue);color:#080d1a;">1</div>
+          </div>
+
+        </div>
+
+        <div class="section-label">Upcoming This Week</div>
+
+        <div class="event-card" onclick="nav('opportunities')">
+          <div class="event-date-box green">
+            <span class="event-date-month col-green">APR</span>
+            <span class="event-date-day col-green">12</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Man City U21 Trial</div>
+            <div class="event-meta">Etihad Campus <span class="event-dot"></span> 10:00 AM</div>
+            <span class="event-badge badge-trial">Trial</span>
+          </div>
+        </div>
+
+        <div class="event-card" onclick="nav('opportunities')" style="margin-bottom:20px;">
+          <div class="event-date-box blue">
+            <span class="event-date-month col-blue">APR</span>
+            <span class="event-date-day col-blue">18</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">National Football Trust Job Fair</div>
+            <div class="event-meta">ExCeL London <span class="event-dot"></span> All Day</div>
+            <span class="event-badge badge-event">Event</span>
+          </div>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ========== OPPORTUNITIES ========== -->
+    <div id="screen-opportunities" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="back()">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="header-title">Opportunities</span>
+        <div style="width:52px"></div>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setTab(this)">All</button>
+        <button class="filter-tab" onclick="setTab(this)">Trials</button>
+        <button class="filter-tab" onclick="setTab(this)">Events</button>
+        <button class="filter-tab" onclick="setTab(this)">Jobs</button>
+      </div>
+      <div class="scroll-area">
+
+        <div class="event-card">
+          <div class="event-date-box green">
+            <span class="event-date-month col-green">APR</span>
+            <span class="event-date-day col-green">12</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Manchester City U21 Trial</div>
+            <div class="event-meta">Etihad Campus, Manchester <span class="event-dot"></span> 10:00 AM</div>
+            <span class="event-badge badge-trial">Trial</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box green">
+            <span class="event-date-month col-green">APR</span>
+            <span class="event-date-day col-green">15</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Sunderland AFC Open Trial</div>
+            <div class="event-meta">Stadium of Light <span class="event-dot"></span> 9:00 AM</div>
+            <span class="event-badge badge-trial">Trial</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box blue">
+            <span class="event-date-month col-blue">APR</span>
+            <span class="event-date-day col-blue">18</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">National Football Trust Job Fair</div>
+            <div class="event-meta">ExCeL London <span class="event-dot"></span> All Day</div>
+            <span class="event-badge badge-event">Event</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box orange">
+            <span class="event-date-month col-orange">APR</span>
+            <span class="event-date-day col-orange">20</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Football Operations Internship</div>
+            <div class="event-meta">Liverpool FC, Anfield <span class="event-dot"></span> Deadline</div>
+            <span class="event-badge badge-job">Job</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box green">
+            <span class="event-date-month col-green">APR</span>
+            <span class="event-date-day col-green">22</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Harrogate Town FC Trials</div>
+            <div class="event-meta">Wetherby Road Ground <span class="event-dot"></span> 10:30 AM</div>
+            <span class="event-badge badge-trial">Trial</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box orange">
+            <span class="event-date-month col-orange">APR</span>
+            <span class="event-date-day col-orange">25</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">AFC Wimbledon — Coaching Role</div>
+            <div class="event-meta">Plough Lane, London <span class="event-dot"></span> Rolling</div>
+            <span class="event-badge badge-job">Job</span>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-date-box purple">
+            <span class="event-date-month col-purple">MAY</span>
+            <span class="event-date-day col-purple">02</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">PFA Wellbeing Workshop</div>
+            <div class="event-meta">PFA House, Birmingham <span class="event-dot"></span> 1:00 PM</div>
+            <span class="event-badge badge-workshop">Workshop</span>
+          </div>
+        </div>
+
+        <div class="event-card" style="margin-bottom:0;">
+          <div class="event-date-box blue">
+            <span class="event-date-month col-blue">MAY</span>
+            <span class="event-date-day col-blue">08</span>
+          </div>
+          <div class="event-info">
+            <div class="event-title">Football Agency Recruitment Day</div>
+            <div class="event-meta">Stellar Group, London <span class="event-dot"></span> 11:00 AM</div>
+            <span class="event-badge badge-event">Event</span>
+          </div>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ========== CONNECTIONS ========== -->
+    <div id="screen-connections" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="back()">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="header-title">Connections</span>
+        <div style="width:52px"></div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7db3" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search contacts...">
+        </div>
+      </div>
+      <div class="category-chips">
+        <button class="chip active" onclick="setChip(this)">All</button>
+        <button class="chip" onclick="setChip(this)">PL Clubs</button>
+        <button class="chip" onclick="setChip(this)">Agents</button>
+        <button class="chip" onclick="setChip(this)">Psychologists</button>
+        <button class="chip" onclick="setChip(this)">PFA</button>
+      </div>
+      <div class="scroll-area">
+
+        <div class="section-label" style="padding-top:8px;">Premier League Clubs</div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:#1c2e4a;color:#6cabdd;">MC</div>
+          <div class="contact-info">
+            <div class="contact-name">James Whitfield</div>
+            <div class="contact-role">Player Welfare Officer</div>
+            <div class="contact-org" style="color:#6cabdd;">Manchester City FC</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to James Whitfield')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:#1a1f3c;color:#d4af37;">CFC</div>
+          <div class="contact-info">
+            <div class="contact-name">Sophie Clarke</div>
+            <div class="contact-role">Player Care Manager</div>
+            <div class="contact-org" style="color:#d4af37;">Chelsea FC</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Sophie Clarke')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:#1e0505;color:#cc0000;">MU</div>
+          <div class="contact-info">
+            <div class="contact-name">David Norris</div>
+            <div class="contact-role">Academy Exit Programme</div>
+            <div class="contact-org" style="color:#cc0000;">Manchester United</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to David Norris')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:#0a1f0a;color:#00a550;">ARS</div>
+          <div class="contact-info">
+            <div class="contact-name">Priya Sharma</div>
+            <div class="contact-role">Player Development Manager</div>
+            <div class="contact-org" style="color:#00a550;">Arsenal FC</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Priya Sharma')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:#1a1040;color:#9146ff;">LFC</div>
+          <div class="contact-info">
+            <div class="contact-name">Marcus Webb</div>
+            <div class="contact-role">Welfare &amp; Support Lead</div>
+            <div class="contact-org" style="color:#cc0000;">Liverpool FC</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Marcus Webb')">Connect</button>
+        </div>
+
+        <div class="section-label">Sports Agents</div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:var(--accent-bg);color:var(--accent);">JM</div>
+          <div class="contact-info">
+            <div class="contact-name">Jonathan Marks</div>
+            <div class="contact-role">Senior Football Agent</div>
+            <div class="contact-org" style="color:var(--accent);">CAA Base</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Jonathan Marks')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:var(--blue-bg);color:var(--blue);">RC</div>
+          <div class="contact-info">
+            <div class="contact-name">Rachel Collins</div>
+            <div class="contact-role">Licensed FIFA Agent</div>
+            <div class="contact-org" style="color:var(--blue);">Stellar Group</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Rachel Collins')">Connect</button>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:var(--orange-bg);color:var(--orange);">BH</div>
+          <div class="contact-info">
+            <div class="contact-name">Ben Harper</div>
+            <div class="contact-role">Player Representative</div>
+            <div class="contact-org" style="color:var(--orange);">ICM Stellar</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Ben Harper')">Connect</button>
+        </div>
+
+        <div class="section-label">Psychologists</div>
+
+        <div class="contact-card">
+          <div class="contact-avatar" style="background:var(--purple-bg);color:var(--purple);">SM</div>
+          <div class="contact-info">
+            <div class="contact-name">Dr. Sarah Mitchell</div>
+            <div class="contact-role">Sports Psychologist</div>
+            <div class="contact-org" style="color:var(--purple);">Independent Practice</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Dr. Mitchell')">Connect</button>
+        </div>
+
+        <div class="contact-card" style="margin-bottom:0;">
+          <div class="contact-avatar" style="background:var(--purple-bg);color:var(--purple);">TP</div>
+          <div class="contact-info">
+            <div class="contact-name">Dr. Thomas Price</div>
+            <div class="contact-role">Mental Performance Coach</div>
+            <div class="contact-org" style="color:var(--purple);">Premier Minds UK</div>
+          </div>
+          <button class="connect-btn" onclick="showToast('Request sent to Dr. Price')">Connect</button>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ========== EDUCATION ========== -->
+    <div id="screen-education" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="back()">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="header-title">Education</span>
+        <div style="width:52px"></div>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setTab(this)">All</button>
+        <button class="filter-tab" onclick="setTab(this)">Law</button>
+        <button class="filter-tab" onclick="setTab(this)">Sales</button>
+        <button class="filter-tab" onclick="setTab(this)">Coaching</button>
+        <button class="filter-tab" onclick="setTab(this)">Business</button>
+        <button class="filter-tab" onclick="setTab(this)">Media</button>
+      </div>
+      <div class="scroll-area">
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">UEFA B Coaching Licence</div>
+            <span class="price-badge price-free">Free*</span>
+          </div>
+          <div class="course-provider">The FA &bull; In-Person + Online</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 6 months</span>
+            <span class="course-tag" style="background:var(--accent-bg);color:var(--accent);">Coaching</span>
+            <button class="apply-btn" onclick="showToast('Opening UEFA B details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Football Management &amp; Analytics</div>
+            <span class="price-badge price-free">Free</span>
+          </div>
+          <div class="course-provider">Coursera &bull; University of Michigan</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 8 weeks</span>
+            <span class="course-tag" style="background:var(--blue-bg);color:var(--blue);">Business</span>
+            <button class="apply-btn" onclick="showToast('Opening course details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Sports Law LLM</div>
+            <span class="price-badge price-paid">£12,000/yr</span>
+          </div>
+          <div class="course-provider">University of Manchester &bull; Full-Time</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 1 year</span>
+            <span class="course-tag" style="background:var(--purple-bg);color:var(--purple);">Law</span>
+            <button class="apply-btn" onclick="showToast('Opening LLM details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Sales &amp; Marketing in Sport</div>
+            <span class="price-badge price-paid">£3,500</span>
+          </div>
+          <div class="course-provider">UCFB &bull; Wembley Campus</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 12 weeks</span>
+            <span class="course-tag" style="background:var(--orange-bg);color:var(--orange);">Sales</span>
+            <button class="apply-btn" onclick="showToast('Opening UCFB details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Media &amp; Broadcasting Diploma</div>
+            <span class="price-badge price-paid">£2,200</span>
+          </div>
+          <div class="course-provider">SkillsCity &bull; Online</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 16 weeks</span>
+            <span class="course-tag" style="background:var(--blue-bg);color:var(--blue);">Media</span>
+            <button class="apply-btn" onclick="showToast('Opening Media details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Business of Football</div>
+            <span class="price-badge price-paid">£4,800</span>
+          </div>
+          <div class="course-provider">Birkbeck, University of London &bull; Part-Time</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 1 year</span>
+            <span class="course-tag" style="background:var(--accent-bg);color:var(--accent);">Business</span>
+            <button class="apply-btn" onclick="showToast('Opening Birkbeck details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <div class="course-header">
+            <div class="course-title">Contract Law for Athletes</div>
+            <span class="price-badge price-free">Free</span>
+          </div>
+          <div class="course-provider">FutureLearn &bull; Open University</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 4 weeks</span>
+            <span class="course-tag" style="background:var(--purple-bg);color:var(--purple);">Law</span>
+            <button class="apply-btn" onclick="showToast('Opening course details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="course-card" style="margin-bottom:0;">
+          <div class="course-header">
+            <div class="course-title">FA Level 2 Coaching</div>
+            <span class="price-badge price-paid">£350</span>
+          </div>
+          <div class="course-provider">The FA &bull; Various Venues</div>
+          <div class="course-footer">
+            <span class="course-meta-item">📅 3 months</span>
+            <span class="course-tag" style="background:var(--accent-bg);color:var(--accent);">Coaching</span>
+            <button class="apply-btn" onclick="showToast('Opening FA Level 2 details...')">Apply</button>
+          </div>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ========== MENTORS ========== -->
+    <div id="screen-mentors" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="back()">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="header-title">Mentors</span>
+        <div style="width:52px"></div>
+      </div>
+      <div class="scroll-area">
+
+        <div class="section-label" style="padding-top:16px;">Live Ask Me Anything</div>
+
+        <div class="ama-banner">
+          <div class="ama-icon blue">🎙️</div>
+          <div class="ama-info">
+            <div class="ama-title">Career After Football — AMA</div>
+            <div class="ama-time blue">Today at 7:00 PM &bull; Ian Wright</div>
+          </div>
+          <button class="ama-join-btn blue" onclick="showToast('Joining AMA session...')">Join</button>
+        </div>
+
+        <div class="ama-banner purple" style="margin-top:10px;">
+          <div class="ama-icon purple">🧠</div>
+          <div class="ama-info">
+            <div class="ama-title">Managing Rejection &amp; Resilience</div>
+            <div class="ama-time purple">Apr 19 &bull; Dr. Marcus Peters</div>
+          </div>
+          <button class="ama-join-btn purple" onclick="showToast('RSVP confirmed!')">RSVP</button>
+        </div>
+
+        <div class="section-label">All Mentors</div>
+
+        <div class="mentor-card">
+          <div class="mentor-top">
+            <div class="mentor-avatar" style="background:var(--orange-bg);color:var(--orange);">IW</div>
+            <div class="mentor-info">
+              <div class="mentor-name">Ian Wright</div>
+              <div class="mentor-title">Former Arsenal &amp; England &bull; TV Presenter &amp; Pundit</div>
+              <span class="avail-pill avail-ama">🎙️ AMA Tonight</span>
+            </div>
+          </div>
+          <div class="mentor-bio">Former professional who made a successful transition into media. Happy to discuss life after football, broadcasting, and building your personal brand post-release.</div>
+          <div class="mentor-actions">
+            <button class="btn-msg" onclick="showToast('Message sent to Ian Wright!')">Message</button>
+            <button class="btn-ama" onclick="showToast('Joining AMA tonight!')">Join AMA</button>
+          </div>
+        </div>
+
+        <div class="mentor-card">
+          <div class="mentor-top">
+            <div class="mentor-avatar" style="background:#1e2240;color:var(--blue);">JC</div>
+            <div class="mentor-info">
+              <div class="mentor-name">Jamie Carragher</div>
+              <div class="mentor-title">Former Liverpool &amp; England &bull; Sky Sports Pundit</div>
+              <span class="avail-pill avail-open">✓ Open to messages</span>
+            </div>
+          </div>
+          <div class="mentor-bio">Happy to advise on transitioning from playing to coaching or punditry, and staying connected to the game you love.</div>
+          <div class="mentor-actions">
+            <button class="btn-msg" onclick="showToast('Message sent to Jamie Carragher!')">Message</button>
+          </div>
+        </div>
+
+        <div class="mentor-card">
+          <div class="mentor-top">
+            <div class="mentor-avatar" style="background:var(--purple-bg);color:var(--purple);">MP</div>
+            <div class="mentor-info">
+              <div class="mentor-name">Dr. Marcus Peters</div>
+              <div class="mentor-title">Sports Psychologist PhD &bull; Athlete Transitions</div>
+              <span class="avail-pill avail-purple">🎙️ AMA Apr 19</span>
+            </div>
+          </div>
+          <div class="mentor-bio">Specialises in athlete identity, transition anxiety, and performance mindset. Open to 1-1 sessions and group workshops for released academy players.</div>
+          <div class="mentor-actions">
+            <button class="btn-msg" onclick="showToast('Message sent to Dr. Peters!')">Message</button>
+            <button class="btn-ama" onclick="showToast('RSVP confirmed!')">RSVP AMA</button>
+          </div>
+        </div>
+
+        <div class="mentor-card" style="margin-bottom:0;">
+          <div class="mentor-top">
+            <div class="mentor-avatar" style="background:var(--accent-bg);color:var(--accent);">ST</div>
+            <div class="mentor-info">
+              <div class="mentor-name">Sarah Thompson</div>
+              <div class="mentor-title">FIFA Licensed Agent &bull; 15 Years Experience</div>
+              <span class="avail-pill avail-open">✓ Open to messages</span>
+            </div>
+          </div>
+          <div class="mentor-bio">15 years negotiating player contracts and transfers. Can guide you on signing with an agent, understanding contracts, and knowing your market value.</div>
+          <div class="mentor-actions">
+            <button class="btn-msg" onclick="showToast('Message sent to Sarah Thompson!')">Message</button>
+          </div>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- ========== PROFILE ========== -->
+    <div id="screen-profile" class="screen">
+      <div class="header">
+        <button class="header-back" onclick="back()">
+          <svg width="8" height="13" viewBox="0 0 8 14" fill="none"><path d="M7 1L1 7l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <span class="header-title">Profile</span>
+        <button style="background:none;border:none;color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="showToast('Edit profile — coming soon!')">Edit</button>
+      </div>
+      <div class="scroll-area">
+
+        <div class="profile-hero">
+          <div class="profile-pic">MT</div>
+          <div class="profile-player-name">Marcus Thompson</div>
+          <div class="profile-position">Right Winger</div>
+          <div class="profile-pills">
+            <span class="profile-pill">🏴󠁧󠁢󠁥󠁮󠁧󠁿 English</span>
+            <span class="profile-pill">📅 Born Mar 15, 2004</span>
+            <span class="profile-pill">6ft 1in</span>
+          </div>
+        </div>
+
+        <!-- Club History -->
+        <div class="psection">
+          <div class="psection-title">Club History</div>
+          <div class="club-item">
+            <div class="club-icon">🔵</div>
+            <div>
+              <div class="club-name">Manchester City FC</div>
+              <div class="club-years">2016 — 2024 &bull; 8 years</div>
+              <div class="club-role">Academy Scholar → U18 → U21</div>
+            </div>
+          </div>
+          <div class="club-item">
+            <div class="club-icon">🟡</div>
+            <div>
+              <div class="club-name">Wigan Athletic (Loan)</div>
+              <div class="club-years">Jan 2024 — May 2024</div>
+              <div class="club-role">First Team Squad</div>
+            </div>
+          </div>
+          <div class="club-item" style="padding-bottom:0;">
+            <div class="club-icon" style="border-color:var(--accent);">🟢</div>
+            <div>
+              <div class="club-name">Free Agent</div>
+              <div class="club-years">June 2024 — Present</div>
+              <div class="club-role" style="color:var(--muted);">Looking for next chapter</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Statistics -->
+        <div class="psection">
+          <div class="psection-title">Key Statistics</div>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-value">34.2</div>
+              <div class="stat-label">Top Speed (km/h)</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">12</div>
+              <div class="stat-label">Goals per Season</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Assists per Season</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">87%</div>
+              <div class="stat-label">Pass Accuracy</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">4.2</div>
+              <div class="stat-label">Dribbles per Game</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">94</div>
+              <div class="stat-label">Total Games Played</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="psection">
+          <div class="psection-title">Achievements &amp; Awards</div>
+          <div class="achievement-item">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-text">
+              <div class="achievement-name">FA Youth Cup Winner</div>
+              <div class="achievement-year">Manchester City &bull; 2022</div>
+            </div>
+          </div>
+          <div class="achievement-item">
+            <div class="achievement-icon">🥇</div>
+            <div class="achievement-text">
+              <div class="achievement-name">PL2 Top Scorer</div>
+              <div class="achievement-year">Manchester City U21 &bull; 2022/23</div>
+            </div>
+          </div>
+          <div class="achievement-item">
+            <div class="achievement-icon">⭐</div>
+            <div class="achievement-text">
+              <div class="achievement-name">England U18 International</div>
+              <div class="achievement-year">14 caps &bull; 2022–2023</div>
+            </div>
+          </div>
+          <div class="achievement-item">
+            <div class="achievement-icon">🎖️</div>
+            <div class="achievement-text">
+              <div class="achievement-name">Academy Player of the Year</div>
+              <div class="achievement-year">Manchester City &bull; 2022/23</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Highlights -->
+        <div class="psection" style="border-bottom:none;">
+          <div class="psection-title">Video Highlights</div>
+          <div class="video-grid">
+            <div class="video-thumb vt-1" onclick="showToast('Opening Goals 22/23...')">
+              <div class="video-overlay">
+                <div class="play-btn">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
+                </div>
+              </div>
+              <div class="video-label">Goals 22/23</div>
+            </div>
+            <div class="video-thumb vt-2" onclick="showToast('Opening FA Youth Cup...')">
+              <div class="video-overlay">
+                <div class="play-btn">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
+                </div>
+              </div>
+              <div class="video-label">FA Youth Cup Final</div>
+            </div>
+            <div class="video-thumb vt-3" onclick="showToast('Opening England U18...')">
+              <div class="video-overlay">
+                <div class="play-btn">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
+                </div>
+              </div>
+              <div class="video-label">England U18</div>
+            </div>
+            <div class="video-thumb vt-4" onclick="showToast('Opening Wigan loan reel...')">
+              <div class="video-overlay">
+                <div class="play-btn">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="#080d1a"><path d="M1 1l8 5-8 5V1z"/></svg>
+                </div>
+              </div>
+              <div class="video-label">Wigan Loan 2024</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-pad"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div><!-- /phone -->
+</div><!-- /app -->
+
+<script>
+  const stack = ['home'];
+
+  function nav(id) {
+    const curr = document.querySelector('.screen.active');
+    const next = document.getElementById('screen-' + id);
+    if (!next || curr === next) return;
+    curr.classList.add('slide-out');
+    curr.classList.remove('active');
+    next.classList.add('active');
+    setTimeout(() => curr.classList.remove('slide-out'), 380);
+    stack.push(id);
+  }
+
+  function back() {
+    if (stack.length <= 1) return;
+    stack.pop();
+    const prevId = stack[stack.length - 1];
+    const curr = document.querySelector('.screen.active');
+    const prev = document.getElementById('screen-' + prevId);
+    curr.style.cssText = 'transition:transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94),opacity 0.3s;transform:translateX(100%);opacity:0;';
+    prev.classList.add('active');
+    prev.classList.remove('slide-out');
+    setTimeout(() => {
+      curr.classList.remove('active');
+      curr.style.cssText = '';
+    }, 310);
+  }
+
+  function setTab(el) {
+    el.closest('.filter-tabs').querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function setChip(el) {
+    el.closest('.category-chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // Swipe-back gesture
+  let sx = 0;
+  const phone = document.getElementById('phone');
+  phone.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  phone.addEventListener('touchend', e => {
+    if (e.changedTouches[0].clientX - sx > 70 && sx < 50) back();
+  }, { passive: true });
+</script>
+
+</body>
+</html>
