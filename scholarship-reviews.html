@@ -621,6 +621,316 @@
       font-size: 14px;
     }
 
+    /* ── Athlete Review View ── */
+    .athlete-view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .athlete-view.active { display: flex; }
+
+    .athlete-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--divider);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .athlete-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .athlete-avatar-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #ccc;
+    }
+    .athlete-review-title {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 500px;
+    }
+    .athlete-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-save-draft {
+      padding: 6px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: 1px solid rgba(59,73,96,0.23);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: background 0.15s;
+    }
+    .btn-save-draft:hover { background: rgba(59,73,96,0.04); }
+    .btn-submit-form {
+      padding: 6px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      background: var(--primary-main);
+      color: #fff;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: background 0.15s;
+    }
+    .btn-submit-form:hover { background: #2e3a4d; }
+
+    .info-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      background: #E8F4FD;
+      border-bottom: 1px solid #B3D9F5;
+      flex-shrink: 0;
+      font-size: 14px;
+      color: #1e3a5f;
+    }
+    .info-banner .material-icons { font-size: 18px; color: #1565c0; flex-shrink: 0; }
+    .info-banner-text { flex: 1; }
+    .btn-recap-link {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      color: #1565c0;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .form-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--divider);
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .form-tab {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      color: rgba(59,73,96,0.6);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .form-tab:hover { color: var(--text-secondary); }
+    .form-tab.active { color: var(--text-secondary); border-bottom-color: var(--primary-main); }
+
+    .form-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .form-nav {
+      width: 240px;
+      border-right: 1px solid var(--divider);
+      flex-shrink: 0;
+      overflow-y: auto;
+      padding: 16px 0;
+      transition: width 0.2s;
+      position: relative;
+    }
+    .form-nav.collapsed { width: 0; padding: 0; overflow: hidden; }
+    .form-nav-header {
+      padding: 0 16px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .form-nav-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(59,73,96,0.5);
+    }
+    .form-nav-collapse {
+      position: absolute;
+      top: 12px; right: 8px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(59,73,96,0.5);
+      font-size: 18px;
+      transition: background 0.15s;
+    }
+    .form-nav-collapse:hover { background: rgba(59,73,96,0.08); }
+    .form-nav-section {
+      padding: 8px 16px;
+      font-size: 13px;
+      color: rgba(59,73,96,0.7);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      border-radius: 0;
+    }
+    .form-nav-section:hover { background: rgba(59,73,96,0.04); color: var(--text-secondary); }
+    .form-nav-section.active { background: rgba(59,73,96,0.08); color: var(--text-secondary); font-weight: 600; }
+
+    .form-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px;
+    }
+    .form-section-title {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .form-question {
+      margin-bottom: 24px;
+    }
+    .form-question-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .form-question-answer {
+      font-size: 14px;
+      color: rgba(59,73,96,0.8);
+      line-height: 1.6;
+    }
+    .form-rating-item {
+      margin-bottom: 16px;
+    }
+    .form-rating-value {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+    .form-rating-comment {
+      font-size: 13px;
+      color: rgba(59,73,96,0.6);
+    }
+    .form-textarea-group {
+      margin-bottom: 28px;
+    }
+    .form-textarea-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .form-textarea-group textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-primary);
+      background: rgba(59,73,96,0.06);
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      border-radius: 4px 4px 0 0;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .form-textarea-group textarea:focus { border-bottom: 2px solid var(--primary-main); }
+    .form-textarea-group textarea::placeholder { color: rgba(59,73,96,0.4); }
+
+    /* Recap panel */
+    .recap-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.1);
+      display: none;
+    }
+    .recap-overlay.open { display: block; }
+    .recap-panel {
+      position: fixed;
+      top: 0; right: -420px;
+      width: 380px;
+      height: 100vh;
+      background: #fff;
+      z-index: 201;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+      transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .recap-panel.open { right: 0; }
+    .recap-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--divider);
+      flex-shrink: 0;
+    }
+    .recap-panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+    .ai-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border: 1px solid rgba(59,73,96,0.3);
+      border-radius: 16px;
+      font-size: 12px;
+      color: rgba(59,73,96,0.7);
+      font-family: 'Open Sans', sans-serif;
+    }
+    .btn-recap-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(59,73,96,0.6);
+      transition: background 0.15s;
+    }
+    .btn-recap-close:hover { background: rgba(59,73,96,0.08); }
+    .btn-recap-close .material-icons { font-size: 20px; }
+    .recap-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .recap-section { margin-bottom: 24px; }
+    .recap-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .recap-section-body {
+      font-size: 14px;
+      color: rgba(59,73,96,0.8);
+      line-height: 1.6;
+    }
+    .recap-section-body p { margin: 0 0 8px; }
+    .recap-section-body p:last-child { margin-bottom: 0; }
+
     /* ── Compliance View ── */
     .compliance-view { display: none; flex-direction: column; height: 100%; }
     .compliance-view.active { display: flex; }
@@ -862,6 +1172,46 @@
       </div>
     </div>
 
+    <!-- ATHLETE REVIEW VIEW -->
+    <div class="athlete-view" id="athlete-view">
+      <div class="athlete-page-header">
+        <div class="athlete-header-left">
+          <button class="back-btn" onclick="closeAthleteView()">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div class="athlete-avatar-sm" id="av-avatar" style="display:flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:14px;font-weight:600;"></div>
+          <span class="athlete-review-title" id="av-title"></span>
+        </div>
+        <div class="athlete-header-actions">
+          <button class="btn-save-draft" id="av-save-draft" onclick="saveAthleteDraft()">Save as draft</button>
+          <button class="btn-submit-form" onclick="submitAthleteForm()">Submit</button>
+        </div>
+      </div>
+
+      <div class="info-banner">
+        <span class="material-icons">info</span>
+        <span class="info-banner-text">Before you begin... make sure you have viewed a recap of the previous review</span>
+        <button class="btn-recap-link" onclick="openRecapPanel()">View recap summary</button>
+      </div>
+
+      <div class="form-tabs">
+        <button class="form-tab active" id="tab-scholar" onclick="switchFormTab('scholar')">Scholar</button>
+        <button class="form-tab" id="tab-club" onclick="switchFormTab('club')">Club</button>
+        <button class="form-tab" id="tab-asm" onclick="switchFormTab('asm')">ASM</button>
+        <button class="form-tab" id="tab-asm-private" onclick="switchFormTab('asm-private')">ASM (Private)</button>
+      </div>
+
+      <div class="form-body">
+        <div class="form-nav" id="form-nav">
+          <button class="form-nav-collapse" onclick="toggleFormNav()" id="form-nav-collapse-btn">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div id="form-nav-content"></div>
+        </div>
+        <div class="form-content" id="form-content"></div>
+      </div>
+    </div>
+
     <!-- COMPLIANCE VIEW -->
     <div class="compliance-view" id="compliance-view">
       <div class="compliance-page-header">
@@ -918,6 +1268,19 @@
     </div>
 
   </div>
+</div>
+
+<!-- Recap panel -->
+<div class="recap-overlay" id="recap-overlay" onclick="closeRecapPanel()"></div>
+<div class="recap-panel" id="recap-panel">
+  <div class="recap-panel-header">
+    <span class="recap-panel-title">Review recap</span>
+    <span class="ai-chip">✦ AI summary</span>
+    <button class="btn-recap-close" onclick="closeRecapPanel()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+  <div class="recap-panel-body" id="recap-panel-body"></div>
 </div>
 
 <!-- Overlay -->
@@ -1133,6 +1496,318 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
+  // ── Athlete Review View ──
+  const formData = {
+    scholar: {
+      label: 'Athlete questions',
+      sections: [
+        {
+          title: 'Section 1: Overview',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 1: Overview</div>
+            <div class="form-question">
+              <div class="form-question-label">How would you currently rate the below areas of your scholarship:</div>
+              ${['Education','Football','Wellbeing','Overall enjoyment'].map(area => `
+                <div class="form-rating-item">
+                  <div class="form-rating-value">${area} - 6</div>
+                  <div class="form-rating-comment">Comment: I did great!</div>
+                </div>`).join('')}
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Something I am enjoying about my scholarship is:</div>
+              <div class="form-question-answer">I'm enjoying playing football and making new friends</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Something I am finding challenging about my scholarship is:</div>
+              <div class="form-question-answer">I feel a lot of pressure to perform</div>
+            </div>`
+        },
+        {
+          title: 'Section 2: Education progress',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 2: Education progress</div>
+            <div class="form-question">
+              <div class="form-question-label">What subjects are you currently studying?</div>
+              <div class="form-question-answer">English, Maths, History, Physical Education</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">How would you describe your current academic performance?</div>
+              <div class="form-question-answer">I am keeping up with my coursework and achieving satisfactory grades across all subjects.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Are there any subjects you are finding particularly difficult?</div>
+              <div class="form-question-answer">Maths can be challenging at times but I am getting extra support.</div>
+            </div>`
+        },
+        {
+          title: 'Section 3: Football progress',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 3: Football progress</div>
+            <div class="form-question">
+              <div class="form-question-label">How do you feel your football has progressed this period?</div>
+              <div class="form-question-answer">I feel I have improved significantly, particularly in my passing and positioning.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">What aspect of your game are you most proud of?</div>
+              <div class="form-question-answer">My defensive awareness has improved a lot and my coach has noticed.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">What area of your game would you most like to improve?</div>
+              <div class="form-question-answer">I would like to work on my weaker foot and my aerial ability.</div>
+            </div>`
+        },
+        {
+          title: 'Section 4: Target setting',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 4: Target setting</div>
+            <div class="form-question">
+              <div class="form-question-label">What are your main targets for the next review period?</div>
+              <div class="form-question-answer">To improve my weaker foot, achieve a B grade in Maths, and get more minutes in first team training sessions.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">How do you plan to achieve these targets?</div>
+              <div class="form-question-answer">Extra practice sessions after training, working with my tutor for Maths, and speaking to the first team coach about opportunities.</div>
+            </div>`
+        }
+      ]
+    },
+    club: {
+      label: 'Club questions',
+      sections: [
+        {
+          title: 'Section 1: Overview',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 1: Overview</div>
+            <div class="form-question">
+              <div class="form-question-label">Overall assessment of the scholar this period:</div>
+              <div class="form-question-answer">The scholar has shown excellent commitment and attitude throughout the review period.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Rate the scholar's performance areas:</div>
+              ${['Technical ability','Tactical understanding','Physical development','Attitude & behaviour'].map(area => `
+                <div class="form-rating-item">
+                  <div class="form-rating-value">${area} - ${Math.floor(Math.random()*3)+5}</div>
+                  <div class="form-rating-comment">Comment: Strong progress shown</div>
+                </div>`).join('')}
+            </div>`
+        },
+        {
+          title: 'Section 2: Development',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 2: Development</div>
+            <div class="form-question">
+              <div class="form-question-label">Key strengths identified this period:</div>
+              <div class="form-question-answer">Excellent work rate, strong positional awareness, and good communication with teammates.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Areas for development:</div>
+              <div class="form-question-answer">Needs to develop consistency across full matches and improve decision making under pressure.</div>
+            </div>`
+        }
+      ]
+    },
+    asm: {
+      label: 'ASM',
+      editable: true,
+      sections: [
+        {
+          title: 'Section 1: ASM overview',
+          content: () => `
+            <div class="form-section-title">ASM questions - Section 1: Overview</div>
+            <div class="form-textarea-group">
+              <label>Overall welfare assessment of the scholar</label>
+              <textarea placeholder="Comments" id="asm-welfare"></textarea>
+            </div>
+            <div class="form-textarea-group">
+              <label>How is the scholar settling into their scholarship?</label>
+              <textarea placeholder="Comments" id="asm-settling"></textarea>
+            </div>
+            <div class="form-textarea-group">
+              <label>Any concerns or issues to flag?</label>
+              <textarea placeholder="Comments" id="asm-concerns"></textarea>
+            </div>`,
+          fields: ['asm-welfare','asm-settling','asm-concerns']
+        }
+      ]
+    },
+    'asm-private': {
+      label: 'ASM',
+      editable: true,
+      sections: [
+        {
+          title: 'Private comments',
+          content: () => `
+            <div class="form-section-title">ASM questions - Section 2: Private comments</div>
+            <div class="form-textarea-group">
+              <label>Please provide any private comments</label>
+              <textarea placeholder="Comments" id="asm-private-comments"></textarea>
+            </div>
+            <div class="form-textarea-group">
+              <label>If a Player Voice question was asked, please summarise response</label>
+              <textarea placeholder="Comments" id="asm-player-voice"></textarea>
+            </div>`,
+          fields: ['asm-private-comments','asm-player-voice']
+        }
+      ]
+    }
+  };
+
+  let currentAthlete = null;
+  let currentReviewName = '';
+  let currentFormTab = 'scholar';
+  let currentFormSection = 0;
+  let formNavCollapsed = false;
+  const draftData = {};
+
+  function openAthleteView(athlete, reviewName) {
+    currentAthlete = athlete;
+    currentReviewName = reviewName;
+    currentFormTab = 'scholar';
+    currentFormSection = 0;
+
+    // Set title
+    const title = `${reviewName} - ${athlete.name} - ${athlete.club}...`;
+    document.getElementById('av-title').textContent = title;
+
+    // Avatar initials
+    const initials = athlete.name.split(' ').map(n => n[0]).join('').slice(0,2);
+    const av = document.getElementById('av-avatar');
+    av.textContent = initials;
+
+    // Show/hide action buttons for read-only tabs
+    updateHeaderActions();
+
+    // Switch to scholar tab
+    switchFormTab('scholar');
+
+    // Show view
+    document.getElementById('compliance-view').classList.remove('active');
+    document.getElementById('athlete-view').classList.add('active');
+  }
+
+  function closeAthleteView() {
+    document.getElementById('athlete-view').classList.remove('active');
+    document.getElementById('compliance-view').classList.add('active');
+    closeRecapPanel();
+  }
+
+  function updateHeaderActions() {
+    const editable = !!formData[currentFormTab]?.editable;
+    document.getElementById('av-save-draft').style.display = editable ? '' : 'none';
+    document.querySelector('.btn-submit-form').style.display = editable ? '' : 'none';
+  }
+
+  function switchFormTab(tab) {
+    currentFormTab = tab;
+    currentFormSection = 0;
+    ['scholar','club','asm','asm-private'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    updateHeaderActions();
+    renderFormNav();
+    renderFormContent();
+  }
+
+  function renderFormNav() {
+    const tabData = formData[currentFormTab];
+    const stepCount = tabData.sections.length;
+    const editable = tabData.editable;
+    const completedSteps = editable ? 0 : stepCount;
+    document.getElementById('form-nav-content').innerHTML = `
+      <div class="form-nav-header">
+        ${tabData.label}<br>
+        <span class="form-nav-sub">${editable ? `0 of ${stepCount} steps completed` : `${stepCount} sections`}</span>
+      </div>
+      ${tabData.sections.map((s, i) => `
+        <div class="form-nav-section ${i === currentFormSection ? 'active' : ''}" onclick="goToFormSection(${i})">${s.title}</div>
+      `).join('')}`;
+  }
+
+  function renderFormContent() {
+    const section = formData[currentFormTab].sections[currentFormSection];
+    document.getElementById('form-content').innerHTML = section.content();
+    // Restore draft values
+    if (section.fields) {
+      section.fields.forEach(id => {
+        const key = `${currentFormTab}-${id}`;
+        if (draftData[key]) {
+          const el = document.getElementById(id);
+          if (el) el.value = draftData[key];
+        }
+      });
+    }
+  }
+
+  function goToFormSection(idx) {
+    currentFormSection = idx;
+    renderFormNav();
+    renderFormContent();
+  }
+
+  function toggleFormNav() {
+    formNavCollapsed = !formNavCollapsed;
+    const nav = document.getElementById('form-nav');
+    nav.classList.toggle('collapsed', formNavCollapsed);
+    document.getElementById('form-nav-collapse-btn').querySelector('.material-icons').textContent =
+      formNavCollapsed ? 'chevron_right' : 'chevron_left';
+  }
+
+  function saveAthleteDraft() {
+    const section = formData[currentFormTab].sections[currentFormSection];
+    if (section.fields) {
+      section.fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) draftData[`${currentFormTab}-${id}`] = el.value;
+      });
+    }
+    const t = document.getElementById('toast');
+    t.innerHTML = '<span class="material-icons">check_circle</span> Draft saved';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function submitAthleteForm() {
+    saveAthleteDraft();
+    const t = document.getElementById('toast');
+    t.innerHTML = '<span class="material-icons">check_circle</span> Form submitted successfully';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function openRecapPanel() {
+    document.getElementById('recap-panel-body').innerHTML = `
+      <div class="recap-section">
+        <div class="recap-section-title">Subjects taken (from LMS)</div>
+        <div class="recap-section-body">English<br>Maths<br>History<br>Another subject name</div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">Club staff's previous answers</div>
+        <div class="recap-section-body">
+          <p>In the last six weeks, ${currentAthlete?.name || 'the scholar'} has shown dedication to their training at the academy. Academically, they are on track with their coursework, showing strong organisational skills.</p>
+          <p>On the pitch, they have made great strides in their set-piece execution and defensive positioning, thanks to their hard work and the insights of the coaching staff.</p>
+        </div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">Scholar's previous answers</div>
+        <div class="recap-section-body">
+          <p>Over the past six months, I've focused on balancing my education at the academy with my soccer training.</p>
+          <p>At home, I've been working on time management to ensure I dedicate enough time to both.</p>
+          <p>On the field, I've seen improvements in my passing accuracy and tactical awareness, thanks to the guidance of the coaching staff.</p>
+        </div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">ASM's previous answers</div>
+        <div class="recap-section-body">All going well, no issues to flag.</div>
+      </div>`;
+    document.getElementById('recap-overlay').classList.add('open');
+    document.getElementById('recap-panel').classList.add('open');
+  }
+
+  function closeRecapPanel() {
+    document.getElementById('recap-overlay').classList.remove('open');
+    document.getElementById('recap-panel').classList.remove('open');
+  }
+
   // ── List sort ──
   let listSort = { key: null, dir: 1 };
 
@@ -1260,7 +1935,7 @@
       const circleClass = a.submitted === 3 ? 'green' : 'red';
       const downloadBtn = a.submitted === 3 ? `<button class="btn-download-pdf">Download PDF</button>` : '';
       return `<tr>
-        <td>${a.name}</td>
+        <td><a href="#" onclick="openAthleteView(${JSON.stringify(a).replace(/"/g,'&quot;')}, '${complianceReview.name.replace(/'/g,"\\'")}'); return false;" style="color:var(--text-secondary);font-weight:600;text-decoration:none;cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${a.name}</a></td>
         <td>${a.club}</td>
         <td><span class="status-chip ${chipClass(a.coach)}">${a.coach}</span></td>
         <td><span class="status-chip ${chipClass(a.athlete)}">${a.athlete}</span></td>
