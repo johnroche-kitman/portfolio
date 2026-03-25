@@ -256,7 +256,21 @@
       line-height: 24px;
       height: 36px;
       background: #fff;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
+    thead th:hover { background: rgba(59,73,96,0.04); }
+    thead th .sort-icon {
+      display: inline-block;
+      font-size: 16px;
+      vertical-align: middle;
+      margin-left: 2px;
+      color: rgba(59,73,96,0.4);
+      font-family: 'Material Icons';
+    }
+    thead th.sort-asc .sort-icon,
+    thead th.sort-desc .sort-icon { color: var(--text-primary); }
     tbody tr {
       border-bottom: 1px solid var(--divider);
       cursor: pointer;
@@ -655,7 +669,10 @@
       height: 36px;
       white-space: nowrap;
       background: #fff;
+      cursor: pointer;
+      user-select: none;
     }
+    .compliance-table-section thead th:hover { background: rgba(59,73,96,0.04); }
     .compliance-table-section tbody tr {
       border-bottom: 1px solid var(--divider);
       transition: background 0.12s;
@@ -833,11 +850,11 @@
         <table id="reviews-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Due date</th>
-              <th>Status</th>
-              <th>Total scholars</th>
-              <th>Cohort</th>
+              <th onclick="sortList('name')">Name <span class="sort-icon" id="sort-icon-name">unfold_more</span></th>
+              <th onclick="sortList('dueDate')">Due date <span class="sort-icon" id="sort-icon-dueDate">unfold_more</span></th>
+              <th onclick="sortList('status')">Status <span class="sort-icon" id="sort-icon-status">unfold_more</span></th>
+              <th onclick="sortList('totalScholars')">Total scholars <span class="sort-icon" id="sort-icon-totalScholars">unfold_more</span></th>
+              <th onclick="sortList('cohort')">Cohort <span class="sort-icon" id="sort-icon-cohort">unfold_more</span></th>
             </tr>
           </thead>
           <tbody id="table-body"></tbody>
@@ -884,12 +901,12 @@
         <table>
           <thead>
             <tr>
-              <th>Athlete</th>
-              <th>Club</th>
-              <th>Coach status</th>
-              <th>Athlete status</th>
-              <th>ASM status</th>
-              <th>Overall status</th>
+              <th onclick="sortCompliance('name')">Athlete <span class="sort-icon" id="csort-name">unfold_more</span></th>
+              <th onclick="sortCompliance('club')">Club <span class="sort-icon" id="csort-club">unfold_more</span></th>
+              <th onclick="sortCompliance('coach')">Coach status <span class="sort-icon" id="csort-coach">unfold_more</span></th>
+              <th onclick="sortCompliance('athlete')">Athlete status <span class="sort-icon" id="csort-athlete">unfold_more</span></th>
+              <th onclick="sortCompliance('asm')">ASM status <span class="sort-icon" id="csort-asm">unfold_more</span></th>
+              <th onclick="sortCompliance('submitted')">Overall status <span class="sort-icon" id="csort-submitted">unfold_more</span></th>
               <th></th>
             </tr>
           </thead>
@@ -1013,11 +1030,20 @@
     const s = document.getElementById('search-input').value.toLowerCase();
     const st = document.getElementById('status-filter').value;
     const co = document.getElementById('cohort-filter').value;
-    renderTable(reviews.filter(r =>
+    let data = reviews.filter(r =>
       (!s || r.name.toLowerCase().includes(s)) &&
       (!st || r.status === st) &&
       (!co || r.cohort === co)
-    ));
+    );
+    if (listSort.key) {
+      data = data.slice().sort((a, b) => {
+        let av = a[listSort.key], bv = b[listSort.key];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        return av < bv ? -listSort.dir : av > bv ? listSort.dir : 0;
+      });
+    }
+    renderTable(data);
   }
 
   // Panel
@@ -1107,6 +1133,44 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
+  // ── List sort ──
+  let listSort = { key: null, dir: 1 };
+
+  function sortList(key) {
+    if (listSort.key === key) listSort.dir *= -1;
+    else { listSort.key = key; listSort.dir = 1; }
+    updateSortIcons(['name','dueDate','status','totalScholars','cohort'], listSort, 'sort-icon-');
+    filterTable();
+  }
+
+
+  function updateSortIcons(keys, sortState, prefix) {
+    keys.forEach(k => {
+      const el = document.getElementById(prefix + k);
+      if (!el) return;
+      const th = el.closest('th');
+      th.classList.remove('sort-asc','sort-desc');
+      if (sortState.key === k) {
+        el.textContent = sortState.dir === 1 ? 'arrow_upward' : 'arrow_downward';
+        th.classList.add(sortState.dir === 1 ? 'sort-asc' : 'sort-desc');
+      } else {
+        el.textContent = 'unfold_more';
+      }
+    });
+  }
+
+  // ── Compliance sort ──
+  let complianceSort = { key: null, dir: 1 };
+  const statusOrder = { 'Submitted': 0, 'Complete': 1, 'Draft': 2, 'Not started': 3 };
+
+  function sortCompliance(key) {
+    if (complianceSort.key === key) complianceSort.dir *= -1;
+    else { complianceSort.key = key; complianceSort.dir = 1; }
+    updateSortIcons(['name','club','coach','athlete','asm','submitted'], complianceSort, 'csort-');
+    compliancePage = 1;
+    renderCompliance();
+  }
+
   // ── Compliance view ──
   const clubs = ['Arsenal','Chelsea','Liverpool','Man City','Tottenham'];
   const firstNames = ['James','Oliver','George','Harry','Charlie','Jacob','Alfie','Freddie','Oscar','Noah','Ethan','Liam','Mason','Logan','Lucas'];
@@ -1176,6 +1240,16 @@
     if (clubF) athletes = athletes.filter(a => a.club === clubF);
     if (statusF === 'complete') athletes = athletes.filter(a => a.submitted === 3);
     if (statusF === 'incomplete') athletes = athletes.filter(a => a.submitted < 3);
+
+    if (complianceSort.key) {
+      athletes = athletes.slice().sort((a, b) => {
+        let av = a[complianceSort.key], bv = b[complianceSort.key];
+        if (['coach','athlete','asm'].includes(complianceSort.key)) {
+          av = statusOrder[av] ?? 99; bv = statusOrder[bv] ?? 99;
+        } else if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+        return av < bv ? -complianceSort.dir : av > bv ? complianceSort.dir : 0;
+      });
+    }
 
     const total = athletes.length;
     const totalPages = Math.max(1, Math.ceil(total / complianceRowsPerPage));
