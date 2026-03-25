@@ -745,12 +745,13 @@
       width: 240px;
       border-right: 1px solid var(--divider);
       flex-shrink: 0;
-      overflow-y: auto;
+      overflow: hidden;
       padding: 16px 0;
       transition: width 0.2s;
       position: relative;
     }
-    .form-nav.collapsed { width: 0; padding: 0; overflow: hidden; }
+    .form-nav.collapsed { width: 36px; padding: 8px 4px; }
+    .form-nav.collapsed #form-nav-content { display: none; }
     .form-nav-header {
       padding: 0 16px 12px;
       font-size: 13px;
@@ -764,7 +765,7 @@
     }
     .form-nav-collapse {
       position: absolute;
-      top: 12px; right: 8px;
+      top: 12px; right: 4px;
       width: 28px; height: 28px;
       border-radius: 50%;
       border: none;
@@ -774,7 +775,10 @@
       color: rgba(59,73,96,0.5);
       font-size: 18px;
       transition: background 0.15s;
+      flex-shrink: 0;
+      z-index: 1;
     }
+    .form-nav.collapsed .form-nav-collapse { right: 4px; left: 4px; top: 8px; margin: 0 auto; }
     .form-nav-collapse:hover { background: rgba(59,73,96,0.08); }
     .form-nav-section {
       padding: 8px 16px;
@@ -1745,11 +1749,10 @@
   }
 
   function toggleFormNav() {
-    formNavCollapsed = !formNavCollapsed;
     const nav = document.getElementById('form-nav');
-    nav.classList.toggle('collapsed', formNavCollapsed);
+    const isCollapsed = nav.classList.toggle('collapsed');
     document.getElementById('form-nav-collapse-btn').querySelector('.material-icons').textContent =
-      formNavCollapsed ? 'chevron_right' : 'chevron_left';
+      isCollapsed ? 'chevron_right' : 'chevron_left';
   }
 
   function saveAthleteDraft() {
