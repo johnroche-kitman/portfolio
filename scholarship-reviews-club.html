@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Club Scholarship Reviews</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --text-primary: #3b4960;
+      --text-secondary: #1f2d44;
+      --primary-main: #3b4960;
+      --primary-contrast: #fff;
+      --secondary-main: #f1f2f3;
+      --success-main: #0a875a;
+      --success-contrast: #fff;
+      --action-selected: rgba(59,73,96,0.08);
+      --divider: rgba(59,73,96,0.12);
+      --border-radius: 4px;
+      --akron-yellow: #fdb632;
+    }
+    body { font-family: 'Open Sans', sans-serif; background: #fff; display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 60px;
+      background: #071952;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+      flex-shrink: 0;
+      z-index: 10;
+      box-shadow: 0 4.8px 14.4px rgba(0,0,0,0.18), 0 25.6px 57.6px rgba(0,0,0,0.22);
+      position: relative;
+      overflow: hidden;
+    }
+    .sidebar-logo-wrap {
+      width: 43px;
+      height: 43px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .sidebar-logo {
+      width: 30px;
+      height: 30px;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .nav-item {
+      width: 60px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .nav-item:hover { background: rgba(0,0,0,0.3); color: #fff; }
+    .nav-item.active { background: rgba(0,0,0,0.6); color: #fff; }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      border-radius: 0 1px 1px 0;
+      background: var(--akron-yellow);
+    }
+    .nav-item .material-icons { font-size: 20px; }
+    .sidebar-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      height: 54px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .topbar-breadcrumb {
+      font-size: 16px;
+      color: var(--primary-main);
+      font-weight: 400;
+      letter-spacing: 0.15px;
+      line-height: 1.5;
+    }
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--primary-main);
+      cursor: pointer;
+    }
+    .topbar-user-name { font-weight: 400; letter-spacing: 0.17px; }
+    .topbar-user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 80px;
+      overflow: hidden;
+      background: #d1d5db;
+    }
+    .topbar-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── Content ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 24px 0;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.334;
+    }
+    .btn-new-review {
+      background: var(--primary-main);
+      color: var(--primary-contrast);
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 6px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      line-height: 24px;
+      transition: background 0.15s;
+    }
+    .btn-new-review:hover { background: #2e3a4d; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px 8px;
+      align-items: center;
+    }
+
+    /* MUI Filled Select variant */
+    .filter-field {
+      position: relative;
+      height: 48px;
+      width: 240px;
+      flex-shrink: 0;
+    }
+    .filter-field input,
+    .filter-field select {
+      height: 48px;
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      padding: 18px 36px 6px 12px;
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-family: 'Open Sans', sans-serif;
+      background: var(--secondary-main);
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+      letter-spacing: 0.15px;
+      line-height: 24px;
+      transition: border-color 0.15s;
+    }
+    .filter-field input {
+      padding: 12px 12px;
+      cursor: text;
+    }
+    .filter-field input::placeholder { color: var(--text-secondary); font-size: 16px; letter-spacing: 0.15px; }
+    .filter-field select:focus,
+    .filter-field input:focus { border-bottom-color: var(--primary-main); border-bottom-width: 2px; }
+
+    /* no-label styling — text sits centered */
+    .filter-field.no-label input,
+    .filter-field.no-label select {
+      padding: 12px 36px 12px 12px;
+    }
+
+    /* right icon/arrow */
+    .filter-field .f-icon-right {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-primary);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .filter-field .f-icon-right .material-icons { font-size: 24px; }
+
+    /* Due date field — narrower */
+    .filter-field.filter-date {
+      width: 160px;
+    }
+    .filter-field.filter-date input[type="date"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* ── Table ── */
+    .table-section { }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid var(--divider); }
+    thead th {
+      padding: 6px 4px 6px 24px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.17px;
+      line-height: 24px;
+      height: 36px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { background: rgba(59,73,96,0.04); }
+    thead th .sort-icon {
+      display: inline-block;
+      font-size: 16px;
+      vertical-align: middle;
+      margin-left: 2px;
+      color: rgba(59,73,96,0.4);
+      font-family: 'Material Icons';
+    }
+    thead th.sort-asc .sort-icon,
+    thead th.sort-desc .sort-icon { color: var(--text-primary); }
+    tbody tr {
+      border-bottom: 1px solid var(--divider);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    tbody tr:hover { background: rgba(0,0,0,0.02); }
+    tbody td {
+      padding: 16px 4px 16px 24px;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-primary);
+      letter-spacing: 0.17px;
+      line-height: 1.43;
+      vertical-align: middle;
+      max-height: 52px;
+    }
+    tbody td:first-child {
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      line-height: 1.57;
+    }
+
+    /* Column widths */
+    thead th:nth-child(1), tbody td:nth-child(1) { width: 280px; }
+    thead th:nth-child(2), tbody td:nth-child(2) { width: 240px; }
+    thead th:nth-child(3), tbody td:nth-child(3) { width: 200px; }
+    thead th:nth-child(4), tbody td:nth-child(4) { width: 168px; }
+    thead th:nth-child(5), tbody td:nth-child(5) { width: 168px; }
+
+    /* Badges (MUI Chip) */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 100px;
+      padding: 4px;
+      overflow: hidden;
+    }
+    .badge-label {
+      padding: 3px 6px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.16px;
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    .badge-active { background: var(--success-main); }
+    .badge-active .badge-label { color: var(--success-contrast); }
+    .badge-complete { background: var(--action-selected); }
+    .badge-complete .badge-label { color: var(--text-primary); }
+
+    /* ── Overlay + panel ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 460px;
+      height: 100vh;
+      background: #fff;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -2px 0 20px rgba(0,0,0,0.1);
+    }
+    .side-panel.open { transform: translateX(0); }
+
+    .panel-header {
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-title { font-size: 20px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.15px; line-height: 1.6; }
+    .panel-title .hl { color: #e55e38; }
+    .panel-close {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      border-radius: var(--border-radius);
+      transition: background 0.1s;
+    }
+    .panel-close:hover { background: var(--secondary-main); }
+    .panel-close .material-icons { font-size: 20px; }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 20px;
+    }
+
+    /* MUI filled field */
+    .mf {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .mf label {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--text-secondary);
+      pointer-events: none;
+      transition: all 0.15s;
+      line-height: 1;
+      letter-spacing: 0.15px;
+    }
+    .mf.filled label,
+    .mf:focus-within label {
+      top: 9px;
+      transform: none;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .mf.orange label,
+    .mf.orange:focus-within label {
+      color: var(--text-secondary);
+    }
+    .mf select,
+    .mf input[type="text"] {
+      width: 100%;
+      height: 52px;
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      padding: 24px 36px 6px 12px;
+      font-size: 16px;
+      color: var(--text-primary);
+      font-family: 'Open Sans', sans-serif;
+      background: rgba(59,73,96,0.06);
+      appearance: none;
+      outline: none;
+      letter-spacing: 0.15px;
+      transition: border-color 0.15s;
+    }
+    .mf select:focus,
+    .mf input:focus {
+      border-bottom-color: var(--primary-main);
+      border-bottom-width: 2px;
+    }
+    .mf.orange select,
+    .mf.orange input {
+      border: 1px solid #ef6c00;
+    }
+    .mf .mf-icon {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(59,73,96,0.54);
+      pointer-events: none;
+    }
+    .mf .mf-icon .material-icons { font-size: 20px; }
+
+    /* date/time field in panel — MUI filled style */
+    .mf-date {
+      position: relative;
+    }
+    .mf-date label {
+      position: absolute;
+      left: 12px;
+      top: 6px;
+      font-size: 12px;
+      color: var(--text-primary);
+      letter-spacing: 0.15px;
+      pointer-events: none;
+      line-height: 12px;
+      z-index: 1;
+    }
+    .mf-date input {
+      width: 100%;
+      height: 48px;
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      padding: 22px 36px 4px 12px;
+      font-size: 16px;
+      color: var(--text-primary);
+      font-family: 'Open Sans', sans-serif;
+      background: rgba(0,0,0,0.06);
+      outline: none;
+      letter-spacing: 0.15px;
+      transition: border-color 0.15s;
+    }
+    .mf-date input::placeholder { color: var(--text-primary); }
+    .mf-date input:focus { border-bottom-color: var(--primary-main); border-bottom-width: 2px; }
+    .mf-date .mf-icon {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(59,73,96,0.54);
+      pointer-events: none;
+    }
+    .mf-date .mf-icon .material-icons { font-size: 24px; }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 1fr 24px 1fr;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+    .date-row .dash {
+      text-align: center;
+      color: rgba(59,73,96,0.4);
+      font-size: 16px;
+    }
+
+    .section-label {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      letter-spacing: 0.15px;
+      line-height: 1.5;
+    }
+    .divider { height: 1px; background: var(--divider); margin: 18px 0; }
+
+    /* Notification */
+    .notify-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5f7089;
+      margin-bottom: 8px;
+      padding: 0 24px;
+      line-height: 16px;
+    }
+    .notify-text .hl { color: #ef6c00; }
+    .chips { display: flex; gap: 6px; padding: 0 24px; }
+    .chip {
+      border: none;
+      border-radius: 100px;
+      padding: 3px 4px;
+      height: 24px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--secondary-main);
+      font-family: 'Open Sans', sans-serif;
+      transition: all 0.15s;
+      letter-spacing: 0.16px;
+      line-height: 18px;
+      opacity: 0.38;
+    }
+    .chip .chip-label { padding: 0 6px; }
+    .chip.on { background: var(--primary-main); color: #fff; opacity: 1; }
+    .chip .chip-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chip.on .chip-avatar { background: var(--primary-main); }
+    .chip .chip-avatar .material-icons { font-size: 12px; }
+
+    /* Panel footer */
+    .panel-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .btn-cancel {
+      border: none;
+      background: var(--secondary-main);
+      border-radius: var(--border-radius);
+      padding: 6px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      letter-spacing: 0.4px;
+      line-height: 24px;
+      transition: background 0.1s;
+    }
+    .btn-cancel:hover { background: #e4e5e6; }
+    .btn-save {
+      background: var(--primary-main);
+      color: var(--primary-contrast);
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 6px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      line-height: 24px;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #2e3a4d; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #323232;
+      color: #fff;
+      border-radius: var(--border-radius);
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 400;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(70px);
+      opacity: 0;
+      transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast .material-icons { font-size: 18px; color: #4ade80; }
+
+    .empty td {
+      text-align: center;
+      padding: 52px 24px;
+      color: rgba(59,73,96,0.4);
+      font-size: 14px;
+    }
+
+    /* ── Athlete Review View ── */
+    .athlete-view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .athlete-view.active { display: flex; }
+
+    .athlete-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--divider);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .athlete-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .athlete-avatar-sm {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #ccc;
+    }
+    .athlete-review-title {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 500px;
+    }
+    .athlete-header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-save-draft {
+      padding: 6px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: 1px solid rgba(59,73,96,0.23);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: background 0.15s;
+    }
+    .btn-save-draft:hover { background: rgba(59,73,96,0.04); }
+    .btn-submit-form {
+      padding: 6px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      background: var(--primary-main);
+      color: #fff;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: background 0.15s;
+    }
+    .btn-submit-form:hover { background: #2e3a4d; }
+
+    .info-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      background: #E8F4FD;
+      border-bottom: 1px solid #B3D9F5;
+      flex-shrink: 0;
+      font-size: 14px;
+      color: #1e3a5f;
+    }
+    .info-banner .material-icons { font-size: 18px; color: #1565c0; flex-shrink: 0; }
+    .info-banner-text { flex: 1; }
+    .btn-recap-link {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      color: #1565c0;
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .form-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--divider);
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .form-tab {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      color: rgba(59,73,96,0.6);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .form-tab:hover { color: var(--text-secondary); }
+    .form-tab.active { color: var(--text-secondary); border-bottom-color: var(--primary-main); }
+
+    .form-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .form-nav {
+      width: 240px;
+      border-right: 1px solid var(--divider);
+      flex-shrink: 0;
+      overflow: hidden;
+      padding: 16px 0;
+      transition: width 0.2s;
+      position: relative;
+    }
+    .form-nav.collapsed { width: 36px; padding: 8px 4px; }
+    .form-nav.collapsed #form-nav-content { display: none; }
+    .form-nav-header {
+      padding: 0 16px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .form-nav-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(59,73,96,0.5);
+    }
+    .form-nav-collapse {
+      position: absolute;
+      top: 12px; right: 4px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(59,73,96,0.5);
+      font-size: 18px;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .form-nav.collapsed .form-nav-collapse { right: 4px; left: 4px; top: 8px; margin: 0 auto; }
+    .form-nav-collapse:hover { background: rgba(59,73,96,0.08); }
+    .form-nav-section {
+      padding: 8px 16px;
+      font-size: 13px;
+      color: rgba(59,73,96,0.7);
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+      border-radius: 0;
+    }
+    .form-nav-section:hover { background: rgba(59,73,96,0.04); color: var(--text-secondary); }
+    .form-nav-section.active { background: rgba(59,73,96,0.08); color: var(--text-secondary); font-weight: 600; }
+
+    .form-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px;
+    }
+    .form-section-title {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .form-question {
+      margin-bottom: 24px;
+    }
+    .form-question-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .form-question-answer {
+      font-size: 14px;
+      color: rgba(59,73,96,0.8);
+      line-height: 1.6;
+    }
+    .form-rating-item {
+      margin-bottom: 16px;
+    }
+    .form-rating-value {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+    .form-rating-comment {
+      font-size: 13px;
+      color: rgba(59,73,96,0.6);
+    }
+    .form-textarea-group {
+      margin-bottom: 28px;
+    }
+    .form-textarea-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .form-textarea-group textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-primary);
+      background: rgba(59,73,96,0.06);
+      border: none;
+      border-bottom: 1px solid var(--divider);
+      border-radius: 4px 4px 0 0;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .form-textarea-group textarea:focus { border-bottom: 2px solid var(--primary-main); }
+    .form-textarea-group textarea::placeholder { color: rgba(59,73,96,0.4); }
+
+    /* Recap panel */
+    .recap-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.1);
+      display: none;
+    }
+    .recap-overlay.open { display: block; }
+    .recap-panel {
+      position: fixed;
+      top: 0; right: -420px;
+      width: 380px;
+      height: 100vh;
+      background: #fff;
+      z-index: 201;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+      transition: right 0.28s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .recap-panel.open { right: 0; }
+    .recap-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--divider);
+      flex-shrink: 0;
+    }
+    .recap-panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+    .ai-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border: 1px solid rgba(59,73,96,0.3);
+      border-radius: 16px;
+      font-size: 12px;
+      color: rgba(59,73,96,0.7);
+      font-family: 'Open Sans', sans-serif;
+    }
+    .btn-recap-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(59,73,96,0.6);
+      transition: background 0.15s;
+    }
+    .btn-recap-close:hover { background: rgba(59,73,96,0.08); }
+    .btn-recap-close .material-icons { font-size: 20px; }
+    .recap-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .recap-section { margin-bottom: 24px; }
+    .recap-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .recap-section-body {
+      font-size: 14px;
+      color: rgba(59,73,96,0.8);
+      line-height: 1.6;
+    }
+    .recap-section-body p { margin: 0 0 8px; }
+    .recap-section-body p:last-child { margin-bottom: 0; }
+
+    /* ── Compliance View ── */
+    .compliance-view { display: none; flex-direction: column; height: 100%; }
+    .compliance-view.active { display: flex; }
+    .list-view { display: flex; flex-direction: column; height: 100%; }
+    .list-view.hidden { display: none; }
+
+    .compliance-page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .back-btn {
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+    }
+    .back-btn .material-icons { font-size: 20px; }
+    .compliance-title { font-size: 24px; font-weight: 400; color: var(--text-primary); line-height: 1.334; }
+
+    .compliance-filter-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--divider);
+    }
+    .compliance-filter-bar .filter-field { min-width: 160px; }
+
+    .compliance-table-section { flex: 1; overflow-y: auto; }
+    .compliance-table-section table { width: 100%; border-collapse: collapse; }
+    .compliance-table-section thead tr { border-bottom: 1px solid var(--divider); }
+    .compliance-table-section thead th {
+      padding: 6px 4px 6px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: left;
+      letter-spacing: 0.17px;
+      line-height: 24px;
+      height: 36px;
+      white-space: nowrap;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+    .compliance-table-section thead th:hover { background: rgba(59,73,96,0.04); }
+    .compliance-table-section tbody tr {
+      border-bottom: 1px solid var(--divider);
+      transition: background 0.12s;
+    }
+    .compliance-table-section tbody tr:hover { background: rgba(59,73,96,0.04); }
+    .compliance-table-section tbody td {
+      padding: 14px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    .compliance-table-section tbody td:first-child { font-weight: 600; }
+
+    .status-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.15px;
+    }
+    .status-chip.submitted { border: 1px solid #0a875a; color: #0a875a; background: transparent; }
+    .status-chip.complete  { border: 1px solid rgba(59,73,96,0.4); color: var(--text-secondary); background: transparent; }
+    .status-chip.draft     { border: 1px solid rgba(59,73,96,0.4); color: var(--text-secondary); background: transparent; }
+    .status-chip.not-started { color: rgba(59,73,96,0.5); font-size: 13px; border: none; padding: 0; }
+
+    .overall-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .overall-circle.green { background: #0a875a; }
+    .overall-circle.red   { background: #c62828; }
+
+    .btn-download-pdf {
+      padding: 5px 15px;
+      font-size: 13px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      background: #F1F2F3;
+      color: #3B4960;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-download-pdf:hover { background: #e2e4e7; }
+
+    .compliance-pagination {
+      display: flex;
+      align-items: center;
+      padding: 8px 24px;
+      border-top: 1px solid var(--divider);
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .compliance-pagination .rows-label { margin-right: 4px; }
+    .compliance-pagination select {
+      border: none;
+      font-size: 13px;
+      color: var(--text-primary);
+      background: none;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .pg-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: background 0.12s;
+    }
+    .pg-btn:hover { background: rgba(59,73,96,0.08); }
+    .pg-btn.active { background: var(--primary-main); color: #fff; }
+    .pg-btn:disabled { opacity: 0.3; cursor: default; }
+    .pg-btn .material-icons { font-size: 18px; }
+
+    /* Club-specific radio groups */
+    .form-radio-group { margin-bottom: 24px; }
+    .form-radio-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    .form-radio-options {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .form-radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: rgba(59,73,96,0.8);
+    }
+    .form-radio-option input[type="radio"] {
+      width: 18px; height: 18px;
+      accent-color: var(--primary-main);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo-wrap">
+  <svg class="sidebar-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="20" r="18" fill="#034694" stroke="#1e6bb8" stroke-width="1.5"/>
+    <text x="20" y="26" text-anchor="middle" font-family="Open Sans, sans-serif" font-size="18" font-weight="700" fill="white">C</text>
+  </svg>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item"><span class="material-icons">bar_chart</span></div>
+    <div class="nav-item active"><span class="material-icons">description</span></div>
+    <div class="nav-item"><span class="material-icons">person_outline</span></div>
+    <div class="nav-item"><span class="material-icons">settings</span></div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item"><span class="material-icons" style="font-size:20px">help_outline</span></div>
+    <div class="nav-item"><span class="material-icons" style="font-size:20px">chevron_right</span></div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-breadcrumb">Reviews</span>
+    <div class="topbar-user">
+      <span class="topbar-user-name">Staff</span>
+      <span class="material-icons" style="font-size:24px;color:var(--text-primary)">arrow_drop_down</span>
+      <div class="topbar-user-avatar">
+        <img src="https://www.figma.com/api/mcp/asset/aa5cd5c2-09ff-40e9-a452-c9f093cc959f" alt="Avatar" />
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- LIST VIEW -->
+    <div class="list-view" id="list-view">
+      <div class="page-header">
+        <h1 class="page-title">Scholarship reviews</h1>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-field no-label">
+          <input type="text" placeholder="Search" id="search-input" oninput="filterTable()" />
+        </div>
+
+        <div class="filter-field no-label">
+          <select id="status-filter" onchange="filterTable()">
+            <option value="">Status</option>
+            <option value="Active">Active</option>
+            <option value="Complete">Complete</option>
+            <option value="Draft">Draft</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+
+        <div class="filter-field no-label">
+          <select id="cohort-filter" onchange="filterTable()">
+            <option value="">Cohort</option>
+            <option value="First year scholars">First year scholars</option>
+            <option value="Second year scholars">Second year scholars</option>
+            <option value="All scholars">All scholars</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+
+        <div class="filter-field filter-date no-label">
+          <select id="due-date-display" style="color:var(--text-secondary)">
+            <option value="">Due date</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">date_range</span></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-section">
+        <table id="reviews-table">
+          <thead>
+            <tr>
+              <th onclick="sortList('name')">Name <span class="sort-icon" id="sort-icon-name">unfold_more</span></th>
+              <th onclick="sortList('dueDate')">Due date <span class="sort-icon" id="sort-icon-dueDate">unfold_more</span></th>
+              <th onclick="sortList('status')">Status <span class="sort-icon" id="sort-icon-status">unfold_more</span></th>
+              <th onclick="sortList('totalScholars')">Total scholars <span class="sort-icon" id="sort-icon-totalScholars">unfold_more</span></th>
+              <th onclick="sortList('cohort')">Cohort <span class="sort-icon" id="sort-icon-cohort">unfold_more</span></th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ATHLETE REVIEW VIEW -->
+    <div class="athlete-view" id="athlete-view">
+      <div class="athlete-page-header">
+        <div class="athlete-header-left">
+          <button class="back-btn" onclick="closeAthleteView()">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div class="athlete-avatar-sm" id="av-avatar" style="display:flex;align-items:center;justify-content:center;background:#8b5cf6;color:#fff;font-size:14px;font-weight:600;"></div>
+          <span class="athlete-review-title" id="av-title"></span>
+        </div>
+        <div class="athlete-header-actions">
+          <button class="btn-save-draft" id="av-save-draft" onclick="saveAthleteDraft()">Save as draft</button>
+          <button class="btn-submit-form" onclick="submitAthleteForm()">Submit</button>
+        </div>
+      </div>
+
+      <div class="info-banner">
+        <span class="material-icons">info</span>
+        <span class="info-banner-text">Before you begin... make sure you have viewed a recap of the previous review</span>
+        <button class="btn-recap-link" onclick="openRecapPanel()">View recap summary</button>
+      </div>
+
+      <div class="form-tabs">
+        <button class="form-tab active" id="tab-scholar" onclick="switchFormTab('scholar')">Scholar</button>
+        <button class="form-tab" id="tab-club" onclick="switchFormTab('club')">Club</button>
+        <button class="form-tab" id="tab-asm" onclick="switchFormTab('asm')">ASM</button>
+      </div>
+
+      <div class="form-body">
+        <div class="form-nav" id="form-nav">
+          <button class="form-nav-collapse" onclick="toggleFormNav()" id="form-nav-collapse-btn">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <div id="form-nav-content"></div>
+        </div>
+        <div class="form-content" id="form-content"></div>
+      </div>
+    </div>
+
+    <!-- COMPLIANCE VIEW -->
+    <div class="compliance-view" id="compliance-view">
+      <div class="compliance-page-header">
+        <button class="back-btn" onclick="closeCompliance()">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <span class="compliance-title" id="compliance-title"></span>
+      </div>
+
+      <div class="compliance-filter-bar">
+        <div class="filter-field no-label">
+          <select id="c-athlete-filter" onchange="renderCompliance()">
+            <option value="">Athlete</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+        <div class="filter-field no-label">
+          <select id="c-status-filter" onchange="renderCompliance()">
+            <option value="">Overall Status</option>
+            <option value="complete">Complete</option>
+            <option value="incomplete">Incomplete</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+      </div>
+
+      <div class="compliance-table-section">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortCompliance('name')">Athlete <span class="sort-icon" id="csort-name">unfold_more</span></th>
+              <th onclick="sortCompliance('coach')">Coach status <span class="sort-icon" id="csort-coach">unfold_more</span></th>
+              <th onclick="sortCompliance('athlete')">Athlete status <span class="sort-icon" id="csort-athlete">unfold_more</span></th>
+              <th onclick="sortCompliance('asm')">ASM status <span class="sort-icon" id="csort-asm">unfold_more</span></th>
+              <th onclick="sortCompliance('submitted')">Overall status <span class="sort-icon" id="csort-submitted">unfold_more</span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="compliance-body"></tbody>
+        </table>
+      </div>
+
+      <div class="compliance-pagination" id="compliance-pagination"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Recap panel -->
+<div class="recap-overlay" id="recap-overlay" onclick="closeRecapPanel()"></div>
+<div class="recap-panel" id="recap-panel">
+  <div class="recap-panel-header">
+    <span class="recap-panel-title">Review recap</span>
+    <span class="ai-chip">✦ AI summary</span>
+    <button class="btn-recap-close" onclick="closeRecapPanel()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+  <div class="recap-panel-body" id="recap-panel-body"></div>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Side panel -->
+<div class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <span class="panel-title">Assign <span class="hl">[recipients]</span></span>
+    <button class="panel-close" onclick="closePanel()">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="panel-body">
+    <div class="mf orange filled" id="mf-cohort">
+      <label>Cohort</label>
+      <select id="panel-cohort" onchange="handleInput(this)">
+        <option value="1st year scholars">1st year scholars</option>
+        <option value="2nd year scholars">2nd year scholars</option>
+        <option value="All scholars">All scholars</option>
+        <option value="3rd year scholars">3rd year scholars</option>
+      </select>
+      <div class="mf-icon"><span class="material-icons">arrow_drop_down</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">Schedule</div>
+
+    <div class="mf filled" id="mf-title">
+      <label>Title</label>
+      <input type="text" id="panel-title" value="August window 2026" oninput="handleInput(this)" />
+    </div>
+
+    <div class="date-row">
+      <div class="mf-date">
+        <label>Start date</label>
+        <input type="text" id="panel-start-date" placeholder="Placeholder" oninput="handleDateInput(this)" />
+        <div class="mf-icon"><span class="material-icons">calendar_today</span></div>
+      </div>
+      <div class="dash">—</div>
+      <div class="mf-date">
+        <label>End date</label>
+        <input type="text" id="panel-end-date" placeholder="Placeholder" oninput="handleDateInput(this)" />
+        <div class="mf-icon"><span class="material-icons">calendar_today</span></div>
+      </div>
+    </div>
+
+    <div class="mf-date" style="margin-bottom:14px">
+      <label>Start Time</label>
+      <input type="text" id="panel-start-time" placeholder="Start Time" oninput="handleDateInput(this)" />
+      <div class="mf-icon"><span class="material-icons">schedule</span></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label" style="padding:0 24px">Notification</div>
+    <div class="notify-text">Notify <span class="hl">[recipients]</span> by</div>
+    <div class="chips">
+      <button class="chip on" id="chip-email" onclick="toggleChip('email')">
+        <span class="chip-avatar"><span class="material-icons">check</span></span><span class="chip-label">Email</span>
+      </button>
+      <button class="chip" id="chip-sms" onclick="toggleChip('sms')"><span class="chip-label">SMS</span></button>
+      <button class="chip" id="chip-push" onclick="toggleChip('push')"><span class="chip-label">Push</span></button>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <button class="btn-cancel" onclick="closePanel()">Cancel</button>
+    <button class="btn-save" onclick="saveReview()">Save</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="material-icons">check_circle</span>
+  Review created successfully
+</div>
+
+<script>
+  const reviews = [
+    { id:1, name:'August window 2026', dueDate:'2026-09-17', dueDateDisplay:'September 17, 2026', status:'Active', totalScholars:90, cohort:'First year scholars' },
+    { id:2, name:'Scholarship review - May 2025', dueDate:'2025-05-17', dueDateDisplay:'May 17, 2025', status:'Complete', totalScholars:90, cohort:'First year scholars' },
+  ];
+
+  function formatDate(s) {
+    if (!s) return '';
+    const d = new Date(s + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  function renderTable(data) {
+    const tb = document.getElementById('table-body');
+    if (!data.length) {
+      tb.innerHTML = '<tr class="empty"><td colspan="5">No reviews match your filters.</td></tr>';
+      return;
+    }
+    tb.innerHTML = data.map(r => `
+      <tr>
+        <td><a href="#" class="review-link" onclick="openCompliance(${r.id}); return false;" style="color:var(--text-secondary);font-weight:600;text-decoration:none;cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${r.name}</a></td>
+        <td>${r.dueDateDisplay}</td>
+        <td><span class="badge badge-${r.status.toLowerCase()}"><span class="badge-label">${r.status}</span></span></td>
+        <td>${r.totalScholars}</td>
+        <td>${r.cohort}</td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const s = document.getElementById('search-input').value.toLowerCase();
+    const st = document.getElementById('status-filter').value;
+    const co = document.getElementById('cohort-filter').value;
+    let data = reviews.filter(r =>
+      (!s || r.name.toLowerCase().includes(s)) &&
+      (!st || r.status === st) &&
+      (!co || r.cohort === co)
+    );
+    if (listSort.key) {
+      data = data.slice().sort((a, b) => {
+        let av = a[listSort.key], bv = b[listSort.key];
+        if (typeof av === 'string') av = av.toLowerCase();
+        if (typeof bv === 'string') bv = bv.toLowerCase();
+        return av < bv ? -listSort.dir : av > bv ? listSort.dir : 0;
+      });
+    }
+    renderTable(data);
+  }
+
+  // Panel
+  function openPanel() {
+    document.getElementById('side-panel').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('panel-cohort').value = '1st year scholars';
+    document.getElementById('panel-title').value = 'August window 2026';
+    ['panel-start-date','panel-end-date','panel-start-time'].forEach(id => {
+      const el = document.getElementById(id);
+      el.value = '';
+      el.classList.remove('has-val');
+    });
+    document.getElementById('mf-cohort').classList.add('filled', 'orange');
+    document.getElementById('mf-title').classList.add('filled');
+    resetChips();
+    activateChip('email');
+  }
+
+  function closePanel() {
+    document.getElementById('side-panel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  function handleInput(el) {
+    const mf = el.closest('.mf');
+    if (mf) {
+      el.value ? mf.classList.add('filled') : mf.classList.remove('filled');
+    }
+  }
+
+  function handleDateInput(el) {
+    el.value ? el.classList.add('has-val') : el.classList.remove('has-val');
+  }
+
+  // chips
+  const chipState = { email: false, sms: false, push: false };
+  const chipLabel = { email: 'Email', sms: 'SMS', push: 'Push' };
+
+  function resetChips() {
+    Object.keys(chipState).forEach(k => {
+      chipState[k] = false;
+      const el = document.getElementById('chip-' + k);
+      el.classList.remove('on');
+      el.innerHTML = `<span class="chip-label">${chipLabel[k]}</span>`;
+    });
+  }
+
+  function activateChip(k) {
+    chipState[k] = true;
+    const el = document.getElementById('chip-' + k);
+    el.classList.add('on');
+    el.innerHTML = `<span class="chip-avatar"><span class="material-icons">check</span></span><span class="chip-label">${chipLabel[k]}</span>`;
+  }
+
+  function toggleChip(k) {
+    chipState[k] ? deactivateChip(k) : activateChip(k);
+  }
+
+  function deactivateChip(k) {
+    chipState[k] = false;
+    const el = document.getElementById('chip-' + k);
+    el.classList.remove('on');
+    el.innerHTML = `<span class="chip-label">${chipLabel[k]}</span>`;
+  }
+
+  function saveReview() {
+    const title = document.getElementById('panel-title').value.trim();
+    if (!title) { document.getElementById('panel-title').focus(); return; }
+    const end = document.getElementById('panel-end-date').value;
+    const cohort = document.getElementById('panel-cohort').value;
+    const cohortDisplay = cohort === '1st year scholars' ? 'First year scholars'
+      : cohort === '2nd year scholars' ? 'Second year scholars' : cohort;
+    reviews.unshift({
+      id: reviews.length + 1,
+      name: title,
+      dueDate: end,
+      dueDateDisplay: end || '—',
+      status: 'Active',
+      totalScholars: 0,
+      cohort: cohortDisplay,
+    });
+    filterTable();
+    closePanel();
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Athlete Review View ──
+  const formData = {
+    scholar: {
+      label: 'Athlete questions',
+      sections: [
+        {
+          title: 'Section 1: Overview',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 1: Overview</div>
+            <div class="form-question">
+              <div class="form-question-label">How would you currently rate the below areas of your scholarship:</div>
+              ${['Education','Football','Wellbeing','Overall enjoyment'].map(area => `
+                <div class="form-rating-item">
+                  <div class="form-rating-value">${area} - 6</div>
+                  <div class="form-rating-comment">Comment: I did great!</div>
+                </div>`).join('')}
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Something I am enjoying about my scholarship is:</div>
+              <div class="form-question-answer">I'm enjoying playing football and making new friends</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Something I am finding challenging about my scholarship is:</div>
+              <div class="form-question-answer">I feel a lot of pressure to perform</div>
+            </div>`
+        },
+        {
+          title: 'Section 2: Education progress',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 2: Education progress</div>
+            <div class="form-question">
+              <div class="form-question-label">What subjects are you currently studying?</div>
+              <div class="form-question-answer">English, Maths, History, Physical Education</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">How would you describe your current academic performance?</div>
+              <div class="form-question-answer">I am keeping up with my coursework and achieving satisfactory grades across all subjects.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Are there any subjects you are finding particularly difficult?</div>
+              <div class="form-question-answer">Maths can be challenging at times but I am getting extra support.</div>
+            </div>`
+        },
+        {
+          title: 'Section 3: Football progress',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 3: Football progress</div>
+            <div class="form-question">
+              <div class="form-question-label">How do you feel your football has progressed this period?</div>
+              <div class="form-question-answer">I feel I have improved significantly, particularly in my passing and positioning.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">What aspect of your game are you most proud of?</div>
+              <div class="form-question-answer">My defensive awareness has improved a lot and my coach has noticed.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">What area of your game would you most like to improve?</div>
+              <div class="form-question-answer">I would like to work on my weaker foot and my aerial ability.</div>
+            </div>`
+        },
+        {
+          title: 'Section 4: Target setting',
+          content: () => `
+            <div class="form-section-title">Scholar questions - Section 4: Target setting</div>
+            <div class="form-question">
+              <div class="form-question-label">What are your main targets for the next review period?</div>
+              <div class="form-question-answer">To improve my weaker foot, achieve a B grade in Maths, and get more minutes in first team training sessions.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">How do you plan to achieve these targets?</div>
+              <div class="form-question-answer">Extra practice sessions after training, working with my tutor for Maths, and speaking to the first team coach about opportunities.</div>
+            </div>`
+        }
+      ]
+    },
+    club: {
+      label: 'Club questions',
+      editable: true,
+      sections: [
+        {
+          title: 'Section 1: Overview',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 1: Overview</div>
+            <div class="form-textarea-group">
+              <label>Overall comments on the scholar this period</label>
+              <textarea placeholder="Comments" id="club-overview"></textarea>
+            </div>
+            <div class="form-textarea-group">
+              <label>Key areas of strength</label>
+              <textarea placeholder="Comments" id="club-strengths"></textarea>
+            </div>`,
+          fields: ['club-overview','club-strengths']
+        },
+        {
+          title: 'Section 2: Education progress',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 2: Education Progress</div>
+            <div class="form-question-label" style="margin-bottom:20px">Rate Scholar progress in the following areas:</div>
+            ${[
+              ['club-btec','BTEC'],
+              ['club-sep-portfolio','SEP - Portfolio'],
+              ['club-sep-knowledge','SEP - Knowledge Test'],
+              ['club-sep-epa','SEP - End Point Assessment A Level']
+            ].map(([id,label]) => `
+              <div class="form-radio-group">
+                <div class="form-radio-label">${label}</div>
+                <div class="form-radio-options">
+                  ${['Below expected progress','Expected progress','Above expected progress','Not applicable'].map((opt,i) => `
+                    <label class="form-radio-option">
+                      <input type="radio" name="${id}" value="${opt}" ${i===0?'checked':''}>
+                      <span>${opt}</span>
+                    </label>`).join('')}
+                </div>
+                <div class="form-textarea-group" style="margin-top:8px;margin-bottom:0">
+                  <textarea placeholder="Comments" id="${id}-comment" rows="1" style="min-height:44px"></textarea>
+                </div>
+              </div>`).join('')}`,
+          fields: ['club-btec-comment','club-sep-portfolio-comment','club-sep-knowledge-comment','club-sep-epa-comment']
+        },
+        {
+          title: 'Section 3: Football progress',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 3: Football Progress</div>
+            <div class="form-question-label" style="margin-bottom:20px">Rate Scholar progress in the following areas:</div>
+            ${[
+              ['club-technical','Technical ability'],
+              ['club-tactical','Tactical understanding'],
+              ['club-physical','Physical development'],
+              ['club-attitude','Attitude & behaviour']
+            ].map(([id,label]) => `
+              <div class="form-radio-group">
+                <div class="form-radio-label">${label}</div>
+                <div class="form-radio-options">
+                  ${['Below expected progress','Expected progress','Above expected progress','Not applicable'].map((opt,i) => `
+                    <label class="form-radio-option">
+                      <input type="radio" name="${id}" value="${opt}" ${i===1?'checked':''}>
+                      <span>${opt}</span>
+                    </label>`).join('')}
+                </div>
+                <div class="form-textarea-group" style="margin-top:8px;margin-bottom:0">
+                  <textarea placeholder="Comments" id="${id}-comment" rows="1" style="min-height:44px"></textarea>
+                </div>
+              </div>`).join('')}`,
+          fields: ['club-technical-comment','club-tactical-comment','club-physical-comment','club-attitude-comment']
+        },
+        {
+          title: 'Section 4: Target setting',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 4: Target Setting</div>
+            <div class="form-textarea-group">
+              <label>Targets agreed for next review period</label>
+              <textarea placeholder="Comments" id="club-targets"></textarea>
+            </div>
+            <div class="form-textarea-group">
+              <label>Support to be provided by the club</label>
+              <textarea placeholder="Comments" id="club-support"></textarea>
+            </div>`,
+          fields: ['club-targets','club-support']
+        },
+        {
+          title: 'Section 5: Summary',
+          content: () => `
+            <div class="form-section-title">Club questions - Section 5: Summary</div>
+            <div class="form-textarea-group">
+              <label>Overall summary and any additional comments</label>
+              <textarea placeholder="Comments" id="club-summary"></textarea>
+            </div>`,
+          fields: ['club-summary']
+        }
+      ]
+    },
+    asm: {
+      label: 'ASM',
+      sections: [
+        {
+          title: 'Section 1: ASM overview',
+          content: () => `
+            <div class="form-section-title">ASM questions - Section 1: Overview</div>
+            <div class="form-question">
+              <div class="form-question-label">Overall welfare assessment of the scholar</div>
+              <div class="form-question-answer">The scholar is settling in well and showing positive signs both on and off the pitch.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">How is the scholar settling into their scholarship?</div>
+              <div class="form-question-answer">Very well. The scholar has integrated with the squad and is building strong relationships with teammates and coaches.</div>
+            </div>
+            <div class="form-question">
+              <div class="form-question-label">Any concerns or issues to flag?</div>
+              <div class="form-question-answer">No concerns at this time.</div>
+            </div>`
+        }
+      ]
+    }
+  };
+
+  let currentAthlete = null;
+  let currentReviewName = '';
+  let currentFormTab = 'scholar';
+  let currentFormSection = 0;
+  let formNavCollapsed = false;
+  const draftData = {};
+
+  function openAthleteView(athlete, reviewName) {
+    currentAthlete = athlete;
+    currentReviewName = reviewName;
+    currentFormTab = 'scholar';
+    currentFormSection = 0;
+
+    // Set title
+    const title = `${reviewName} - ${athlete.name} - ${athlete.club}...`;
+    document.getElementById('av-title').textContent = title;
+
+    // Avatar initials
+    const initials = athlete.name.split(' ').map(n => n[0]).join('').slice(0,2);
+    const av = document.getElementById('av-avatar');
+    av.textContent = initials;
+
+    // Show/hide action buttons for read-only tabs
+    updateHeaderActions();
+
+    // Switch to scholar tab
+    switchFormTab('scholar');
+
+    // Show view
+    document.getElementById('compliance-view').classList.remove('active');
+    document.getElementById('athlete-view').classList.add('active');
+  }
+
+  function closeAthleteView() {
+    document.getElementById('athlete-view').classList.remove('active');
+    document.getElementById('compliance-view').classList.add('active');
+    closeRecapPanel();
+  }
+
+  function updateHeaderActions() {
+    const editable = !!formData[currentFormTab]?.editable;
+    document.getElementById('av-save-draft').style.display = editable ? '' : 'none';
+    document.querySelector('.btn-submit-form').style.display = editable ? '' : 'none';
+  }
+
+  function switchFormTab(tab) {
+    currentFormTab = tab;
+    currentFormSection = 0;
+    ['scholar','club','asm'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    });
+    updateHeaderActions();
+    renderFormNav();
+    renderFormContent();
+  }
+
+  function renderFormNav() {
+    const tabData = formData[currentFormTab];
+    const stepCount = tabData.sections.length;
+    const editable = tabData.editable;
+    const completedSteps = editable ? 0 : stepCount;
+    document.getElementById('form-nav-content').innerHTML = `
+      <div class="form-nav-header">
+        ${tabData.label}<br>
+        <span class="form-nav-sub">${editable ? `0 of ${stepCount} steps completed` : `${stepCount} sections`}</span>
+      </div>
+      ${tabData.sections.map((s, i) => `
+        <div class="form-nav-section ${i === currentFormSection ? 'active' : ''}" onclick="goToFormSection(${i})">${s.title}</div>
+      `).join('')}`;
+  }
+
+  function renderFormContent() {
+    const section = formData[currentFormTab].sections[currentFormSection];
+    document.getElementById('form-content').innerHTML = section.content();
+    // Restore draft values
+    if (section.fields) {
+      section.fields.forEach(id => {
+        const key = `${currentFormTab}-${id}`;
+        if (draftData[key]) {
+          const el = document.getElementById(id);
+          if (el) el.value = draftData[key];
+        }
+      });
+    }
+  }
+
+  function goToFormSection(idx) {
+    currentFormSection = idx;
+    renderFormNav();
+    renderFormContent();
+  }
+
+  function toggleFormNav() {
+    const nav = document.getElementById('form-nav');
+    const isCollapsed = nav.classList.toggle('collapsed');
+    document.getElementById('form-nav-collapse-btn').querySelector('.material-icons').textContent =
+      isCollapsed ? 'chevron_right' : 'chevron_left';
+  }
+
+  function saveAthleteDraft() {
+    const section = formData[currentFormTab].sections[currentFormSection];
+    if (section.fields) {
+      section.fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) draftData[`${currentFormTab}-${id}`] = el.value;
+      });
+    }
+    const t = document.getElementById('toast');
+    t.innerHTML = '<span class="material-icons">check_circle</span> Draft saved';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function submitAthleteForm() {
+    saveAthleteDraft();
+    closeAthleteView();
+    const t = document.getElementById('toast');
+    t.innerHTML = '<span class="material-icons">check_circle</span> Form submitted successfully';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function openRecapPanel() {
+    document.getElementById('recap-panel-body').innerHTML = `
+      <div class="recap-section">
+        <div class="recap-section-title">Subjects taken (from LMS)</div>
+        <div class="recap-section-body">English<br>Maths<br>History<br>Another subject name</div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">Club staff's previous answers</div>
+        <div class="recap-section-body">
+          <p>In the last six weeks, ${currentAthlete?.name || 'the scholar'} has shown dedication to their training at the academy. Academically, they are on track with their coursework, showing strong organisational skills.</p>
+          <p>On the pitch, they have made great strides in their set-piece execution and defensive positioning, thanks to their hard work and the insights of the coaching staff.</p>
+        </div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">Scholar's previous answers</div>
+        <div class="recap-section-body">
+          <p>Over the past six months, I've focused on balancing my education at the academy with my soccer training.</p>
+          <p>At home, I've been working on time management to ensure I dedicate enough time to both.</p>
+          <p>On the field, I've seen improvements in my passing accuracy and tactical awareness, thanks to the guidance of the coaching staff.</p>
+        </div>
+      </div>
+      <div class="recap-section">
+        <div class="recap-section-title">ASM's previous answers</div>
+        <div class="recap-section-body">All going well, no issues to flag.</div>
+      </div>`;
+    document.getElementById('recap-overlay').classList.add('open');
+    document.getElementById('recap-panel').classList.add('open');
+  }
+
+  function closeRecapPanel() {
+    document.getElementById('recap-overlay').classList.remove('open');
+    document.getElementById('recap-panel').classList.remove('open');
+  }
+
+  // ── List sort ──
+  let listSort = { key: null, dir: 1 };
+
+  function sortList(key) {
+    if (listSort.key === key) listSort.dir *= -1;
+    else { listSort.key = key; listSort.dir = 1; }
+    updateSortIcons(['name','dueDate','status','totalScholars','cohort'], listSort, 'sort-icon-');
+    filterTable();
+  }
+
+
+  function updateSortIcons(keys, sortState, prefix) {
+    keys.forEach(k => {
+      const el = document.getElementById(prefix + k);
+      if (!el) return;
+      const th = el.closest('th');
+      th.classList.remove('sort-asc','sort-desc');
+      if (sortState.key === k) {
+        el.textContent = sortState.dir === 1 ? 'arrow_upward' : 'arrow_downward';
+        th.classList.add(sortState.dir === 1 ? 'sort-asc' : 'sort-desc');
+      } else {
+        el.textContent = 'unfold_more';
+      }
+    });
+  }
+
+  // ── Compliance sort ──
+  let complianceSort = { key: null, dir: 1 };
+  const statusOrder = { 'Submitted': 0, 'Complete': 1, 'Draft': 2, 'Not started': 3 };
+
+  function sortCompliance(key) {
+    if (complianceSort.key === key) complianceSort.dir *= -1;
+    else { complianceSort.key = key; complianceSort.dir = 1; }
+    updateSortIcons(['name','coach','athlete','asm','submitted'], complianceSort, 'csort-');
+    compliancePage = 1;
+    renderCompliance();
+  }
+
+  // ── Compliance view ──
+  const clubs = ['Arsenal','Chelsea','Liverpool','Man City','Tottenham'];
+  const firstNames = ['James','Oliver','George','Harry','Charlie','Jacob','Alfie','Freddie','Oscar','Noah','Ethan','Liam','Mason','Logan','Lucas'];
+  const lastNames = ['Smith','Jones','Williams','Brown','Taylor','Davies','Evans','Wilson','Thomas','Roberts','Johnson','Walker','Wright','Thompson','Robinson'];
+
+  function genAthletes(reviewId, count) {
+    const rng = (seed) => { let x = Math.sin(seed) * 10000; return x - Math.floor(x); };
+    return Array.from({ length: count }, (_, i) => {
+      const seed = reviewId * 1000 + i;
+      const fn = firstNames[Math.floor(rng(seed) * firstNames.length)];
+      const ln = lastNames[Math.floor(rng(seed + 0.5) * lastNames.length)];
+      const club = 'Chelsea';
+      const coachStatuses = ['Submitted','Complete','Draft','Not started'];
+      const athleteStatuses = ['Submitted','Complete','Not started'];
+      const asmStatuses = ['Submitted','Not started'];
+      const coach = i === 0 ? 'Submitted' : coachStatuses[Math.floor(rng(seed + 2) * coachStatuses.length)];
+      const athlete = i === 0 ? 'Submitted' : athleteStatuses[Math.floor(rng(seed + 3) * athleteStatuses.length)];
+      const asm = i === 0 ? 'Submitted' : asmStatuses[Math.floor(rng(seed + 4) * asmStatuses.length)];
+      const submitted = [coach, athlete, asm].filter(s => s === 'Submitted').length;
+      return { name: `${fn} ${ln}`, club, coach, athlete, asm, submitted, total: 3 };
+    });
+  }
+
+  let complianceReview = null;
+  let compliancePage = 1;
+  const complianceRowsPerPage = 10;
+
+  function openCompliance(reviewId) {
+    complianceReview = reviews.find(r => r.id === reviewId);
+    if (!complianceReview) return;
+    compliancePage = 1;
+    document.getElementById('compliance-title').textContent = complianceReview.name;
+
+    // populate athlete filter
+    const athletes = genAthletes(reviewId, complianceReview.totalScholars || 14);
+    const sel = document.getElementById('c-athlete-filter');
+    sel.innerHTML = '<option value="">Athlete</option>' +
+      [...new Set(athletes.map(a => a.name))].map(n => `<option value="${n}">${n}</option>`).join('');
+
+    document.getElementById('c-athlete-filter').value = '';
+    document.getElementById('c-status-filter').value = '';
+
+    document.getElementById('list-view').classList.add('hidden');
+    document.getElementById('compliance-view').classList.add('active');
+    renderCompliance();
+  }
+
+  function closeCompliance() {
+    document.getElementById('compliance-view').classList.remove('active');
+    document.getElementById('list-view').classList.remove('hidden');
+  }
+
+  function chipClass(status) {
+    const map = { 'Submitted': 'submitted', 'Complete': 'complete', 'Draft': 'draft', 'Not started': 'not-started' };
+    return map[status] || 'not-started';
+  }
+
+  function renderCompliance() {
+    if (!complianceReview) return;
+    const athleteF = document.getElementById('c-athlete-filter').value;
+    const statusF = document.getElementById('c-status-filter').value;
+
+    let athletes = genAthletes(complianceReview.id, complianceReview.totalScholars || 14);
+    if (athleteF) athletes = athletes.filter(a => a.name === athleteF);
+    if (statusF === 'complete') athletes = athletes.filter(a => a.submitted === 3);
+    if (statusF === 'incomplete') athletes = athletes.filter(a => a.submitted < 3);
+
+    if (complianceSort.key) {
+      athletes = athletes.slice().sort((a, b) => {
+        let av = a[complianceSort.key], bv = b[complianceSort.key];
+        if (['coach','athlete','asm'].includes(complianceSort.key)) {
+          av = statusOrder[av] ?? 99; bv = statusOrder[bv] ?? 99;
+        } else if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+        return av < bv ? -complianceSort.dir : av > bv ? complianceSort.dir : 0;
+      });
+    }
+
+    const total = athletes.length;
+    const totalPages = Math.max(1, Math.ceil(total / complianceRowsPerPage));
+    if (compliancePage > totalPages) compliancePage = totalPages;
+    const page = athletes.slice((compliancePage - 1) * complianceRowsPerPage, compliancePage * complianceRowsPerPage);
+
+    document.getElementById('compliance-body').innerHTML = page.map(a => {
+      const circleClass = a.submitted === 3 ? 'green' : 'red';
+      const downloadBtn = a.submitted === 3 ? `<button class="btn-download-pdf">Download PDF</button>` : '';
+      return `<tr>
+        <td><a href="#" onclick="openAthleteView(${JSON.stringify(a).replace(/"/g,'&quot;')}, '${complianceReview.name.replace(/'/g,"\\'")}'); return false;" style="color:var(--text-secondary);font-weight:600;text-decoration:none;cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${a.name}</a></td>
+        <td><span class="status-chip ${chipClass(a.coach)}">${a.coach}</span></td>
+        <td><span class="status-chip ${chipClass(a.athlete)}">${a.athlete}</span></td>
+        <td><span class="status-chip ${chipClass(a.asm)}">${a.asm}</span></td>
+        <td><span class="overall-circle ${circleClass}">${a.submitted}/${a.total}</span></td>
+        <td>${downloadBtn}</td>
+      </tr>`;
+    }).join('');
+
+    // Pagination
+    let pg = `<span class="rows-label">Rows</span>
+      <select onchange="complianceRowsPerPage = +this.value; compliancePage=1; renderCompliance();">
+        <option value="10" ${complianceRowsPerPage===10?'selected':''}>10</option>
+        <option value="25" ${complianceRowsPerPage===25?'selected':''}>25</option>
+        <option value="50" ${complianceRowsPerPage===50?'selected':''}>50</option>
+      </select>
+      <button class="pg-btn" onclick="compliancePage--; renderCompliance();" ${compliancePage===1?'disabled':''}>
+        <span class="material-icons">chevron_left</span>
+      </button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      pg += `<button class="pg-btn ${i===compliancePage?'active':''}" onclick="compliancePage=${i}; renderCompliance();">${i}</button>`;
+    }
+    pg += `<button class="pg-btn" onclick="compliancePage++; renderCompliance();" ${compliancePage===totalPages?'disabled':''}>
+        <span class="material-icons">chevron_right</span>
+      </button>`;
+    document.getElementById('compliance-pagination').innerHTML = pg;
+  }
+
+  renderTable(reviews);
+</script>
+</body>
+</html>
