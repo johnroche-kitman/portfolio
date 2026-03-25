@@ -1771,6 +1771,7 @@
 
   function submitAthleteForm() {
     saveAthleteDraft();
+    closeAthleteView();
     const t = document.getElementById('toast');
     t.innerHTML = '<span class="material-icons">check_circle</span> Form submitted successfully';
     t.classList.add('show');
