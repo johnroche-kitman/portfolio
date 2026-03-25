@@ -616,23 +616,21 @@
     .compliance-page-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 14px 24px;
+      gap: 12px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--divider);
     }
     .back-btn {
-      width: 40px; height: 40px;
       display: flex; align-items: center; justify-content: center;
-      border-radius: 50%;
       cursor: pointer;
-      color: var(--text-primary);
+      color: var(--text-secondary);
       background: none;
       border: none;
-      transition: background 0.15s;
+      padding: 0;
+      line-height: 1;
     }
-    .back-btn:hover { background: rgba(59,73,96,0.08); }
-    .back-btn .material-icons { font-size: 22px; }
-    .compliance-title { font-size: 20px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.15px; }
+    .back-btn .material-icons { font-size: 20px; }
+    .compliance-title { font-size: 24px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.15px; }
 
     .compliance-filter-bar {
       display: flex;
@@ -647,14 +645,14 @@
     .compliance-table-section table { width: 100%; border-collapse: collapse; }
     .compliance-table-section thead th {
       padding: 10px 16px;
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(59,73,96,0.54);
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(59,73,96,0.7);
       text-align: left;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.15px;
       border-bottom: 1px solid var(--divider);
       white-space: nowrap;
-      background: #fff;
+      background: rgba(59,73,96,0.04);
     }
     .compliance-table-section tbody tr {
       border-bottom: 1px solid var(--divider);
@@ -696,19 +694,20 @@
     .overall-circle.red   { background: #c62828; }
 
     .btn-download-pdf {
-      padding: 5px 12px;
+      padding: 6px 16px;
       font-size: 13px;
       font-family: 'Open Sans', sans-serif;
-      font-weight: 600;
-      border: 1px solid rgba(59,73,96,0.3);
+      font-weight: 500;
+      border: 1px solid rgba(59,73,96,0.23);
       border-radius: 4px;
-      background: #fff;
+      background: transparent;
       color: var(--text-secondary);
       cursor: pointer;
-      letter-spacing: 0.3px;
-      transition: background 0.15s;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .btn-download-pdf:hover { background: rgba(59,73,96,0.06); }
+    .btn-download-pdf:hover { background: rgba(59,73,96,0.04); border-color: var(--text-secondary); }
 
     .compliance-pagination {
       display: flex;
@@ -848,7 +847,7 @@
     <div class="compliance-view" id="compliance-view">
       <div class="compliance-page-header">
         <button class="back-btn" onclick="closeCompliance()">
-          <span class="material-icons">arrow_back</span>
+          <span class="material-icons">chevron_left</span>
         </button>
         <span class="compliance-title" id="compliance-title"></span>
       </div>
