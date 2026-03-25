@@ -606,6 +606,143 @@
       color: rgba(59,73,96,0.4);
       font-size: 14px;
     }
+
+    /* ── Compliance View ── */
+    .compliance-view { display: none; flex-direction: column; height: 100%; }
+    .compliance-view.active { display: flex; }
+    .list-view { display: flex; flex-direction: column; height: 100%; }
+    .list-view.hidden { display: none; }
+
+    .compliance-page-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .back-btn {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--text-primary);
+      background: none;
+      border: none;
+      transition: background 0.15s;
+    }
+    .back-btn:hover { background: rgba(59,73,96,0.08); }
+    .back-btn .material-icons { font-size: 22px; }
+    .compliance-title { font-size: 20px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.15px; }
+
+    .compliance-filter-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--divider);
+    }
+    .compliance-filter-bar .filter-field { min-width: 160px; }
+
+    .compliance-table-section { flex: 1; overflow-y: auto; }
+    .compliance-table-section table { width: 100%; border-collapse: collapse; }
+    .compliance-table-section thead th {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(59,73,96,0.54);
+      text-align: left;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--divider);
+      white-space: nowrap;
+      background: #fff;
+    }
+    .compliance-table-section tbody tr {
+      border-bottom: 1px solid var(--divider);
+      transition: background 0.12s;
+    }
+    .compliance-table-section tbody tr:hover { background: rgba(59,73,96,0.04); }
+    .compliance-table-section tbody td {
+      padding: 14px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    .compliance-table-section tbody td:first-child { font-weight: 600; }
+
+    .status-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.15px;
+    }
+    .status-chip.submitted { border: 1px solid #0a875a; color: #0a875a; background: transparent; }
+    .status-chip.complete  { border: 1px solid rgba(59,73,96,0.4); color: var(--text-secondary); background: transparent; }
+    .status-chip.draft     { border: 1px solid rgba(59,73,96,0.4); color: var(--text-secondary); background: transparent; }
+    .status-chip.not-started { color: rgba(59,73,96,0.5); font-size: 13px; border: none; padding: 0; }
+
+    .overall-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .overall-circle.green { background: #0a875a; }
+    .overall-circle.red   { background: #c62828; }
+
+    .btn-download-pdf {
+      padding: 5px 12px;
+      font-size: 13px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      border: 1px solid rgba(59,73,96,0.3);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+    .btn-download-pdf:hover { background: rgba(59,73,96,0.06); }
+
+    .compliance-pagination {
+      display: flex;
+      align-items: center;
+      padding: 8px 24px;
+      border-top: 1px solid var(--divider);
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .compliance-pagination .rows-label { margin-right: 4px; }
+    .compliance-pagination select {
+      border: none;
+      font-size: 13px;
+      color: var(--text-primary);
+      background: none;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .pg-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: background 0.12s;
+    }
+    .pg-btn:hover { background: rgba(59,73,96,0.08); }
+    .pg-btn.active { background: var(--primary-main); color: #fff; }
+    .pg-btn:disabled { opacity: 0.3; cursor: default; }
+    .pg-btn .material-icons { font-size: 18px; }
   </style>
 </head>
 <body>
@@ -648,60 +785,120 @@
   </div>
 
   <div class="content">
-    <div class="page-header">
-      <h1 class="page-title">Scholarship reviews</h1>
-      <button class="btn-new-review" onclick="openPanel()">New review</button>
+
+    <!-- LIST VIEW -->
+    <div class="list-view" id="list-view">
+      <div class="page-header">
+        <h1 class="page-title">Scholarship reviews</h1>
+        <button class="btn-new-review" onclick="openPanel()">New review</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-field no-label">
+          <input type="text" placeholder="Search" id="search-input" oninput="filterTable()" />
+        </div>
+
+        <div class="filter-field no-label">
+          <select id="status-filter" onchange="filterTable()">
+            <option value="">Status</option>
+            <option value="Active">Active</option>
+            <option value="Complete">Complete</option>
+            <option value="Draft">Draft</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+
+        <div class="filter-field no-label">
+          <select id="cohort-filter" onchange="filterTable()">
+            <option value="">Cohort</option>
+            <option value="First year scholars">First year scholars</option>
+            <option value="Second year scholars">Second year scholars</option>
+            <option value="All scholars">All scholars</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+
+        <div class="filter-field filter-date no-label">
+          <select id="due-date-display" style="color:var(--text-secondary)">
+            <option value="">Due date</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">date_range</span></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-section">
+        <table id="reviews-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Due date</th>
+              <th>Status</th>
+              <th>Total scholars</th>
+              <th>Cohort</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Filter bar -->
-    <div class="filter-bar">
-      <div class="filter-field no-label">
-        <input type="text" placeholder="Search" id="search-input" oninput="filterTable()" />
+    <!-- COMPLIANCE VIEW -->
+    <div class="compliance-view" id="compliance-view">
+      <div class="compliance-page-header">
+        <button class="back-btn" onclick="closeCompliance()">
+          <span class="material-icons">arrow_back</span>
+        </button>
+        <span class="compliance-title" id="compliance-title"></span>
       </div>
 
-      <div class="filter-field no-label">
-        <select id="status-filter" onchange="filterTable()">
-          <option value="">Status</option>
-          <option value="Active">Active</option>
-          <option value="Complete">Complete</option>
-          <option value="Draft">Draft</option>
-        </select>
-        <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+      <div class="compliance-filter-bar">
+        <div class="filter-field no-label">
+          <select id="c-athlete-filter" onchange="renderCompliance()">
+            <option value="">Athlete</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+        <div class="filter-field no-label">
+          <select id="c-club-filter" onchange="renderCompliance()">
+            <option value="">Club</option>
+            <option value="Arsenal">Arsenal</option>
+            <option value="Chelsea">Chelsea</option>
+            <option value="Liverpool">Liverpool</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
+        <div class="filter-field no-label">
+          <select id="c-status-filter" onchange="renderCompliance()">
+            <option value="">Overall Status</option>
+            <option value="complete">Complete</option>
+            <option value="incomplete">Incomplete</option>
+          </select>
+          <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+        </div>
       </div>
 
-      <div class="filter-field no-label">
-        <select id="cohort-filter" onchange="filterTable()">
-          <option value="">Cohort</option>
-          <option value="First year scholars">First year scholars</option>
-          <option value="Second year scholars">Second year scholars</option>
-          <option value="All scholars">All scholars</option>
-        </select>
-        <div class="f-icon-right"><span class="material-icons">arrow_drop_down</span></div>
+      <div class="compliance-table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>Athlete</th>
+              <th>Club</th>
+              <th>Coach status</th>
+              <th>Athlete status</th>
+              <th>ASM status</th>
+              <th>Overall status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="compliance-body"></tbody>
+        </table>
       </div>
 
-      <div class="filter-field filter-date no-label">
-        <select id="due-date-display" style="color:var(--text-secondary)">
-          <option value="">Due date</option>
-        </select>
-        <div class="f-icon-right"><span class="material-icons">date_range</span></div>
-      </div>
+      <div class="compliance-pagination" id="compliance-pagination"></div>
     </div>
 
-    <!-- Table -->
-    <div class="table-section">
-      <table id="reviews-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Due date</th>
-            <th>Status</th>
-            <th>Total scholars</th>
-            <th>Cohort</th>
-          </tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
   </div>
 </div>
 
@@ -803,7 +1000,7 @@
     }
     tb.innerHTML = data.map(r => `
       <tr>
-        <td>${r.name}</td>
+        <td><a href="#" class="review-link" onclick="openCompliance(${r.id}); return false;" style="color:var(--text-secondary);font-weight:600;text-decoration:none;cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${r.name}</a></td>
         <td>${r.dueDateDisplay}</td>
         <td><span class="badge badge-${r.status.toLowerCase()}"><span class="badge-label">${r.status}</span></span></td>
         <td>${r.totalScholars}</td>
@@ -907,6 +1104,114 @@
     const t = document.getElementById('toast');
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Compliance view ──
+  const clubs = ['Arsenal','Chelsea','Liverpool','Man City','Tottenham'];
+  const firstNames = ['James','Oliver','George','Harry','Charlie','Jacob','Alfie','Freddie','Oscar','Noah','Ethan','Liam','Mason','Logan','Lucas'];
+  const lastNames = ['Smith','Jones','Williams','Brown','Taylor','Davies','Evans','Wilson','Thomas','Roberts','Johnson','Walker','Wright','Thompson','Robinson'];
+
+  function genAthletes(reviewId, count) {
+    const rng = (seed) => { let x = Math.sin(seed) * 10000; return x - Math.floor(x); };
+    return Array.from({ length: count }, (_, i) => {
+      const seed = reviewId * 1000 + i;
+      const fn = firstNames[Math.floor(rng(seed) * firstNames.length)];
+      const ln = lastNames[Math.floor(rng(seed + 0.5) * lastNames.length)];
+      const club = clubs[Math.floor(rng(seed + 1) * clubs.length)];
+      const coachStatuses = ['Submitted','Complete','Draft','Not started'];
+      const athleteStatuses = ['Submitted','Complete','Not started'];
+      const asmStatuses = ['Submitted','Not started'];
+      const coach = i === 0 ? 'Submitted' : coachStatuses[Math.floor(rng(seed + 2) * coachStatuses.length)];
+      const athlete = i === 0 ? 'Submitted' : athleteStatuses[Math.floor(rng(seed + 3) * athleteStatuses.length)];
+      const asm = i === 0 ? 'Submitted' : asmStatuses[Math.floor(rng(seed + 4) * asmStatuses.length)];
+      const submitted = [coach, athlete, asm].filter(s => s === 'Submitted').length;
+      return { name: `${fn} ${ln}`, club, coach, athlete, asm, submitted, total: 3 };
+    });
+  }
+
+  let complianceReview = null;
+  let compliancePage = 1;
+  const complianceRowsPerPage = 10;
+
+  function openCompliance(reviewId) {
+    complianceReview = reviews.find(r => r.id === reviewId);
+    if (!complianceReview) return;
+    compliancePage = 1;
+    document.getElementById('compliance-title').textContent = complianceReview.name;
+
+    // populate athlete filter
+    const athletes = genAthletes(reviewId, complianceReview.totalScholars || 14);
+    const sel = document.getElementById('c-athlete-filter');
+    sel.innerHTML = '<option value="">Athlete</option>' +
+      [...new Set(athletes.map(a => a.name))].map(n => `<option value="${n}">${n}</option>`).join('');
+
+    document.getElementById('c-athlete-filter').value = '';
+    document.getElementById('c-club-filter').value = '';
+    document.getElementById('c-status-filter').value = '';
+
+    document.getElementById('list-view').classList.add('hidden');
+    document.getElementById('compliance-view').classList.add('active');
+    renderCompliance();
+  }
+
+  function closeCompliance() {
+    document.getElementById('compliance-view').classList.remove('active');
+    document.getElementById('list-view').classList.remove('hidden');
+  }
+
+  function chipClass(status) {
+    const map = { 'Submitted': 'submitted', 'Complete': 'complete', 'Draft': 'draft', 'Not started': 'not-started' };
+    return map[status] || 'not-started';
+  }
+
+  function renderCompliance() {
+    if (!complianceReview) return;
+    const athleteF = document.getElementById('c-athlete-filter').value;
+    const clubF = document.getElementById('c-club-filter').value;
+    const statusF = document.getElementById('c-status-filter').value;
+
+    let athletes = genAthletes(complianceReview.id, complianceReview.totalScholars || 14);
+    if (athleteF) athletes = athletes.filter(a => a.name === athleteF);
+    if (clubF) athletes = athletes.filter(a => a.club === clubF);
+    if (statusF === 'complete') athletes = athletes.filter(a => a.submitted === 3);
+    if (statusF === 'incomplete') athletes = athletes.filter(a => a.submitted < 3);
+
+    const total = athletes.length;
+    const totalPages = Math.max(1, Math.ceil(total / complianceRowsPerPage));
+    if (compliancePage > totalPages) compliancePage = totalPages;
+    const page = athletes.slice((compliancePage - 1) * complianceRowsPerPage, compliancePage * complianceRowsPerPage);
+
+    document.getElementById('compliance-body').innerHTML = page.map(a => {
+      const circleClass = a.submitted === 3 ? 'green' : 'red';
+      const downloadBtn = a.submitted === 3 ? `<button class="btn-download-pdf">Download PDF</button>` : '';
+      return `<tr>
+        <td>${a.name}</td>
+        <td>${a.club}</td>
+        <td><span class="status-chip ${chipClass(a.coach)}">${a.coach}</span></td>
+        <td><span class="status-chip ${chipClass(a.athlete)}">${a.athlete}</span></td>
+        <td><span class="status-chip ${chipClass(a.asm)}">${a.asm}</span></td>
+        <td><span class="overall-circle ${circleClass}">${a.submitted}/${a.total}</span></td>
+        <td>${downloadBtn}</td>
+      </tr>`;
+    }).join('');
+
+    // Pagination
+    let pg = `<span class="rows-label">Rows</span>
+      <select onchange="complianceRowsPerPage = +this.value; compliancePage=1; renderCompliance();">
+        <option value="10" ${complianceRowsPerPage===10?'selected':''}>10</option>
+        <option value="25" ${complianceRowsPerPage===25?'selected':''}>25</option>
+        <option value="50" ${complianceRowsPerPage===50?'selected':''}>50</option>
+      </select>
+      <button class="pg-btn" onclick="compliancePage--; renderCompliance();" ${compliancePage===1?'disabled':''}>
+        <span class="material-icons">chevron_left</span>
+      </button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      pg += `<button class="pg-btn ${i===compliancePage?'active':''}" onclick="compliancePage=${i}; renderCompliance();">${i}</button>`;
+    }
+    pg += `<button class="pg-btn" onclick="compliancePage++; renderCompliance();" ${compliancePage===totalPages?'disabled':''}>
+        <span class="material-icons">chevron_right</span>
+      </button>`;
+    document.getElementById('compliance-pagination').innerHTML = pg;
   }
 
   renderTable(reviews);
