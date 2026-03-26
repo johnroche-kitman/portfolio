@@ -197,6 +197,7 @@
   </div>
 
   <script>
+    // Determine view from URL param: ?view=club or ?view=scholar
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view') || 'club';
 
