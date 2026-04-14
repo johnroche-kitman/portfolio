@@ -1303,20 +1303,19 @@
 <!-- Side panel -->
 <div class="side-panel" id="side-panel">
   <div class="panel-header">
-    <span class="panel-title">Assign <span class="hl">[recipients]</span></span>
+    <span class="panel-title">Assign recipients</span>
     <button class="panel-close" onclick="closePanel()">
       <span class="material-icons">close</span>
     </button>
   </div>
 
   <div class="panel-body">
-    <div class="mf orange filled" id="mf-cohort">
+    <div class="mf filled" id="mf-cohort">
       <label>Cohort</label>
       <select id="panel-cohort" onchange="handleInput(this)">
         <option value="1st year scholars">1st year scholars</option>
         <option value="2nd year scholars">2nd year scholars</option>
         <option value="All scholars">All scholars</option>
-        <option value="3rd year scholars">3rd year scholars</option>
       </select>
       <div class="mf-icon"><span class="material-icons">arrow_drop_down</span></div>
     </div>
@@ -1353,7 +1352,7 @@
     <div class="divider"></div>
 
     <div class="section-label" style="padding:0 24px">Notification</div>
-    <div class="notify-text">Notify <span class="hl">[recipients]</span> by</div>
+    <div class="notify-text">Notify recipients by</div>
     <div class="chips">
       <button class="chip on" id="chip-email" onclick="toggleChip('email')">
         <span class="chip-avatar"><span class="material-icons">check</span></span><span class="chip-label">Email</span>
