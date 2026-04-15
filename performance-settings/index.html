@@ -82,6 +82,11 @@
         MuiListItemText:  { styleOverrides: { primary: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
         MuiTypography:    { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
         MuiFormControlLabel: { styleOverrides: { label: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiFilledInput:   { styleOverrides: { root: {
+          backgroundColor: '#F1F2F3',
+          '&:hover': { backgroundColor: '#e8e9eb' },
+          '&.Mui-focused': { backgroundColor: '#F1F2F3' },
+        }}},
       },
     });
 
@@ -151,12 +156,11 @@
       return (
         <Button
           size="small"
-          variant="outlined"
           startIcon={<MI name="add" size={16} />}
           onClick={onClick}
           sx={{
-            mt: 1.5, color: PRIMARY, borderColor: DIVIDER, fontWeight: 600,
-            '&:hover': { borderColor: PRIMARY, bgcolor: PRIMARY_SEL },
+            mt: 1.5, color: PRIMARY, fontWeight: 600, px: 0,
+            '&:hover': { bgcolor: 'transparent', opacity: 0.75 },
           }}
         >
           Add squad specific setting
@@ -173,7 +177,7 @@
           onChange={(_, v) => onChange && onChange(v)}
           disableClearable
           sx={sx}
-          renderInput={(p) => <TextField {...p} label={label} />}
+          renderInput={(p) => <TextField {...p} label={label} variant="filled" />}
         />
       );
     }
@@ -189,7 +193,7 @@
 
       return (
         <Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
             {/* Left label */}
             <Box>
               <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
@@ -205,7 +209,7 @@
               <MetricSelect value={val} onChange={setVal} sx={{ maxWidth: 490, width: '100%' }} />
 
               {squads.length > 0 && (
-                <Box sx={{ mt: 2, pl: 2, borderLeft: `4px solid ${PRIMARY}` }}>
+                <Box sx={{ mt: 2, pl: 2, borderLeft: '4px solid #B6C9D4' }}>
                   <Typography sx={{ fontSize: 13, fontWeight: 600, color: PRIMARY, mb: 1.5 }}>
                     Squad specific
                   </Typography>
@@ -213,18 +217,18 @@
                     {squads.map((s, i) => (
                       <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 490 }}>
                         <Box sx={{ flex: 1 }}>
-                          <Autocomplete
+                          <TextField
                             size="small"
-                            options={SQUAD_OPTIONS}
+                            variant="filled"
+                            label="Squad(s)"
+                            placeholder="e.g. Squad1, U21"
                             value={s.squad}
-                            onChange={(_, v) => updateSquad(i, 'squad', v)}
-                            disableClearable
+                            onChange={(e) => updateSquad(i, 'squad', e.target.value)}
                             sx={{ mb: 1, width: '100%' }}
-                            renderInput={(p) => <TextField {...p} label="Squad(s)" />}
                           />
                           <MetricSelect value={s.value} onChange={(v) => updateSquad(i, 'value', v)} sx={{ width: '100%' }} />
                         </Box>
-                        <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: 0.5 }}>
+                        <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: '14px' }}>
                           <MI name="delete_outline" size={18} color={GREY100} />
                         </IconButton>
                       </Stack>
@@ -236,8 +240,8 @@
               <AddSquadBtn onClick={addSquad} />
             </Box>
 
-            {/* Right restore */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+            {/* Right restore — top-aligned with metric dropdown */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <RestoreDefault />
             </Box>
           </Box>
@@ -261,7 +265,7 @@
       const [num, setNum]   = useState(defaultNum);
       return (
         <Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
             <Box>
               <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>{title}</Typography>
               <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>{description}</Typography>
@@ -275,13 +279,13 @@
                   onChange={(_, v) => setType(v)}
                   disableClearable
                   sx={{ flex: 1 }}
-                  renderInput={(p) => <TextField {...p} label="Type" />}
+                  renderInput={(p) => <TextField {...p} label="Type" variant="filled" />}
                 />
-                <TextField size="small" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160 }} />
+                <TextField size="small" variant="filled" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160 }} />
               </Stack>
               <AddSquadBtn />
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <RestoreDefault />
             </Box>
           </Box>
@@ -415,10 +419,6 @@
                     pl: 2,
                     '&.Mui-selected': { bgcolor: PRIMARY_SEL, color: PRIMARY },
                     '&.Mui-selected:hover': { bgcolor: `${PRIMARY_SEL}` },
-                    '&.Mui-selected::before': {
-                      content: '""', position: 'absolute', left: 0, top: 4, bottom: 4,
-                      width: 4, bgcolor: PRIMARY, borderRadius: '0 2px 2px 0',
-                    },
                   }}
                 >
                   <ListItemText
@@ -449,11 +449,11 @@
             </Box>
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Button
-                variant="outlined"
+                variant="text"
                 size="small"
                 endIcon={<MI name="open_in_new" size={14} />}
-                sx={{ color: PRIMARY, borderColor: DIVIDER, fontWeight: 600,
-                  '&:hover': { borderColor: PRIMARY } }}
+                sx={{ color: PRIMARY, fontWeight: 600, px: 0,
+                  '&:hover': { bgcolor: 'transparent', opacity: 0.75 } }}
               >
                 View dashboard
               </Button>
@@ -496,7 +496,7 @@
           {/* Numeric options */}
           <SectionTitle>Numeric options</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Game comparison - minimum participation minutes
@@ -506,10 +506,10 @@
                 </Typography>
               </Box>
               <Box>
-                <TextField size="small" label="Minutes" defaultValue="60" sx={{ width: 220 }} />
+                <TextField size="small" variant="filled" label="Minutes" defaultValue="60" sx={{ width: 220 }} />
                 <AddSquadBtn />
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <RestoreDefault />
               </Box>
             </Box>
@@ -519,7 +519,7 @@
           {/* Competition IDs */}
           <SectionTitle>Competition IDs</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Game comparison - competition IDs
@@ -529,17 +529,17 @@
                 </Typography>
               </Box>
               <Box>
-                <Autocomplete
+                <TextField
                   size="small"
-                  options={['Friendly', 'League', 'Cup', 'Tournament']}
+                  variant="filled"
+                  label="Competition IDs"
+                  placeholder="e.g. Friendly, League, Cup"
                   defaultValue="Friendly, League, Cup"
-                  disableClearable
                   sx={{ maxWidth: 490, width: '100%' }}
-                  renderInput={(p) => <TextField {...p} label="Type" />}
                 />
                 <AddSquadBtn />
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <RestoreDefault />
               </Box>
             </Box>
@@ -549,7 +549,7 @@
           {/* Boolean options */}
           <SectionTitle>Boolean options</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Include or exclude child games from squad game calendar
@@ -572,7 +572,7 @@
                   />
                 </RadioGroup>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <RestoreDefault />
               </Box>
             </Box>
