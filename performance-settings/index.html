@@ -17,6 +17,23 @@
       -webkit-font-smoothing: antialiased;
     }
     * { box-sizing: border-box; }
+
+    /* Force filled-variant InputLabel inside the grey box.
+       MUI CDN doesn't add MuiInputLabel-filled, so target via :has() */
+    .MuiFormControl-root:has(.MuiFilledInput-root) {
+      position: relative;
+    }
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root {
+      position: absolute !important;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      color: #3b4960 !important;
+      transform: translate(12px, 9px) scale(1) !important; /* size=small default */
+    }
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root.MuiInputLabel-shrink {
+      transform: translate(12px, 4px) scale(0.75) !important; /* size=small shrunk */
+    }
   </style>
 </head>
 <body>
@@ -82,11 +99,23 @@
         MuiListItemText:  { styleOverrides: { primary: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
         MuiTypography:    { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
         MuiFormControlLabel: { styleOverrides: { label: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
-        MuiFilledInput:   { styleOverrides: { root: {
+        MuiFilledInput: { styleOverrides: { root: {
           backgroundColor: '#F1F2F3',
           '&:hover': { backgroundColor: '#e8e9eb' },
           '&.Mui-focused': { backgroundColor: '#F1F2F3' },
         }}},
+        MuiInputLabel: { styleOverrides: { root: {
+          '&.MuiInputLabel-filled': {
+            position: 'absolute', left: 0, top: 0,
+            transform: 'translate(12px, 16px) scale(1)',
+            '&.MuiInputLabel-shrink': { transform: 'translate(12px, 7px) scale(0.75)' },
+            '&.MuiInputLabel-sizeSmall': {
+              transform: 'translate(12px, 9px) scale(1)',
+              '&.MuiInputLabel-shrink': { transform: 'translate(12px, 4px) scale(0.75)' },
+            },
+          },
+        }}},
+        MuiFormControl: { styleOverrides: { root: { position: 'relative' } } },
       },
     });
 
@@ -109,7 +138,7 @@
     const METRICS = [
       { key: 'total_distance',      label: 'Total distance',       value: 'Catapult_distance',
         description: 'The third party or combo variable ID to use for "Total Distance" in the performance management dashboards',
-        squads: [{ squad: 'Squad1', value: 'U21_first_team' }, { squad: 'Squad2', value: 'Statsports_distance' }, { squad: 'U5', value: 'Polarmom.distance' }] },
+        squads: [{ squad: ['Squad1'], value: 'U21_first_team' }, { squad: ['Squad2'], value: 'Statsports_distance' }, { squad: ['U5'], value: 'Polarmom.distance' }] },
       { key: 'sprint_distance',     label: 'Sprint distance',      value: 'Catapult_distance_zone7',
         description: 'The third party or combo variable ID to use for "Sprint Distance" in the performance management dashboards' },
       { key: 'rsi',                 label: 'RSI',                  value: 'Catapult_rsi',
@@ -142,6 +171,7 @@
       'Statsports_distance', 'Polarmom.distance', 'U21_first_team'
     ];
     const SQUAD_OPTIONS = ['Squad1', 'Squad2', 'Squad3', 'U15', 'U17', 'U19', 'U21', 'First Team'];
+    const COMPETITION_OPTIONS = ['Friendly', 'League', 'Cup', 'Tournament', 'International', 'Champions League', 'Europa League'];
 
     // ── Shared sub-components ───────────────────────────────────────
     function RestoreDefault() {
@@ -177,7 +207,7 @@
           onChange={(_, v) => onChange && onChange(v)}
           disableClearable
           sx={sx}
-          renderInput={(p) => <TextField {...p} label={label} variant="filled" />}
+          renderInput={(p) => <TextField {...p} label={label} variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
         />
       );
     }
@@ -187,13 +217,13 @@
       const [val, setVal] = useState(metric.value);
       const [squads, setSquads] = useState(metric.squads || []);
 
-      const addSquad = () => setSquads([...squads, { squad: '', value: '' }]);
+      const addSquad = () => setSquads([...squads, { squad: [], value: '' }]);
       const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
       const updateSquad = (i, k, v) => { const n = [...squads]; n[i] = { ...n[i], [k]: v }; setSquads(n); };
 
       return (
         <Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
             {/* Left label */}
             <Box>
               <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
@@ -204,9 +234,13 @@
               </Typography>
             </Box>
 
-            {/* Middle controls */}
+            {/* Right controls */}
             <Box>
-              <MetricSelect value={val} onChange={setVal} sx={{ maxWidth: 490, width: '100%' }} />
+              {/* Metric autocomplete + Restore default on same row */}
+              <Stack direction="row" spacing={2} alignItems="center">
+                <MetricSelect value={val} onChange={setVal} sx={{ width: 490, flexShrink: 0 }} />
+                <RestoreDefault />
+              </Stack>
 
               {squads.length > 0 && (
                 <Box sx={{ mt: 2, pl: 2, borderLeft: '4px solid #B6C9D4' }}>
@@ -217,14 +251,19 @@
                     {squads.map((s, i) => (
                       <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 490 }}>
                         <Box sx={{ flex: 1 }}>
-                          <TextField
+                          <Autocomplete
                             size="small"
-                            variant="filled"
-                            label="Squad(s)"
-                            placeholder="e.g. Squad1, U21"
+                            multiple
+                            options={SQUAD_OPTIONS}
                             value={s.squad}
-                            onChange={(e) => updateSquad(i, 'squad', e.target.value)}
+                            onChange={(_, v) => updateSquad(i, 'squad', v)}
+                            renderTags={(selected) => (
+                              <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                                {selected.join(', ')}
+                              </span>
+                            )}
                             sx={{ mb: 1, width: '100%' }}
+                            renderInput={(p) => <TextField {...p} label="Squad(s)" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                           />
                           <MetricSelect value={s.value} onChange={(v) => updateSquad(i, 'value', v)} sx={{ width: '100%' }} />
                         </Box>
@@ -238,11 +277,6 @@
               )}
 
               <AddSquadBtn onClick={addSquad} />
-            </Box>
-
-            {/* Right restore — top-aligned with metric dropdown */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <RestoreDefault />
             </Box>
           </Box>
           <Divider />
@@ -265,28 +299,26 @@
       const [num, setNum]   = useState(defaultNum);
       return (
         <Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
             <Box>
               <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>{title}</Typography>
               <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>{description}</Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} sx={{ maxWidth: 490 }}>
+              <Stack direction="row" spacing={2} alignItems="center">
                 <Autocomplete
                   size="small"
                   options={typeOpts}
                   value={type}
                   onChange={(_, v) => setType(v)}
                   disableClearable
-                  sx={{ flex: 1 }}
-                  renderInput={(p) => <TextField {...p} label="Type" variant="filled" />}
+                  sx={{ width: 220, flexShrink: 0 }}
+                  renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                 />
-                <TextField size="small" variant="filled" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160 }} />
+                <TextField size="small" variant="filled" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                <RestoreDefault />
               </Stack>
               <AddSquadBtn />
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <RestoreDefault />
             </Box>
           </Box>
           <Divider />
@@ -496,7 +528,7 @@
           {/* Numeric options */}
           <SectionTitle>Numeric options</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Game comparison - minimum participation minutes
@@ -506,11 +538,11 @@
                 </Typography>
               </Box>
               <Box>
-                <TextField size="small" variant="filled" label="Minutes" defaultValue="60" sx={{ width: 220 }} />
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <TextField size="small" variant="filled" label="Minutes" defaultValue="60" sx={{ width: 220, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                  <RestoreDefault />
+                </Stack>
                 <AddSquadBtn />
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <RestoreDefault />
               </Box>
             </Box>
             <Divider />
@@ -519,7 +551,7 @@
           {/* Competition IDs */}
           <SectionTitle>Competition IDs</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Game comparison - competition IDs
@@ -529,18 +561,23 @@
                 </Typography>
               </Box>
               <Box>
-                <TextField
-                  size="small"
-                  variant="filled"
-                  label="Competition IDs"
-                  placeholder="e.g. Friendly, League, Cup"
-                  defaultValue="Friendly, League, Cup"
-                  sx={{ maxWidth: 490, width: '100%' }}
-                />
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Autocomplete
+                    size="small"
+                    multiple
+                    options={COMPETITION_OPTIONS}
+                    defaultValue={['Friendly', 'League', 'Cup']}
+                    renderTags={(selected) => (
+                      <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                        {selected.join(', ')}
+                      </span>
+                    )}
+                    sx={{ width: 490, flexShrink: 0 }}
+                    renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                  />
+                  <RestoreDefault />
+                </Stack>
                 <AddSquadBtn />
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <RestoreDefault />
               </Box>
             </Box>
             <Divider />
@@ -549,7 +586,7 @@
           {/* Boolean options */}
           <SectionTitle>Boolean options</SectionTitle>
           <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
               <Box>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                   Include or exclude child games from squad game calendar
@@ -559,21 +596,21 @@
                 </Typography>
               </Box>
               <Box>
-                <RadioGroup row defaultValue="include">
-                  <FormControlLabel
-                    value="include"
-                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                    label="Include child games"
-                  />
-                  <FormControlLabel
-                    value="exclude"
-                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                    label="Exclude child games"
-                  />
-                </RadioGroup>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <RestoreDefault />
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <RadioGroup row defaultValue="include">
+                    <FormControlLabel
+                      value="include"
+                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                      label="Include child games"
+                    />
+                    <FormControlLabel
+                      value="exclude"
+                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                      label="Exclude child games"
+                    />
+                  </RadioGroup>
+                  <RestoreDefault />
+                </Stack>
               </Box>
             </Box>
           </Box>
