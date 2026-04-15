@@ -6,16 +6,17 @@
   <title>Performance management dashboard settings</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
   <style>
     html, body, #root { height: 100%; margin: 0; }
     body {
-      font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      font-family: 'Open Sans', sans-serif;
       background: #fff;
-      color: rgba(0,0,0,0.87);
+      color: #3b4960;
       -webkit-font-smoothing: antialiased;
     }
+    * { box-sizing: border-box; }
   </style>
 </head>
 <body>
@@ -31,7 +32,6 @@
       "react-dom": "https://esm.sh/react-dom@18.3.1",
       "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
       "@mui/material": "https://esm.sh/@mui/material@5.16.7?external=react,react-dom,@emotion/react,@emotion/styled",
-      "@mui/material/": "https://esm.sh/@mui/material@5.16.7/?external=react,react-dom,@emotion/react,@emotion/styled",
       "@emotion/react": "https://esm.sh/@emotion/react@11.13.3?external=react",
       "@emotion/styled": "https://esm.sh/@emotion/styled@11.13.0?external=react,@emotion/react"
     }
@@ -46,93 +46,86 @@
       Box, Stack, Typography, Button, IconButton, Divider,
       Tabs, Tab, List, ListItemButton, ListItemText,
       Autocomplete, TextField, Radio, RadioGroup, FormControlLabel,
-      Link, Avatar, Tooltip
+      Avatar, Tooltip, Link
     } from '@mui/material';
-    // Material Icons via Google Fonts "material-icons-outlined" class
-    const MI = ({ name, sx, fontSize, style }) => {
-      let fs = 20;
-      if (typeof fontSize === 'number') fs = fontSize;
-      else if (fontSize === 'small') fs = 18;
-      else if (fontSize === 'large') fs = 24;
-      else if (fontSize === 'inherit') fs = 'inherit';
-      const merged = { fontSize: fs, lineHeight: 1, ...(style || {}), ...(sx || {}) };
-      if (merged.fontSize && typeof merged.fontSize === 'number' && !sx?.fontSize) merged.fontSize = fs;
-      return React.createElement('span', { className: 'material-icons-outlined', style: merged }, name);
-    };
-    const AnalyticsOutlinedIcon = (p) => React.createElement(MI, { name: 'analytics', ...p });
-    const ScienceOutlinedIcon = (p) => React.createElement(MI, { name: 'science', ...p });
-    const DirectionsRunOutlinedIcon = (p) => React.createElement(MI, { name: 'directions_run', ...p });
-    const HealingOutlinedIcon = (p) => React.createElement(MI, { name: 'healing', ...p });
-    const FitnessCenterOutlinedIcon = (p) => React.createElement(MI, { name: 'fitness_center', ...p });
-    const AssignmentOutlinedIcon = (p) => React.createElement(MI, { name: 'assignment', ...p });
-    const CalendarTodayOutlinedIcon = (p) => React.createElement(MI, { name: 'calendar_today', ...p });
-    const DescriptionOutlinedIcon = (p) => React.createElement(MI, { name: 'description', ...p });
-    const ChatBubbleOutlineOutlinedIcon = (p) => React.createElement(MI, { name: 'chat_bubble_outline', ...p });
-    const PlayCircleOutlineOutlinedIcon = (p) => React.createElement(MI, { name: 'play_circle', ...p });
-    const AssignmentIndOutlinedIcon = (p) => React.createElement(MI, { name: 'assignment_ind', ...p });
-    const SettingsOutlinedIcon = (p) => React.createElement(MI, { name: 'settings', ...p });
-    const AddIcon = (p) => React.createElement(MI, { name: 'add', fontSize: 18, ...p });
-    const DeleteOutlineIcon = (p) => React.createElement(MI, { name: 'delete', fontSize: 20, ...p });
-    const OpenInNewIcon = (p) => React.createElement(MI, { name: 'open_in_new', fontSize: 16, ...p });
-    const ExpandMoreIcon = (p) => React.createElement(MI, { name: 'expand_more', fontSize: 20, ...p });
 
-    const ORANGE = '#F37037';
+    // ── Design tokens ──────────────────────────────────────────────
+    const PRIMARY     = '#3b4960';
+    const PRIMARY_SEL = '#3b496014';
+    const BLUE_GREY   = '#546e7a';
+    const GREY100     = '#5F7089';
+    const ACTIVE_NAV  = '#0f28ff';
+    const DIVIDER     = '#3b49601f';
+    const NEUTRAL_200 = '#F1F2F3';
 
+    // ── Material icon helper ────────────────────────────────────────
+    const MI = ({ name, size = 20, color, style }) => (
+      <span className="material-icons-outlined" style={{ fontSize: size, lineHeight: 1, color, ...style }}>{name}</span>
+    );
+
+    // ── MUI Theme ──────────────────────────────────────────────────
     const theme = createTheme({
       palette: {
-        primary: { main: ORANGE },
-        text: { primary: 'rgba(0,0,0,0.87)', secondary: 'rgba(0,0,0,0.6)' },
-        divider: 'rgba(0,0,0,0.12)',
+        primary: { main: PRIMARY },
+        text: { primary: PRIMARY, secondary: GREY100 },
+        divider: DIVIDER,
       },
       typography: {
-        fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
-        h5: { fontSize: 20, fontWeight: 500 },
-        subtitle1: { fontSize: 16, fontWeight: 500 },
-        body2: { fontSize: 14, color: 'rgba(0,0,0,0.6)' },
+        fontFamily: "'Open Sans', sans-serif",
       },
       components: {
-        MuiButton: {
-          styleOverrides: {
-            root: { textTransform: 'none', fontWeight: 500 },
-          },
-        },
-        MuiTab: {
-          styleOverrides: { root: { textTransform: 'none', fontWeight: 500, minHeight: 46 } },
-        },
+        MuiButton:        { styleOverrides: { root: { textTransform: 'none', fontFamily: "'Open Sans', sans-serif", fontWeight: 600 } } },
+        MuiTab:           { styleOverrides: { root: { textTransform: 'none', fontFamily: "'Open Sans', sans-serif", fontWeight: 600, fontSize: 14, minHeight: 46 } } },
+        MuiInputBase:     { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiInputLabel:    { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiAutocomplete:  { styleOverrides: { option: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiListItemText:  { styleOverrides: { primary: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiTypography:    { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
+        MuiFormControlLabel: { styleOverrides: { label: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
       },
     });
 
-    // ---------- Mock data ----------
+    // ── Data ────────────────────────────────────────────────────────
+    const NAV_ITEMS = [
+      { icon: 'bar_chart',            label: 'Analysis' },
+      { icon: 'science',              label: 'Next Gen' },
+      { icon: 'group',                label: 'Athletes' },
+      { icon: 'add_circle_outline',   label: 'Medical' },
+      { icon: 'fitness_center',       label: 'Planning' },
+      { icon: 'assignment',           label: 'Forms' },
+      { icon: 'calendar_today',       label: 'Calendar' },
+      { icon: 'file_copy',            label: 'Documents' },
+      { icon: 'chat_bubble_outline',  label: 'Messaging' },
+      { icon: 'play_circle_outline',  label: 'Media' },
+      { icon: 'assignment_ind',       label: 'Recruitment' },
+      { icon: 'settings',             label: 'Administration', active: true },
+    ];
+
     const METRICS = [
-      { key: 'total_distance', label: 'Total distance', value: 'Catapult_distance',
+      { key: 'total_distance',      label: 'Total distance',       value: 'Catapult_distance',
         description: 'The third party or combo variable ID to use for "Total Distance" in the performance management dashboards',
-        squads: [
-          { squad: 'Squad1', value: 'U21_first_team' },
-          { squad: 'Squad2', value: 'Statsports_distance' },
-          { squad: 'U5', value: 'Polarmom.distance' },
-        ],
-      },
-      { key: 'sprint_distance', label: 'Sprint distance', value: 'Catapult_distance_zone7',
+        squads: [{ squad: 'Squad1', value: 'U21_first_team' }, { squad: 'Squad2', value: 'Statsports_distance' }, { squad: 'U5', value: 'Polarmom.distance' }] },
+      { key: 'sprint_distance',     label: 'Sprint distance',      value: 'Catapult_distance_zone7',
         description: 'The third party or combo variable ID to use for "Sprint Distance" in the performance management dashboards' },
-      { key: 'rsi', label: 'RSI', value: 'Catapult_rsi',
+      { key: 'rsi',                 label: 'RSI',                  value: 'Catapult_rsi',
         description: 'The third party or combo variable ID to use for "RSI" in the performance management dashboards' },
-      { key: 'max_velocity', label: 'Max velocity', value: 'Catapult_max_velocity',
+      { key: 'max_velocity',        label: 'Max velocity',         value: 'Catapult_max_velocity',
         description: 'The third party or combo variable ID to use for "Max Velocity" in the performance management dashboards' },
-      { key: 'hsr_distance', label: 'HSR distance', value: 'Catapult_distance_zone6',
+      { key: 'hsr_distance',        label: 'HSR distance',         value: 'Catapult_distance_zone6',
         description: 'The third party or combo variable ID to use for "HSR Distance" in the performance management dashboards' },
-      { key: 'high_metabolic_load', label: 'High metabolic load', value: 'Catapult_HMLD',
+      { key: 'high_metabolic_load', label: 'High metabolic load',  value: 'Catapult_HMLD',
         description: 'The third party or combo variable ID to use for "High Metabolic Load" in the performance management dashboards' },
-      { key: 'distance_per_minute', label: 'Distance per minute', value: 'Catapult_DPM',
+      { key: 'distance_per_minute', label: 'Distance per minute',  value: 'Catapult_DPM',
         description: 'The third party or combo variable ID to use for "Distance Per Minute" in the performance management dashboards' },
-      { key: 'deceleration_distance', label: 'Deceleration distance', value: 'Catapult_decels_distance',
+      { key: 'decel_distance',      label: 'Deceleration distance', value: 'Catapult_decels_distance',
         description: 'The third party or combo variable ID to use for "Deceleration Distance" in the performance management dashboards' },
-      { key: 'deceleration_count', label: 'Deceleration count', value: 'Catapult_decels_count',
+      { key: 'decel_count',         label: 'Deceleration count',   value: 'Catapult_decels_count',
         description: 'The third party or combo variable ID to use for "Deceleration Count" in the performance management dashboards' },
-      { key: 'cmj', label: 'CMJ', value: 'Catapult_CMJ',
+      { key: 'cmj',                 label: 'CMJ',                  value: 'Catapult_CMJ',
         description: 'The third party or combo variable ID to use for "CMJ" in the performance management dashboards' },
-      { key: 'acceleration_distance', label: 'Acceleration distance', value: 'Catapult_accels_distance',
+      { key: 'accel_distance',      label: 'Acceleration distance', value: 'Catapult_accels_distance',
         description: 'The third party or combo variable ID to use for "Acceleration Distance" in the performance management dashboards' },
-      { key: 'acceleration_count', label: 'Acceleration count', value: 'Catapult_accels_count',
+      { key: 'accel_count',         label: 'Acceleration count',   value: 'Catapult_accels_count',
         description: 'The third party or combo variable ID to use for "Acceleration Count" in the performance management dashboards' },
     ];
 
@@ -143,69 +136,27 @@
       'Catapult_accels_distance', 'Catapult_accels_count',
       'Statsports_distance', 'Polarmom.distance', 'U21_first_team'
     ];
-
     const SQUAD_OPTIONS = ['Squad1', 'Squad2', 'Squad3', 'U15', 'U17', 'U19', 'U21', 'First Team'];
 
-    const TABS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'IP dashboards', 'Calendar', 'Locations', 'Notifications'];
-
-    const PRIMARY_NAV = [
-      { icon: AnalyticsOutlinedIcon, label: 'Analysis' },
-      { icon: ScienceOutlinedIcon, label: 'IP Studio' },
-      { icon: DirectionsRunOutlinedIcon, label: 'Athletes' },
-      { icon: HealingOutlinedIcon, label: 'Injury' },
-      { icon: FitnessCenterOutlinedIcon, label: 'Workloads' },
-      { icon: AssignmentOutlinedIcon, label: 'Questionnaire' },
-      { icon: CalendarTodayOutlinedIcon, label: 'Calendar' },
-      { icon: DescriptionOutlinedIcon, label: 'Documents' },
-      { icon: ChatBubbleOutlineOutlinedIcon, label: 'Messaging' },
-      { icon: PlayCircleOutlineOutlinedIcon, label: 'Video' },
-      { icon: AssignmentIndOutlinedIcon, label: 'Assignments' },
-      { icon: SettingsOutlinedIcon, label: 'Settings', active: true },
-    ];
-
-    // ---------- Reusable field components ----------
-    function MetricAutocomplete({ value, onChange, sx, placeholder }) {
+    // ── Shared sub-components ───────────────────────────────────────
+    function RestoreDefault() {
       return (
-        <Autocomplete
-          size="small"
-          options={VARIABLE_OPTIONS}
-          value={value}
-          onChange={(_, v) => onChange(v)}
-          disableClearable
-          sx={sx}
-          renderInput={(params) => (
-            <TextField {...params} label="Metric" placeholder={placeholder} />
-          )}
-        />
+        <Button size="small" sx={{ color: PRIMARY, fontWeight: 600, whiteSpace: 'nowrap', minWidth: 0, px: 0 }}>
+          Restore default
+        </Button>
       );
     }
 
-    function SquadAutocomplete({ value, onChange }) {
-      return (
-        <Autocomplete
-          size="small"
-          options={SQUAD_OPTIONS}
-          value={value}
-          onChange={(_, v) => onChange(v)}
-          disableClearable
-          sx={{ width: '100%' }}
-          renderInput={(params) => <TextField {...params} label="Squad(s)" />}
-        />
-      );
-    }
-
-    function AddSquadButton({ onClick }) {
+    function AddSquadBtn({ onClick }) {
       return (
         <Button
-          variant="outlined"
           size="small"
-          startIcon={<AddIcon />}
+          variant="outlined"
+          startIcon={<MI name="add" size={16} />}
           onClick={onClick}
           sx={{
-            color: ORANGE,
-            borderColor: 'rgba(0,0,0,0.23)',
-            mt: 1,
-            '&:hover': { borderColor: ORANGE, backgroundColor: 'rgba(243,112,55,0.04)' },
+            mt: 1.5, color: PRIMARY, borderColor: DIVIDER, fontWeight: 600,
+            '&:hover': { borderColor: PRIMARY, bgcolor: PRIMARY_SEL },
           }}
         >
           Add squad specific setting
@@ -213,366 +164,443 @@
       );
     }
 
-    function RestoreDefaultButton() {
+    function MetricSelect({ value, onChange, label = 'Metric', sx }) {
       return (
-        <Button sx={{ color: ORANGE, minWidth: 0, whiteSpace: 'nowrap' }}>Restore default</Button>
+        <Autocomplete
+          size="small"
+          options={VARIABLE_OPTIONS}
+          value={value}
+          onChange={(_, v) => onChange && onChange(v)}
+          disableClearable
+          sx={sx}
+          renderInput={(p) => <TextField {...p} label={label} />}
+        />
       );
     }
 
-    // ---------- Metric Row ----------
-    function MetricRow({ metric, onChange }) {
+    // ── Metric row ──────────────────────────────────────────────────
+    function MetricRow({ metric }) {
+      const [val, setVal] = useState(metric.value);
       const [squads, setSquads] = useState(metric.squads || []);
-      const [mainValue, setMainValue] = useState(metric.value);
-      const isExpanded = squads.length > 0;
 
       const addSquad = () => setSquads([...squads, { squad: '', value: '' }]);
       const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
-      const updateSquad = (i, key, v) => {
-        const next = [...squads];
-        next[i] = { ...next[i], [key]: v };
-        setSquads(next);
-      };
+      const updateSquad = (i, k, v) => { const n = [...squads]; n[i] = { ...n[i], [k]: v }; setSquads(n); };
 
       return (
-        <Box sx={{ display: 'grid', gridTemplateColumns: '370px 1fr 140px', gap: 4, py: 3 }}>
-          {/* Left: label + description */}
-          <Box>
-            <Typography sx={{ fontWeight: 500, fontSize: 14 }}>
-              Metric - {metric.label}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.45 }}>
-              {metric.description}
-            </Typography>
-          </Box>
+        <Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+            {/* Left label */}
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                Metric - {metric.label}
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                {metric.description}
+              </Typography>
+            </Box>
 
-          {/* Middle: autocomplete + squad specific */}
-          <Box>
-            <MetricAutocomplete value={mainValue} onChange={setMainValue} sx={{ width: '100%', maxWidth: 490 }} />
+            {/* Middle controls */}
+            <Box>
+              <MetricSelect value={val} onChange={setVal} sx={{ maxWidth: 490, width: '100%' }} />
 
-            {isExpanded && (
-              <Box sx={{
-                mt: 2,
-                borderLeft: `4px solid ${ORANGE}`,
-                pl: 2,
-                py: 1,
-              }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 500, mb: 1.5 }}>Squad specific</Typography>
-                <Stack spacing={1.5}>
-                  {squads.map((s, i) => (
-                    <Stack key={i} direction="row" spacing={1} alignItems="center" sx={{ maxWidth: 490 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <SquadAutocomplete value={s.squad} onChange={(v) => updateSquad(i, 'squad', v)} />
-                        <Box sx={{ mt: 1 }}>
-                          <MetricAutocomplete value={s.value} onChange={(v) => updateSquad(i, 'value', v)} sx={{ width: '100%' }} />
+              {squads.length > 0 && (
+                <Box sx={{ mt: 2, pl: 2, borderLeft: `4px solid ${PRIMARY}` }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: PRIMARY, mb: 1.5 }}>
+                    Squad specific
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    {squads.map((s, i) => (
+                      <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 490 }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Autocomplete
+                            size="small"
+                            options={SQUAD_OPTIONS}
+                            value={s.squad}
+                            onChange={(_, v) => updateSquad(i, 'squad', v)}
+                            disableClearable
+                            sx={{ mb: 1, width: '100%' }}
+                            renderInput={(p) => <TextField {...p} label="Squad(s)" />}
+                          />
+                          <MetricSelect value={s.value} onChange={(v) => updateSquad(i, 'value', v)} sx={{ width: '100%' }} />
                         </Box>
-                      </Box>
-                      <IconButton size="small" onClick={() => removeSquad(i)} aria-label="remove">
-                        <DeleteOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Box>
-            )}
+                        <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: 0.5 }}>
+                          <MI name="delete_outline" size={18} color={GREY100} />
+                        </IconButton>
+                      </Stack>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
 
-            <Box sx={{ mt: 1 }}>
-              <AddSquadButton onClick={addSquad} />
+              <AddSquadBtn onClick={addSquad} />
+            </Box>
+
+            {/* Right restore */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+              <RestoreDefault />
             </Box>
           </Box>
-
-          {/* Right: restore default */}
-          <Box sx={{ textAlign: 'right' }}>
-            <RestoreDefaultButton />
-          </Box>
+          <Divider />
         </Box>
       );
     }
 
-    // ---------- Section wrapper ----------
-    function SectionHeader({ title }) {
+    // ── Section title ───────────────────────────────────────────────
+    function SectionTitle({ children }) {
       return (
-        <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 500, mt: 4, mb: 1 }}>
-          {title}
+        <Typography sx={{ fontWeight: 700, fontSize: 16, color: PRIMARY, pt: 3, pb: 1 }}>
+          {children}
         </Typography>
       );
     }
 
-    // ---------- Comparison Row ----------
-    function ComparisonRow({ title, description, typeLabel, typeValue, typeOptions, numberLabel, numberValue }) {
-      const [type, setType] = useState(typeValue);
-      const [num, setNum] = useState(numberValue);
+    // ── Comparison row ──────────────────────────────────────────────
+    function ComparisonRow({ title, description, typeOpts, defaultType, numLabel, defaultNum }) {
+      const [type, setType] = useState(defaultType);
+      const [num, setNum]   = useState(defaultNum);
       return (
-        <Box sx={{ display: 'grid', gridTemplateColumns: '370px 1fr 140px', gap: 4, py: 3 }}>
-          <Box>
-            <Typography sx={{ fontWeight: 500, fontSize: 14 }}>{title}</Typography>
-            <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.45 }}>
-              {description}
-            </Typography>
+        <Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>{title}</Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>{description}</Typography>
+            </Box>
+            <Box>
+              <Stack direction="row" spacing={2} sx={{ maxWidth: 490 }}>
+                <Autocomplete
+                  size="small"
+                  options={typeOpts}
+                  value={type}
+                  onChange={(_, v) => setType(v)}
+                  disableClearable
+                  sx={{ flex: 1 }}
+                  renderInput={(p) => <TextField {...p} label="Type" />}
+                />
+                <TextField size="small" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160 }} />
+              </Stack>
+              <AddSquadBtn />
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+              <RestoreDefault />
+            </Box>
           </Box>
-          <Box>
-            <Stack direction="row" spacing={2} sx={{ maxWidth: 490 }}>
-              <Autocomplete
-                size="small"
-                options={typeOptions}
-                value={type}
-                onChange={(_, v) => setType(v)}
-                disableClearable
-                sx={{ flex: 1 }}
-                renderInput={(params) => <TextField {...params} label={typeLabel} />}
-              />
-              <TextField
-                size="small"
-                label={numberLabel}
-                value={num}
-                onChange={(e) => setNum(e.target.value)}
-                sx={{ width: 164 }}
-              />
-            </Stack>
-            <AddSquadButton />
+          <Divider />
+        </Box>
+      );
+    }
+
+    // ── Primary nav ─────────────────────────────────────────────────
+    function PrimaryNav() {
+      return (
+        <Box sx={{
+          width: 60, flexShrink: 0,
+          background: 'linear-gradient(180deg, #2B3548 0%, #1C2538 45%, #0F1929 75%, #121E30 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          position: 'sticky', top: 0, height: '100vh',
+          boxShadow: '4px 0 14px rgba(0,0,0,0.22)',
+          zIndex: 20, overflowY: 'auto', overflowX: 'hidden',
+        }}>
+          {/* Logo */}
+          <Box sx={{
+            width: 36, height: 36, borderRadius: '8px', bgcolor: ACTIVE_NAV,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            mt: 1.5, mb: 2, flexShrink: 0,
+          }}>
+            <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: 16, fontFamily: "'Open Sans', sans-serif" }}>K</Typography>
           </Box>
-          <Box sx={{ textAlign: 'right' }}>
-            <RestoreDefaultButton />
+
+          {/* Nav items */}
+          <Stack sx={{ width: '100%', flex: 1 }} spacing={0}>
+            {NAV_ITEMS.map((item) => (
+              <Tooltip key={item.label} title={item.label} placement="right">
+                <Box sx={{
+                  width: '100%', height: 40,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', cursor: 'pointer', flexShrink: 0,
+                  bgcolor: item.active ? ACTIVE_NAV : 'transparent',
+                  '&:hover': { bgcolor: item.active ? ACTIVE_NAV : 'rgba(255,255,255,0.08)' },
+                }}>
+                  {item.active && (
+                    <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: '#fff', borderRadius: '0 2px 2px 0' }} />
+                  )}
+                  <MI name={item.icon} size={20} color={item.active ? '#fff' : 'rgba(255,255,255,0.7)'} />
+                </Box>
+              </Tooltip>
+            ))}
+          </Stack>
+
+          {/* Bottom items */}
+          <Box sx={{ width: '100%', pb: 1, flexShrink: 0 }}>
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', mb: 1 }} />
+            <Tooltip title="Help" placement="right">
+              <Box sx={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+                <MI name="help_outline" size={20} color="rgba(255,255,255,0.7)" />
+              </Box>
+            </Tooltip>
+            <Tooltip title="Close menu" placement="right">
+              <Box sx={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+                <MI name="keyboard_double_arrow_left" size={20} color="rgba(255,255,255,0.7)" />
+              </Box>
+            </Tooltip>
           </Box>
         </Box>
       );
     }
 
-    // ---------- Layout ----------
-    function App() {
-      const [topTab, setTopTab] = useState(4); // IP dashboards
-      const [sidebarIndex, setSidebarIndex] = useState(1); // Performance management
-
+    // ── Top bar ─────────────────────────────────────────────────────
+    function TopBar() {
       return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#fff' }}>
-          {/* Primary dark nav */}
-          <Box sx={{
-            width: 60,
-            bgcolor: '#1F2430',
-            backgroundImage: 'linear-gradient(180deg, #262B38 0%, #1B1F29 100%)',
-            flexShrink: 0,
-            position: 'sticky', top: 0, height: '100vh',
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            py: 1.5,
-            zIndex: 10,
-          }}>
-            <Avatar sx={{ width: 36, height: 36, bgcolor: ORANGE, fontSize: 14, fontWeight: 700, mb: 2 }}>AL</Avatar>
-            <Stack spacing={1} alignItems="center">
-              {PRIMARY_NAV.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <Tooltip key={i} title={item.label} placement="right">
-                    <Box sx={{
-                      width: 60, height: 40,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      position: 'relative',
-                      cursor: 'pointer',
-                      color: item.active ? ORANGE : 'rgba(255,255,255,0.75)',
-                      '&:hover': { color: '#fff' },
-                      '&::before': item.active ? {
-                        content: '""', position: 'absolute', left: 0, top: 4, bottom: 4,
-                        width: 4, borderTopRightRadius: 3, borderBottomRightRadius: 3,
-                        backgroundColor: ORANGE,
-                      } : {},
-                    }}>
-                      <Icon sx={{ fontSize: 22 }} />
-                    </Box>
-                  </Tooltip>
-                );
-              })}
-            </Stack>
-          </Box>
+        <Box sx={{
+          height: 50, bgcolor: '#fff', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          px: 3, borderBottom: `1px solid ${DIVIDER}`,
+        }}>
+          <Typography sx={{ fontSize: 14, color: GREY100 }}>Org settings</Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography sx={{ fontSize: 14, color: PRIMARY }}>Kitman Labs</Typography>
+            <MI name="expand_more" size={18} color={GREY100} />
+            <Avatar sx={{ width: 32, height: 32, bgcolor: '#c5d0dc', fontSize: 13, color: PRIMARY, fontWeight: 600 }}>KL</Avatar>
+          </Stack>
+        </Box>
+      );
+    }
 
-          {/* Secondary sidebar */}
-          <Box sx={{
-            width: 280, flexShrink: 0,
-            borderRight: '1px solid', borderColor: 'divider',
-            bgcolor: '#fff',
-          }}>
-            <Box sx={{ px: 2.5, py: 2, height: 96, display: 'flex', alignItems: 'center' }}>
-              <Stack direction="row" spacing={0.5} alignItems="center" sx={{ cursor: 'pointer' }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 500 }}>Org settings</Typography>
-                <ExpandMoreIcon fontSize="small" />
-              </Stack>
-            </Box>
-            <Divider />
-            <List sx={{ py: 1 }}>
-              {['Medical', 'Performance management'].map((label, i) => (
+    // ── Tabs bar ────────────────────────────────────────────────────
+    const TAB_LABELS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'IP dashboards', 'Calendar', 'Locations', 'Notifications'];
+
+    function TabsBar({ value, onChange }) {
+      return (
+        <Box sx={{ bgcolor: '#fff', flexShrink: 0, borderBottom: `1px solid ${DIVIDER}` }}>
+          <Tabs
+            value={value}
+            onChange={onChange}
+            variant="scrollable"
+            scrollButtons={false}
+            sx={{
+              minHeight: 46,
+              '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+              '& .MuiTab-root': { color: BLUE_GREY, minHeight: 46, py: 1.25, px: 2 },
+              '& .Mui-selected': { color: `${PRIMARY} !important` },
+            }}
+          >
+            {TAB_LABELS.map((t) => <Tab key={t} label={t} />)}
+          </Tabs>
+        </Box>
+      );
+    }
+
+    // ── Sub-nav sidebar ─────────────────────────────────────────────
+    function SubNav({ selected, onSelect }) {
+      const items = ['Medical', 'Performance management'];
+      return (
+        <Box sx={{
+          width: 240, flexShrink: 0, bgcolor: '#fff',
+          borderRight: `1px solid ${DIVIDER}`,
+          pt: 1,
+        }}>
+          <List dense disablePadding>
+            {items.map((item) => {
+              const isSelected = selected === item;
+              return (
                 <ListItemButton
-                  key={label}
-                  selected={sidebarIndex === i}
-                  onClick={() => setSidebarIndex(i)}
+                  key={item}
+                  selected={isSelected}
+                  onClick={() => onSelect(item)}
                   sx={{
-                    mx: 1, borderRadius: 1,
-                    '&.Mui-selected': { bgcolor: 'rgba(243,112,55,0.08)', color: ORANGE },
-                    '&.Mui-selected:hover': { bgcolor: 'rgba(243,112,55,0.12)' },
+                    height: 48, mx: 1, borderRadius: 1, mb: 0.5,
+                    position: 'relative',
+                    pl: 2,
+                    '&.Mui-selected': { bgcolor: PRIMARY_SEL, color: PRIMARY },
+                    '&.Mui-selected:hover': { bgcolor: `${PRIMARY_SEL}` },
+                    '&.Mui-selected::before': {
+                      content: '""', position: 'absolute', left: 0, top: 4, bottom: 4,
+                      width: 4, bgcolor: PRIMARY, borderRadius: '0 2px 2px 0',
+                    },
                   }}
                 >
-                  <ListItemText primaryTypographyProps={{ fontSize: 14, fontWeight: sidebarIndex === i ? 600 : 400 }} primary={label} />
+                  <ListItemText
+                    primary={item}
+                    primaryTypographyProps={{ fontSize: 14, fontWeight: isSelected ? 600 : 400, color: isSelected ? PRIMARY : GREY100 }}
+                  />
                 </ListItemButton>
-              ))}
-            </List>
+              );
+            })}
+          </List>
+        </Box>
+      );
+    }
+
+    // ── Main content ────────────────────────────────────────────────
+    function MainContent() {
+      return (
+        <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
+          {/* Header */}
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 0.5 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 700, fontSize: 20, color: PRIMARY }}>
+                Performance management dashboard settings
+              </Typography>
+              <Link href="#" underline="hover" sx={{ fontSize: 13, color: PRIMARY, mt: 0.5, display: 'inline-block' }}>
+                Reset all to default
+              </Link>
+            </Box>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Button
+                variant="outlined"
+                size="small"
+                endIcon={<MI name="open_in_new" size={14} />}
+                sx={{ color: PRIMARY, borderColor: DIVIDER, fontWeight: 600,
+                  '&:hover': { borderColor: PRIMARY } }}
+              >
+                View dashboard
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{ bgcolor: PRIMARY, color: '#fff', fontWeight: 600, boxShadow: 'none',
+                  '&:hover': { bgcolor: '#2e3a4e', boxShadow: 'none' } }}
+              >
+                Save changes
+              </Button>
+            </Stack>
+          </Stack>
+
+          <Divider sx={{ mt: 2, mb: 0 }} />
+
+          {/* Metrics */}
+          <SectionTitle>Metrics</SectionTitle>
+          {METRICS.map((m) => <MetricRow key={m.key} metric={m} />)}
+
+          {/* Comparison types */}
+          <SectionTitle>Comparison types</SectionTitle>
+          <ComparisonRow
+            title="Game comparison - comparison type"
+            description="The range of data for the game-to-game/overall comparison dashboards"
+            typeOpts={['Last X games', 'Last X weeks', 'Last X months']}
+            defaultType="Last X games"
+            numLabel="Number of games"
+            defaultNum="10"
+          />
+          <ComparisonRow
+            title="Gameday +/- comparison - comparison type"
+            description="The range of data for the game-day +/- comparison in the performance management dashboards"
+            typeOpts={['Last X Days', 'Last X Weeks', 'Last X Months']}
+            defaultType="Last X Days"
+            numLabel="Number of days"
+            defaultNum="100"
+          />
+
+          {/* Numeric options */}
+          <SectionTitle>Numeric options</SectionTitle>
+          <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+              <Box>
+                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                  Game comparison - minimum participation minutes
+                </Typography>
+                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                  Only games where the players has played at least this number of minutes will be considered when calculating their game comparison values for the performance management reports. If this is left blank, all games will be included.
+                </Typography>
+              </Box>
+              <Box>
+                <TextField size="small" label="Minutes" defaultValue="60" sx={{ width: 220 }} />
+                <AddSquadBtn />
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+                <RestoreDefault />
+              </Box>
+            </Box>
+            <Divider />
           </Box>
 
-          {/* Main content */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {/* Top tabs + user */}
-            <Box sx={{
-              display: 'flex', alignItems: 'center',
-              borderBottom: '1px solid', borderColor: 'divider',
-              pr: 3, height: 96,
-              position: 'sticky', top: 0, zIndex: 5, bgcolor: '#fff',
-            }}>
-              <Tabs
-                value={topTab}
-                onChange={(_, v) => setTopTab(v)}
-                variant="scrollable"
-                scrollButtons={false}
-                sx={{
-                  flex: 1, pl: 3,
-                  '& .MuiTabs-indicator': { backgroundColor: ORANGE, height: 3 },
-                  '& .Mui-selected': { color: `${ORANGE} !important` },
-                }}
-              >
-                {TABS.map((t) => <Tab key={t} label={t} />)}
-              </Tabs>
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Typography sx={{ fontSize: 14 }}>Abinash Labs</Typography>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#888' }}>AL</Avatar>
-              </Stack>
+          {/* Competition IDs */}
+          <SectionTitle>Competition IDs</SectionTitle>
+          <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+              <Box>
+                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                  Game comparison - competition IDs
+                </Typography>
+                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                  The comma-separated list of competition IDs we use as games to include when calculating game comparison values for the performance management dashboards. If this is left blank, all competitions will be included.
+                </Typography>
+              </Box>
+              <Box>
+                <Autocomplete
+                  size="small"
+                  options={['Friendly', 'League', 'Cup', 'Tournament']}
+                  defaultValue="Friendly, League, Cup"
+                  disableClearable
+                  sx={{ maxWidth: 490, width: '100%' }}
+                  renderInput={(p) => <TextField {...p} label="Type" />}
+                />
+                <AddSquadBtn />
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+                <RestoreDefault />
+              </Box>
             </Box>
+            <Divider />
+          </Box>
 
-            {/* Page body */}
-            <Box sx={{ maxWidth: 1100, mx: 'auto', px: 4, py: 4 }}>
-              {/* Title bar */}
-              <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 1 }}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 500 }}>
-                    Performance management dashboard settings
-                  </Typography>
-                  <Link href="#" underline="hover" sx={{ fontSize: 13, color: ORANGE, display: 'inline-flex', alignItems: 'center', mt: 1 }}>
-                    Reset all to default
-                  </Link>
-                </Box>
-                <Stack direction="row" spacing={1.5}>
-                  <Button
-                    variant="text"
-                    endIcon={<OpenInNewIcon fontSize="small" />}
-                    sx={{ color: ORANGE }}
-                  >
-                    View dashboard
-                  </Button>
-                  <Button
-                    variant="contained"
-                    sx={{ bgcolor: ORANGE, '&:hover': { bgcolor: '#D95F2A' }, boxShadow: 'none' }}
-                  >
-                    Save changes
-                  </Button>
-                </Stack>
-              </Stack>
-
-              <Divider sx={{ mt: 3 }} />
-
-              {/* Metrics */}
-              <SectionHeader title="Metrics" />
-              {METRICS.map((m, i) => (
-                <React.Fragment key={m.key}>
-                  <MetricRow metric={m} />
-                  {i < METRICS.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-
-              {/* Comparison types */}
-              <Divider sx={{ mt: 2 }} />
-              <SectionHeader title="Comparison types" />
-              <ComparisonRow
-                title="Game comparison - comparison type"
-                description="The range of data for the game-to-game/overall comparison dashboards"
-                typeLabel="Type"
-                typeValue="Last X games"
-                typeOptions={['Last X games', 'Last X weeks', 'Last X months']}
-                numberLabel="Number of games"
-                numberValue="10"
-              />
-              <Divider />
-              <ComparisonRow
-                title="Gameday +/- comparison - comparison type"
-                description="The range of data for the game-day +/- comparison in the performance management dashboards"
-                typeLabel="Type"
-                typeValue="Last X Days"
-                typeOptions={['Last X Days', 'Last X Weeks', 'Last X Months']}
-                numberLabel="Number of days"
-                numberValue="100"
-              />
-
-              {/* Numeric options */}
-              <Divider sx={{ mt: 2 }} />
-              <SectionHeader title="Numeric options" />
-              <Box sx={{ display: 'grid', gridTemplateColumns: '370px 1fr 140px', gap: 4, py: 3 }}>
-                <Box>
-                  <Typography sx={{ fontWeight: 500, fontSize: 14 }}>Game comparison - minimum participation minutes</Typography>
-                  <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.45 }}>
-                    Only games where the players has played at least this number of minutes will be considered when calculating their game comparison values for the performance management reports. If this is left blank, all games will be included.
-                  </Typography>
-                </Box>
-                <Box>
-                  <TextField size="small" label="Minutes" defaultValue="60" sx={{ width: 220 }} />
-                  <AddSquadButton />
-                </Box>
-                <Box sx={{ textAlign: 'right' }}><RestoreDefaultButton /></Box>
+          {/* Boolean options */}
+          <SectionTitle>Boolean options</SectionTitle>
+          <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr 130px', columnGap: 4, py: 3 }}>
+              <Box>
+                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                  Include or exclude child games from squad game calendar
+                </Typography>
+                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                  Whether to include or exclude games played by the parent club's child entities.
+                </Typography>
               </Box>
-
-              {/* Competition IDs */}
-              <Divider sx={{ mt: 2 }} />
-              <SectionHeader title="Competition IDs" />
-              <Box sx={{ display: 'grid', gridTemplateColumns: '370px 1fr 140px', gap: 4, py: 3 }}>
-                <Box>
-                  <Typography sx={{ fontWeight: 500, fontSize: 14 }}>Game comparison - competition IDs</Typography>
-                  <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.45 }}>
-                    The comma-separated list of competition IDs we use as games to include when calculating game comparison values for the performance management dashboards. If this is left blank, all competitions will be included.
-                  </Typography>
-                </Box>
-                <Box>
-                  <Autocomplete
-                    size="small"
-                    options={['Friendly', 'League', 'Cup', 'Tournament']}
-                    defaultValue="Friendly, League, Cup"
-                    disableClearable
-                    sx={{ maxWidth: 490 }}
-                    renderInput={(params) => <TextField {...params} label="Type" />}
+              <Box>
+                <RadioGroup row defaultValue="include">
+                  <FormControlLabel
+                    value="include"
+                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                    label="Include child games"
                   />
-                  <AddSquadButton />
-                </Box>
-                <Box sx={{ textAlign: 'right' }}><RestoreDefaultButton /></Box>
+                  <FormControlLabel
+                    value="exclude"
+                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                    label="Exclude child games"
+                  />
+                </RadioGroup>
               </Box>
-
-              {/* Boolean options */}
-              <Divider sx={{ mt: 2 }} />
-              <SectionHeader title="Boolean options" />
-              <Box sx={{ display: 'grid', gridTemplateColumns: '370px 1fr 140px', gap: 4, py: 3 }}>
-                <Box>
-                  <Typography sx={{ fontWeight: 500, fontSize: 14 }}>Include or exclude child games from squad game calendar</Typography>
-                  <Typography variant="body2" sx={{ mt: 0.75, lineHeight: 1.45 }}>
-                    Whether to include or exclude games played by the parent club's child entities.
-                  </Typography>
-                </Box>
-                <Box>
-                  <RadioGroup row defaultValue="include" sx={{ gap: 3 }}>
-                    <FormControlLabel
-                      value="include"
-                      control={<Radio sx={{ color: ORANGE, '&.Mui-checked': { color: ORANGE } }} />}
-                      label="Include child games"
-                    />
-                    <FormControlLabel
-                      value="exclude"
-                      control={<Radio sx={{ color: 'rgba(0,0,0,0.6)', '&.Mui-checked': { color: ORANGE } }} />}
-                      label="Exclude child games"
-                    />
-                  </RadioGroup>
-                </Box>
-                <Box sx={{ textAlign: 'right' }}><RestoreDefaultButton /></Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+                <RestoreDefault />
               </Box>
+            </Box>
+          </Box>
 
-              <Box sx={{ height: 64 }} />
+          <Box sx={{ height: 48 }} />
+        </Box>
+      );
+    }
+
+    // ── App ─────────────────────────────────────────────────────────
+    function App() {
+      const [tabIndex, setTabIndex]   = useState(4);
+      const [subNav,   setSubNav]     = useState('Performance management');
+
+      return (
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+          <PrimaryNav />
+
+          {/* Everything right of nav */}
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+            <TopBar />
+            <TabsBar value={tabIndex} onChange={(_, v) => setTabIndex(v)} />
+
+            {/* Content row: sub-nav + main */}
+            <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+              <SubNav selected={subNav} onSelect={setSubNav} />
+              <MainContent />
             </Box>
           </Box>
         </Box>
@@ -581,12 +609,10 @@
 
     const root = createRoot(document.getElementById('root'));
     root.render(
-      React.createElement(ThemeProvider, { theme },
-        React.createElement(React.Fragment, null,
-          React.createElement(CssBaseline),
-          React.createElement(App)
-        )
-      )
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
     );
   </script>
 </body>
