@@ -37,7 +37,17 @@
     }
     /* Error label colour override */
     .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root.Mui-error {
-      color: #d32f2f !important;
+      color: #c31d2b !important;
+    }
+    /* Error underline — always visible (not just on focus) in error state */
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiFilledInput-root.Mui-error::after {
+      border-bottom: 2px solid #c31d2b;
+      transform: scaleX(1) !important;
+    }
+    /* Error input text colour */
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiFilledInput-root.Mui-error input,
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiFilledInput-root.Mui-error .MuiAutocomplete-input {
+      color: #c31d2b;
     }
   </style>
 </head>
@@ -615,6 +625,26 @@
       const [val, setVal] = useState('include');
       const [squads, setSquads] = useState([]);
       const radioSx = { color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } };
+      const RadioPair = ({ value: current, onChange }) => (
+        <Stack direction="row" alignItems="center">
+          <FormControlLabel
+            label="Include child games"
+            control={
+              <Radio size="small" sx={radioSx}
+                checked={current === 'include'}
+                onChange={() => onChange('include')} />
+            }
+          />
+          <FormControlLabel
+            label="Exclude child games"
+            control={
+              <Radio size="small" sx={radioSx}
+                checked={current === 'exclude'}
+                onChange={() => onChange('exclude')} />
+            }
+          />
+        </Stack>
+      );
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -628,10 +658,7 @@
             </Box>
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
-                <RadioGroup row name="child-games" value={val} onChange={(e) => { setVal(e.target.value); onDirty?.(); }}>
-                  <FormControlLabel value="include" control={<Radio size="small" sx={radioSx} />} label="Include child games" />
-                  <FormControlLabel value="exclude" control={<Radio size="small" sx={radioSx} />} label="Exclude child games" />
-                </RadioGroup>
+                <RadioPair value={val} onChange={(v) => { setVal(v); onDirty?.(); }} />
                 <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); onDirty?.(); }} />
               </Stack>
               <SquadOverrides
@@ -639,10 +666,10 @@
                 setSquads={(s) => { setSquads(s); onDirty?.(); }}
                 submitted={false}
                 renderControl={(s, i, update) => (
-                  <RadioGroup row name={`child-games-squad-${i}`} value={s.val || 'include'} onChange={(e) => { update(i, { val: e.target.value }); onDirty?.(); }}>
-                    <FormControlLabel value="include" control={<Radio size="small" sx={radioSx} />} label="Include child games" />
-                    <FormControlLabel value="exclude" control={<Radio size="small" sx={radioSx} />} label="Exclude child games" />
-                  </RadioGroup>
+                  <RadioPair
+                    value={s.val || 'include'}
+                    onChange={(v) => { update(i, { val: v }); onDirty?.(); }}
+                  />
                 )}
               />
             </Box>
