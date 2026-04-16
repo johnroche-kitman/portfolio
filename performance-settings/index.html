@@ -18,13 +18,10 @@
     }
     * { box-sizing: border-box; }
 
-    /* Force filled-variant InputLabel inside the grey box.
-       The label is positioned relative to MuiFormControl-root which is the wrapper.
-       We anchor it to the FilledInput by offsetting from the FilledInput's top edge. */
+    /* Force filled-variant InputLabel inside the grey box. */
     .MuiFormControl-root:has(.MuiFilledInput-root) {
       position: relative !important;
     }
-    /* Hide the label from normal flow so it doesn't push the input down */
     .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root {
       position: absolute !important;
       left: 0 !important;
@@ -37,6 +34,10 @@
       transform: translate(12px, 7px) !important;
       transform-origin: left top !important;
       transition: none !important;
+    }
+    /* Error label colour override */
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root.Mui-error {
+      color: #d32f2f !important;
     }
   </style>
 </head>
@@ -60,14 +61,14 @@
   </script>
 
   <script type="text/babel" data-type="module" data-presets="react">
-    import React, { useState } from 'react';
+    import React, { useState, useRef, useImperativeHandle } from 'react';
     import { createRoot } from 'react-dom/client';
     import {
       createTheme, ThemeProvider, CssBaseline,
       Box, Stack, Typography, Button, IconButton, Divider,
       Tabs, Tab, List, ListItemButton, ListItemText,
       Autocomplete, TextField, Radio, RadioGroup, FormControlLabel,
-      Avatar, Tooltip, Link
+      Avatar, Tooltip, Link, Alert
     } from '@mui/material';
 
     // ── Design tokens ──────────────────────────────────────────────
@@ -174,7 +175,7 @@
       'Catapult_accels_distance', 'Catapult_accels_count',
       'Statsports_distance', 'Polarmom.distance', 'U21_first_team'
     ];
-    const SQUAD_OPTIONS = ['Squad1', 'Squad2', 'Squad3', 'U15', 'U17', 'U19', 'U21', 'First Team'];
+    const SQUAD_OPTIONS = ['U9', 'U10', 'U11', 'U12', 'U13', 'U14', 'U15', 'U16', 'U17', 'U19', 'U21', 'U23', 'First team'];
     const COMPETITION_OPTIONS = ['Friendly', 'League', 'Cup', 'Tournament', 'International', 'Champions League', 'Europa League'];
 
     // ── Shared sub-components ───────────────────────────────────────
@@ -203,7 +204,7 @@
     }
 
     // ── Reusable squad-specific overrides section ───────────────────
-    function SquadOverrides({ squads, setSquads, renderControl }) {
+    function SquadOverrides({ squads, setSquads, renderControl, submitted }) {
       const addSquad = () => setSquads([...squads, { squad: [] }]);
       const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
       const update = (i, patch) => { const n = [...squads]; n[i] = { ...n[i], ...patch }; setSquads(n); };
@@ -215,29 +216,42 @@
                 Squad specific
               </Typography>
               <Stack spacing={1.5}>
-                {squads.map((s, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="center" sx={{ maxWidth: 540 }}>
-                    <Box sx={{ flex: 1 }}>
-                      <Autocomplete
-                        size="small" multiple options={SQUAD_OPTIONS} value={s.squad}
-                        onChange={(_, v) => update(i, { squad: v })}
-                        renderTags={(sel) => (
-                          <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                            {sel.join(', ')}
-                          </span>
-                        )}
-                        sx={{ mb: 1, width: '100%' }}
-                        renderInput={(p) => <TextField {...p} label="Squad(s)" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
-                      />
-                      {renderControl(s, i, update)}
+                {squads.map((s, i) => {
+                  const squadErr = submitted && (!s.squad || s.squad.length === 0);
+                  return (
+                    <Box key={i} sx={{ maxWidth: 540 }}>
+                      {/* Squad(s) row with trash icon vertically centred */}
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        <Autocomplete
+                          size="small" multiple options={SQUAD_OPTIONS} value={s.squad}
+                          onChange={(_, v) => update(i, { squad: v })}
+                          renderTags={(sel) => (
+                            <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                              {sel.join(', ')}
+                            </span>
+                          )}
+                          sx={{ flex: 1 }}
+                          renderInput={(p) => (
+                            <TextField
+                              {...p}
+                              label="Squad(s)"
+                              variant="filled"
+                              InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
+                              error={squadErr}
+                              helperText={squadErr ? 'Field required' : undefined}
+                            />
+                          )}
+                        />
+                        <Tooltip title="Remove squad setting" placement="top">
+                          <IconButton size="small" onClick={() => removeSquad(i)}>
+                            <MI name="delete_outline" size={18} color={GREY100} />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                      {renderControl(s, i, update, submitted)}
                     </Box>
-                    <Tooltip title="Remove squad setting" placement="top">
-                      <IconButton size="small" onClick={() => removeSquad(i)} sx={{ alignSelf: 'flex-start', mt: '7px' }}>
-                        <MI name="delete_outline" size={18} color={GREY100} />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                ))}
+                  );
+                })}
               </Stack>
             </Box>
           )}
@@ -246,7 +260,7 @@
       );
     }
 
-    function MetricSelect({ value, onChange, label = 'Metric', sx }) {
+    function MetricSelect({ value, onChange, label = 'Metric', sx, error }) {
       return (
         <Autocomplete
           size="small"
@@ -255,16 +269,40 @@
           onChange={(_, v) => onChange && onChange(v)}
           disableClearable
           sx={sx}
-          renderInput={(p) => <TextField {...p} label={label} variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+          renderInput={(p) => (
+            <TextField
+              {...p}
+              label={label}
+              variant="filled"
+              InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
+              error={error}
+              helperText={error ? 'Field required' : undefined}
+            />
+          )}
         />
       );
     }
 
     // ── Metric row ──────────────────────────────────────────────────
-    function MetricRow({ metric }) {
+    const MetricRow = React.forwardRef(function MetricRow({ metric, onDirty }, ref) {
       const defaultSquads = (metric.squads || []).map(s => ({ squad: s.squad, value: s.value }));
       const [val, setVal] = useState(metric.value);
       const [squads, setSquads] = useState(defaultSquads);
+      const [submitted, setSubmitted] = useState(false);
+
+      useImperativeHandle(ref, () => ({
+        validate() {
+          setSubmitted(true);
+          const mainValid = !!val;
+          const squadsValid = squads.every(s =>
+            s.squad && s.squad.length > 0 && !!s.value
+          );
+          return mainValid && squadsValid;
+        }
+      }));
+
+      const valError = submitted && !val;
+
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -278,12 +316,25 @@
             </Box>
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
-                <MetricSelect value={val} onChange={setVal} sx={{ width: 490, flexShrink: 0 }} />
-                <RestoreDefault onRestore={() => { setVal(metric.value); setSquads(defaultSquads); }} />
+                <MetricSelect
+                  value={val}
+                  onChange={(v) => { setVal(v); onDirty?.(); }}
+                  error={valError}
+                  sx={{ width: 490, flexShrink: 0 }}
+                />
+                <RestoreDefault onRestore={() => { setVal(metric.value); setSquads(defaultSquads); setSubmitted(false); onDirty?.(); }} />
               </Stack>
-              <SquadOverrides squads={squads} setSquads={setSquads}
-                renderControl={(s, i, update) => (
-                  <MetricSelect value={s.value || ''} onChange={(v) => update(i, { value: v })} sx={{ width: '100%' }} />
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={submitted}
+                renderControl={(s, i, update, sub) => (
+                  <MetricSelect
+                    value={s.value || ''}
+                    onChange={(v) => { update(i, { value: v }); onDirty?.(); }}
+                    error={sub && !s.value}
+                    sx={{ width: '100%' }}
+                  />
                 )}
               />
             </Box>
@@ -291,7 +342,7 @@
           <Divider />
         </Box>
       );
-    }
+    });
 
     // ── Section title ───────────────────────────────────────────────
     function SectionTitle({ children }) {
@@ -313,12 +364,30 @@
       return 'Number';
     }
 
-    function ComparisonRow({ title, description, typeOpts: baseOpts, defaultType, defaultNum }) {
+    const ComparisonRow = React.forwardRef(function ComparisonRow({ title, description, typeOpts: baseOpts, defaultType, defaultNum, onDirty }, ref) {
       const typeOpts = [...baseOpts, 'Season so far', 'Last season'];
       const [type, setType] = useState(defaultType);
       const [num, setNum]   = useState(defaultNum);
       const [squads, setSquads] = useState([]);
+      const [submitted, setSubmitted] = useState(false);
+
       const showNum = !NO_NUM_TYPES.includes(type);
+
+      useImperativeHandle(ref, () => ({
+        validate() {
+          setSubmitted(true);
+          const mainValid = !showNum || !!num;
+          const squadsValid = squads.every(s => {
+            const st = s.type || typeOpts[0];
+            const sShowNum = !NO_NUM_TYPES.includes(st);
+            return s.squad && s.squad.length > 0 && (!sShowNum || !!s.num);
+          });
+          return mainValid && squadsValid;
+        }
+      }));
+
+      const numError = submitted && showNum && !num;
+
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -330,31 +399,47 @@
               <Stack direction="row" spacing={2} alignItems="center">
                 <Autocomplete
                   size="small" options={typeOpts} value={type}
-                  onChange={(_, v) => setType(v)} disableClearable
+                  onChange={(_, v) => { setType(v); onDirty?.(); }} disableClearable
                   sx={{ width: 220, flexShrink: 0 }}
                   renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                 />
                 {showNum && (
-                  <TextField size="small" variant="filled" label={numLabelForType(type)} value={num}
-                    onChange={(e) => setNum(e.target.value)} sx={{ width: 180, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                  <TextField
+                    size="small" variant="filled" label={numLabelForType(type)} value={num}
+                    onChange={(e) => { setNum(e.target.value); onDirty?.(); }}
+                    sx={{ width: 180, flexShrink: 0 }}
+                    InputLabelProps={{ shrink: true }}
+                    error={numError}
+                    helperText={numError ? 'Field required' : undefined}
+                  />
                 )}
-                <RestoreDefault onRestore={() => { setType(defaultType); setNum(defaultNum); setSquads([]); }} />
+                <RestoreDefault onRestore={() => { setType(defaultType); setNum(defaultNum); setSquads([]); setSubmitted(false); onDirty?.(); }} />
               </Stack>
-              <SquadOverrides squads={squads} setSquads={setSquads}
-                renderControl={(s, i, update) => {
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={submitted}
+                renderControl={(s, i, update, sub) => {
                   const sType = s.type || typeOpts[0];
                   const sShowNum = !NO_NUM_TYPES.includes(sType);
+                  const sNumErr = sub && sShowNum && !s.num;
                   return (
                     <Stack direction="row" spacing={1}>
                       <Autocomplete
                         size="small" options={typeOpts} value={sType}
-                        onChange={(_, v) => update(i, { type: v })} disableClearable
+                        onChange={(_, v) => { update(i, { type: v }); onDirty?.(); }} disableClearable
                         sx={{ flex: 1 }}
                         renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                       />
                       {sShowNum && (
-                        <TextField size="small" variant="filled" label={numLabelForType(sType)} value={s.num || ''}
-                          onChange={(e) => update(i, { num: e.target.value })} sx={{ width: 160 }} InputLabelProps={{ shrink: true }} />
+                        <TextField
+                          size="small" variant="filled" label={numLabelForType(sType)} value={s.num || ''}
+                          onChange={(e) => { update(i, { num: e.target.value }); onDirty?.(); }}
+                          sx={{ width: 160 }}
+                          InputLabelProps={{ shrink: true }}
+                          error={sNumErr}
+                          helperText={sNumErr ? 'Field required' : undefined}
+                        />
                       )}
                     </Stack>
                   );
@@ -365,12 +450,27 @@
           <Divider />
         </Box>
       );
-    }
+    });
 
     // ── Numeric options row ─────────────────────────────────────────
-    function NumericOptionsRow() {
+    const NumericOptionsRow = React.forwardRef(function NumericOptionsRow({ onDirty }, ref) {
       const [minutes, setMinutes] = useState('60');
       const [squads, setSquads] = useState([]);
+      const [submitted, setSubmitted] = useState(false);
+
+      useImperativeHandle(ref, () => ({
+        validate() {
+          setSubmitted(true);
+          const mainValid = !!minutes;
+          const squadsValid = squads.every(s =>
+            s.squad && s.squad.length > 0 && !!s.minutes
+          );
+          return mainValid && squadsValid;
+        }
+      }));
+
+      const minutesError = submitted && !minutes;
+
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -384,27 +484,60 @@
             </Box>
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
-                <TextField size="small" variant="filled" label="Minutes" value={minutes}
-                  onChange={(e) => setMinutes(e.target.value)} sx={{ width: 220, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
-                <RestoreDefault onRestore={() => { setMinutes('60'); setSquads([]); }} />
+                <TextField
+                  size="small" variant="filled" label="Minutes" value={minutes}
+                  onChange={(e) => { setMinutes(e.target.value); onDirty?.(); }}
+                  sx={{ width: 220, flexShrink: 0 }}
+                  InputLabelProps={{ shrink: true }}
+                  error={minutesError}
+                  helperText={minutesError ? 'Field required' : undefined}
+                />
+                <RestoreDefault onRestore={() => { setMinutes('60'); setSquads([]); setSubmitted(false); onDirty?.(); }} />
               </Stack>
-              <SquadOverrides squads={squads} setSquads={setSquads}
-                renderControl={(s, i, update) => (
-                  <TextField size="small" variant="filled" label="Minutes" value={s.minutes || ''}
-                    onChange={(e) => update(i, { minutes: e.target.value })} sx={{ width: '100%' }} InputLabelProps={{ shrink: true }} />
-                )}
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={submitted}
+                renderControl={(s, i, update, sub) => {
+                  const mErr = sub && !s.minutes;
+                  return (
+                    <TextField
+                      size="small" variant="filled" label="Minutes" value={s.minutes || ''}
+                      onChange={(e) => { update(i, { minutes: e.target.value }); onDirty?.(); }}
+                      sx={{ width: '100%' }}
+                      InputLabelProps={{ shrink: true }}
+                      error={mErr}
+                      helperText={mErr ? 'Field required' : undefined}
+                    />
+                  );
+                }}
               />
             </Box>
           </Box>
           <Divider />
         </Box>
       );
-    }
+    });
 
     // ── Competition IDs row ─────────────────────────────────────────
-    function CompetitionIDsRow() {
+    const CompetitionIDsRow = React.forwardRef(function CompetitionIDsRow({ onDirty }, ref) {
       const [ids, setIds] = useState(['Friendly', 'League', 'Cup']);
       const [squads, setSquads] = useState([]);
+      const [submitted, setSubmitted] = useState(false);
+
+      useImperativeHandle(ref, () => ({
+        validate() {
+          setSubmitted(true);
+          const mainValid = ids.length > 0;
+          const squadsValid = squads.every(s =>
+            s.squad && s.squad.length > 0 && s.ids && s.ids.length > 0
+          );
+          return mainValid && squadsValid;
+        }
+      }));
+
+      const idsError = submitted && ids.length === 0;
+
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -420,43 +553,68 @@
               <Stack direction="row" spacing={2} alignItems="center">
                 <Autocomplete
                   size="small" multiple options={COMPETITION_OPTIONS} value={ids}
-                  onChange={(_, v) => setIds(v)}
+                  onChange={(_, v) => { setIds(v); onDirty?.(); }}
                   renderTags={(sel) => (
                     <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
                       {sel.join(', ')}
                     </span>
                   )}
                   sx={{ width: 490, flexShrink: 0 }}
-                  renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                  renderInput={(p) => (
+                    <TextField
+                      {...p}
+                      label="Competition IDs"
+                      variant="filled"
+                      InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
+                      error={idsError}
+                      helperText={idsError ? 'Field required' : undefined}
+                    />
+                  )}
                 />
-                <RestoreDefault onRestore={() => { setIds(['Friendly', 'League', 'Cup']); setSquads([]); }} />
+                <RestoreDefault onRestore={() => { setIds(['Friendly', 'League', 'Cup']); setSquads([]); setSubmitted(false); onDirty?.(); }} />
               </Stack>
-              <SquadOverrides squads={squads} setSquads={setSquads}
-                renderControl={(s, i, update) => (
-                  <Autocomplete
-                    size="small" multiple options={COMPETITION_OPTIONS} value={s.ids || []}
-                    onChange={(_, v) => update(i, { ids: v })}
-                    renderTags={(sel) => (
-                      <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                        {sel.join(', ')}
-                      </span>
-                    )}
-                    sx={{ width: '100%' }}
-                    renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
-                  />
-                )}
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={submitted}
+                renderControl={(s, i, update, sub) => {
+                  const iErr = sub && (!s.ids || s.ids.length === 0);
+                  return (
+                    <Autocomplete
+                      size="small" multiple options={COMPETITION_OPTIONS} value={s.ids || []}
+                      onChange={(_, v) => { update(i, { ids: v }); onDirty?.(); }}
+                      renderTags={(sel) => (
+                        <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                          {sel.join(', ')}
+                        </span>
+                      )}
+                      sx={{ width: '100%' }}
+                      renderInput={(p) => (
+                        <TextField
+                          {...p}
+                          label="Competition IDs"
+                          variant="filled"
+                          InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
+                          error={iErr}
+                          helperText={iErr ? 'Field required' : undefined}
+                        />
+                      )}
+                    />
+                  );
+                }}
               />
             </Box>
           </Box>
           <Divider />
         </Box>
       );
-    }
+    });
 
     // ── Boolean options row ─────────────────────────────────────────
-    function BooleanOptionsRow() {
+    function BooleanOptionsRow({ onDirty }) {
       const [val, setVal] = useState('include');
       const [squads, setSquads] = useState([]);
+      const radioSx = { color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } };
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -470,25 +628,20 @@
             </Box>
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
-                <RadioGroup row value={val} onChange={(e) => setVal(e.target.value)}>
-                  <FormControlLabel value="include"
-                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                    label="Include child games" />
-                  <FormControlLabel value="exclude"
-                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                    label="Exclude child games" />
+                <RadioGroup row name="child-games" value={val} onChange={(e) => { setVal(e.target.value); onDirty?.(); }}>
+                  <FormControlLabel value="include" control={<Radio size="small" sx={radioSx} />} label="Include child games" />
+                  <FormControlLabel value="exclude" control={<Radio size="small" sx={radioSx} />} label="Exclude child games" />
                 </RadioGroup>
-                <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); }} />
+                <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); onDirty?.(); }} />
               </Stack>
-              <SquadOverrides squads={squads} setSquads={setSquads}
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={false}
                 renderControl={(s, i, update) => (
-                  <RadioGroup row value={s.val || 'include'} onChange={(e) => update(i, { val: e.target.value })}>
-                    <FormControlLabel value="include"
-                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                      label="Include child games" />
-                    <FormControlLabel value="exclude"
-                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                      label="Exclude child games" />
+                  <RadioGroup row name={`child-games-squad-${i}`} value={s.val || 'include'} onChange={(e) => { update(i, { val: e.target.value }); onDirty?.(); }}>
+                    <FormControlLabel value="include" control={<Radio size="small" sx={radioSx} />} label="Include child games" />
+                    <FormControlLabel value="exclude" control={<Radio size="small" sx={radioSx} />} label="Exclude child games" />
                   </RadioGroup>
                 )}
               />
@@ -509,7 +662,6 @@
           boxShadow: '4px 0 14px rgba(0,0,0,0.22)',
           zIndex: 20, overflowY: 'auto', overflowX: 'hidden',
         }}>
-          {/* Logo */}
           <Box sx={{
             width: 36, height: 36, borderRadius: '8px', bgcolor: ACTIVE_NAV,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -518,7 +670,6 @@
             <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: 16, fontFamily: "'Open Sans', sans-serif" }}>K</Typography>
           </Box>
 
-          {/* Nav items */}
           <Stack sx={{ width: '100%', flex: 1 }} spacing={0}>
             {NAV_ITEMS.map((item) => (
               <Tooltip key={item.label} title={item.label} placement="right">
@@ -538,7 +689,6 @@
             ))}
           </Stack>
 
-          {/* Bottom items */}
           <Box sx={{ width: '100%', pb: 1, flexShrink: 0 }}>
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', mb: 1 }} />
             <Tooltip title="Help" placement="right">
@@ -577,7 +727,7 @@
     }
 
     // ── Tabs bar ────────────────────────────────────────────────────
-    const TAB_LABELS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'IP dashboards', 'Calendar', 'Locations', 'Notifications'];
+    const TAB_LABELS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'iP dashboards', 'Calendar', 'Locations', 'Notifications'];
 
     function TabsBar({ value, onChange }) {
       return (
@@ -638,7 +788,7 @@
     }
 
     // ── Main content ────────────────────────────────────────────────
-    function MainContent() {
+    function MainContent({ dirty, saveStatus, onSave, onDirty, onResetAll, metricRefs, compRef1, compRef2, numericRef, competitionRef }) {
       return (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           {/* Sticky header — does not scroll */}
@@ -648,7 +798,7 @@
                 <Typography sx={{ fontWeight: 700, fontSize: 20, color: PRIMARY }}>
                   Performance management dashboard settings
                 </Typography>
-                <Link href="#" underline="hover" sx={{ fontSize: 13, color: PRIMARY, mt: 0.5, display: 'inline-block' }}>
+                <Link href="#" underline="hover" onClick={(e) => { e.preventDefault(); onResetAll?.(); }} sx={{ fontSize: 13, color: PRIMARY, mt: 0.5, display: 'inline-block' }}>
                   Reset all to default
                 </Link>
               </Box>
@@ -665,8 +815,11 @@
                 <Button
                   variant="contained"
                   size="small"
+                  disabled={!dirty}
+                  onClick={onSave}
                   sx={{ bgcolor: PRIMARY, color: '#fff', fontWeight: 600, boxShadow: 'none',
-                    '&:hover': { bgcolor: '#2e3a4e', boxShadow: 'none' } }}
+                    '&:hover': { bgcolor: '#2e3a4e', boxShadow: 'none' },
+                    '&.Mui-disabled': { bgcolor: `${PRIMARY}60`, color: '#fff' } }}
                 >
                   Save changes
                 </Button>
@@ -677,40 +830,78 @@
           {/* Scrollable settings */}
           <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
 
-          {/* Metrics */}
-          <SectionTitle>Metrics</SectionTitle>
-          {METRICS.map((m) => <MetricRow key={m.key} metric={m} />)}
+            {/* Error banner */}
+            {saveStatus === 'error' && (
+              <Alert
+                severity="error"
+                icon={<MI name="error_outline" size={22} color="#931621" />}
+                sx={{
+                  mb: 3, bgcolor: '#fdeded', color: '#931621',
+                  '& .MuiAlert-icon': { color: '#931621', alignItems: 'center' },
+                  '& .MuiAlert-message': { py: 0.5 },
+                  borderRadius: 1,
+                }}
+              >
+                <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#931621', lineHeight: 1.3 }}>Error</Typography>
+                <Typography sx={{ fontSize: 14, color: '#931621' }}>All fields require an input</Typography>
+              </Alert>
+            )}
 
-          {/* Comparison types */}
-          <SectionTitle>Comparison types</SectionTitle>
-          <ComparisonRow
-            title="Game comparison - comparison type"
-            description="The range of data for the game-to-game/overall comparison dashboards"
-            typeOpts={['Last X games', 'Last X weeks', 'Last X months']}
-            defaultType="Last X games"
-            defaultNum="10"
-          />
-          <ComparisonRow
-            title="Gameday +/- comparison - comparison type"
-            description="The range of data for the game-day +/- comparison in the performance management dashboards"
-            typeOpts={['Last X Days', 'Last X Weeks', 'Last X Months']}
-            defaultType="Last X Days"
-            defaultNum="100"
-          />
+            {/* Success banner */}
+            {saveStatus === 'success' && (
+              <Alert
+                severity="warning"
+                sx={{
+                  mb: 3,
+                  '& .MuiAlert-message': { py: 0.5 },
+                  borderRadius: 1,
+                }}
+              >
+                <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>Changes submitted</Typography>
+                <Typography sx={{ fontSize: 14 }}>It may take a few hours for changes to be reflected in the dashboard</Typography>
+              </Alert>
+            )}
 
-          {/* Numeric options */}
-          <SectionTitle>Numeric options</SectionTitle>
-          <NumericOptionsRow />
+            {/* Metrics */}
+            <SectionTitle>Metrics</SectionTitle>
+            {METRICS.map((m, idx) => (
+              <MetricRow key={m.key} metric={m} ref={metricRefs[idx]} onDirty={onDirty} />
+            ))}
 
-          {/* Competition IDs */}
-          <SectionTitle>Competition IDs</SectionTitle>
-          <CompetitionIDsRow />
+            {/* Comparison types */}
+            <SectionTitle>Comparison types</SectionTitle>
+            <ComparisonRow
+              ref={compRef1}
+              title="Game comparison - comparison type"
+              description="The range of data for the game-to-game/overall comparison dashboards"
+              typeOpts={['Last X games']}
+              defaultType="Last X games"
+              defaultNum="10"
+              onDirty={onDirty}
+            />
+            <ComparisonRow
+              ref={compRef2}
+              title="Gameday +/- comparison - comparison type"
+              description="The range of data for the game-day +/- comparison in the performance management dashboards"
+              typeOpts={['Last X Days']}
+              defaultType="Last X Days"
+              defaultNum="100"
+              onDirty={onDirty}
+            />
 
-          {/* Boolean options */}
-          <SectionTitle>Boolean options</SectionTitle>
-          <BooleanOptionsRow />
+            {/* Numeric options */}
+            <SectionTitle>Numeric options</SectionTitle>
+            <NumericOptionsRow ref={numericRef} onDirty={onDirty} />
 
-          <Box sx={{ height: 48 }} />
+            {/* Competition IDs */}
+            <SectionTitle>Competition IDs</SectionTitle>
+            <CompetitionIDsRow ref={competitionRef} onDirty={onDirty} />
+
+            {/* Boolean options */}
+            <SectionTitle>Boolean options</SectionTitle>
+            <BooleanOptionsRow onDirty={onDirty} />
+
+            <Box sx={{ height: 48 }} />
           </Box>
         </Box>
       );
@@ -720,20 +911,71 @@
     function App() {
       const [tabIndex, setTabIndex]   = useState(4);
       const [subNav,   setSubNav]     = useState('Performance management');
+      const [dirty,    setDirty]      = useState(false);
+      const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'error' | 'success'
+      const [resetKey, setResetKey]   = useState(0);
+
+      const onDirty = () => { setDirty(true); setSaveStatus('idle'); };
+
+      function handleResetAll() {
+        setResetKey(k => k + 1);
+        setDirty(false);
+        setSaveStatus('idle');
+      }
+
+      // Refs for validatable rows — recreated when resetKey changes
+      const metricRefs = useRef(null);
+      const prevResetKey = useRef(resetKey);
+      if (!metricRefs.current || prevResetKey.current !== resetKey) {
+        metricRefs.current = METRICS.map(() => React.createRef());
+        prevResetKey.current = resetKey;
+      }
+      const compRef1      = useRef(null);
+      const compRef2      = useRef(null);
+      const numericRef    = useRef(null);
+      const competitionRef = useRef(null);
+
+      function handleSave() {
+        const allRefs = [
+          ...metricRefs.current,
+          compRef1,
+          compRef2,
+          numericRef,
+          competitionRef,
+        ];
+        const results = allRefs.map(r => r.current ? r.current.validate() : true);
+        const allValid = results.every(Boolean);
+        if (allValid) {
+          setSaveStatus('success');
+          setDirty(false);
+        } else {
+          setSaveStatus('error');
+        }
+      }
 
       return (
         <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
           <PrimaryNav />
 
-          {/* Everything right of nav */}
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
             <TopBar />
             <TabsBar value={tabIndex} onChange={(_, v) => setTabIndex(v)} />
 
-            {/* Content row: sub-nav + main */}
             <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
               <SubNav selected={subNav} onSelect={setSubNav} />
-              <MainContent />
+              <MainContent
+                key={resetKey}
+                dirty={dirty}
+                saveStatus={saveStatus}
+                onSave={handleSave}
+                onDirty={onDirty}
+                onResetAll={handleResetAll}
+                metricRefs={metricRefs.current}
+                compRef1={compRef1}
+                compRef2={compRef2}
+                numericRef={numericRef}
+                competitionRef={competitionRef}
+              />
             </Box>
           </Box>
         </Box>
