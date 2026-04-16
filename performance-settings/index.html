@@ -202,6 +202,48 @@
       );
     }
 
+    // ── Reusable squad-specific overrides section ───────────────────
+    function SquadOverrides({ squads, setSquads, renderControl }) {
+      const addSquad = () => setSquads([...squads, { squad: [] }]);
+      const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
+      const update = (i, patch) => { const n = [...squads]; n[i] = { ...n[i], ...patch }; setSquads(n); };
+      return (
+        <>
+          {squads.length > 0 && (
+            <Box sx={{ mt: 2, pl: 2, borderLeft: '4px solid #B6C9D4' }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: PRIMARY, mb: 1.5 }}>
+                Squad specific
+              </Typography>
+              <Stack spacing={1.5}>
+                {squads.map((s, i) => (
+                  <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 540 }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Autocomplete
+                        size="small" multiple options={SQUAD_OPTIONS} value={s.squad}
+                        onChange={(_, v) => update(i, { squad: v })}
+                        renderTags={(sel) => (
+                          <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                            {sel.join(', ')}
+                          </span>
+                        )}
+                        sx={{ mb: 1, width: '100%' }}
+                        renderInput={(p) => <TextField {...p} label="Squad(s)" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                      />
+                      {renderControl(s, i, update)}
+                    </Box>
+                    <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: '14px' }}>
+                      <MI name="delete_outline" size={18} color={GREY100} />
+                    </IconButton>
+                  </Stack>
+                ))}
+              </Stack>
+            </Box>
+          )}
+          <AddSquadBtn onClick={addSquad} />
+        </>
+      );
+    }
+
     function MetricSelect({ value, onChange, label = 'Metric', sx }) {
       return (
         <Autocomplete
@@ -219,16 +261,12 @@
     // ── Metric row ──────────────────────────────────────────────────
     function MetricRow({ metric }) {
       const [val, setVal] = useState(metric.value);
-      const [squads, setSquads] = useState(metric.squads || []);
-
-      const addSquad = () => setSquads([...squads, { squad: [], value: '' }]);
-      const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
-      const updateSquad = (i, k, v) => { const n = [...squads]; n[i] = { ...n[i], [k]: v }; setSquads(n); };
-
+      const [squads, setSquads] = useState(
+        (metric.squads || []).map(s => ({ squad: s.squad, value: s.value }))
+      );
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
-            {/* Left label */}
             <Box>
               <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
                 Metric - {metric.label}
@@ -237,50 +275,16 @@
                 {metric.description}
               </Typography>
             </Box>
-
-            {/* Right controls */}
             <Box>
-              {/* Metric autocomplete + Restore default on same row */}
               <Stack direction="row" spacing={2} alignItems="center">
                 <MetricSelect value={val} onChange={setVal} sx={{ width: 490, flexShrink: 0 }} />
                 <RestoreDefault />
               </Stack>
-
-              {squads.length > 0 && (
-                <Box sx={{ mt: 2, pl: 2, borderLeft: '4px solid #B6C9D4' }}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: PRIMARY, mb: 1.5 }}>
-                    Squad specific
-                  </Typography>
-                  <Stack spacing={1.5}>
-                    {squads.map((s, i) => (
-                      <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 490 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Autocomplete
-                            size="small"
-                            multiple
-                            options={SQUAD_OPTIONS}
-                            value={s.squad}
-                            onChange={(_, v) => updateSquad(i, 'squad', v)}
-                            renderTags={(selected) => (
-                              <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                                {selected.join(', ')}
-                              </span>
-                            )}
-                            sx={{ mb: 1, width: '100%' }}
-                            renderInput={(p) => <TextField {...p} label="Squad(s)" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
-                          />
-                          <MetricSelect value={s.value} onChange={(v) => updateSquad(i, 'value', v)} sx={{ width: '100%' }} />
-                        </Box>
-                        <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: '14px' }}>
-                          <MI name="delete_outline" size={18} color={GREY100} />
-                        </IconButton>
-                      </Stack>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              <AddSquadBtn onClick={addSquad} />
+              <SquadOverrides squads={squads} setSquads={setSquads}
+                renderControl={(s, i, update) => (
+                  <MetricSelect value={s.value || ''} onChange={(v) => update(i, { value: v })} sx={{ width: '100%' }} />
+                )}
+              />
             </Box>
           </Box>
           <Divider />
@@ -301,6 +305,7 @@
     function ComparisonRow({ title, description, typeOpts, defaultType, numLabel, defaultNum }) {
       const [type, setType] = useState(defaultType);
       const [num, setNum]   = useState(defaultNum);
+      const [squads, setSquads] = useState([]);
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -311,21 +316,163 @@
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Autocomplete
-                  size="small"
-                  options={typeOpts}
-                  value={type}
-                  onChange={(_, v) => setType(v)}
-                  disableClearable
+                  size="small" options={typeOpts} value={type}
+                  onChange={(_, v) => setType(v)} disableClearable
                   sx={{ width: 220, flexShrink: 0 }}
                   renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                 />
-                <TextField size="small" variant="filled" label={numLabel} value={num} onChange={(e) => setNum(e.target.value)} sx={{ width: 160, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                <TextField size="small" variant="filled" label={numLabel} value={num}
+                  onChange={(e) => setNum(e.target.value)} sx={{ width: 160, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
                 <RestoreDefault />
               </Stack>
-              <AddSquadBtn />
+              <SquadOverrides squads={squads} setSquads={setSquads}
+                renderControl={(s, i, update) => (
+                  <Stack direction="row" spacing={1}>
+                    <Autocomplete
+                      size="small" options={typeOpts} value={s.type || typeOpts[0]}
+                      onChange={(_, v) => update(i, { type: v })} disableClearable
+                      sx={{ flex: 1 }}
+                      renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                    />
+                    <TextField size="small" variant="filled" label={numLabel} value={s.num || ''}
+                      onChange={(e) => update(i, { num: e.target.value })} sx={{ width: 130 }} InputLabelProps={{ shrink: true }} />
+                  </Stack>
+                )}
+              />
             </Box>
           </Box>
           <Divider />
+        </Box>
+      );
+    }
+
+    // ── Numeric options row ─────────────────────────────────────────
+    function NumericOptionsRow() {
+      const [minutes, setMinutes] = useState('60');
+      const [squads, setSquads] = useState([]);
+      return (
+        <Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                Game comparison - minimum participation minutes
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                Only games where the players has played at least this number of minutes will be considered when calculating their game comparison values for the performance management reports. If this is left blank, all games will be included.
+              </Typography>
+            </Box>
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <TextField size="small" variant="filled" label="Minutes" value={minutes}
+                  onChange={(e) => setMinutes(e.target.value)} sx={{ width: 220, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                <RestoreDefault />
+              </Stack>
+              <SquadOverrides squads={squads} setSquads={setSquads}
+                renderControl={(s, i, update) => (
+                  <TextField size="small" variant="filled" label="Minutes" value={s.minutes || ''}
+                    onChange={(e) => update(i, { minutes: e.target.value })} sx={{ width: '100%' }} InputLabelProps={{ shrink: true }} />
+                )}
+              />
+            </Box>
+          </Box>
+          <Divider />
+        </Box>
+      );
+    }
+
+    // ── Competition IDs row ─────────────────────────────────────────
+    function CompetitionIDsRow() {
+      const [ids, setIds] = useState(['Friendly', 'League', 'Cup']);
+      const [squads, setSquads] = useState([]);
+      return (
+        <Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                Game comparison - competition IDs
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                The comma-separated list of competition IDs we use as games to include when calculating game comparison values for the performance management dashboards. If this is left blank, all competitions will be included.
+              </Typography>
+            </Box>
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Autocomplete
+                  size="small" multiple options={COMPETITION_OPTIONS} value={ids}
+                  onChange={(_, v) => setIds(v)}
+                  renderTags={(sel) => (
+                    <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                      {sel.join(', ')}
+                    </span>
+                  )}
+                  sx={{ width: 490, flexShrink: 0 }}
+                  renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                />
+                <RestoreDefault />
+              </Stack>
+              <SquadOverrides squads={squads} setSquads={setSquads}
+                renderControl={(s, i, update) => (
+                  <Autocomplete
+                    size="small" multiple options={COMPETITION_OPTIONS} value={s.ids || []}
+                    onChange={(_, v) => update(i, { ids: v })}
+                    renderTags={(sel) => (
+                      <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+                        {sel.join(', ')}
+                      </span>
+                    )}
+                    sx={{ width: '100%' }}
+                    renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                  />
+                )}
+              />
+            </Box>
+          </Box>
+          <Divider />
+        </Box>
+      );
+    }
+
+    // ── Boolean options row ─────────────────────────────────────────
+    function BooleanOptionsRow() {
+      const [val, setVal] = useState('include');
+      const [squads, setSquads] = useState([]);
+      return (
+        <Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
+                Include or exclude child games from squad game calendar
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
+                Whether to include or exclude games played by the parent club's child entities.
+              </Typography>
+            </Box>
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <RadioGroup row value={val} onChange={(e) => setVal(e.target.value)}>
+                  <FormControlLabel value="include"
+                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                    label="Include child games" />
+                  <FormControlLabel value="exclude"
+                    control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                    label="Exclude child games" />
+                </RadioGroup>
+                <RestoreDefault />
+              </Stack>
+              <SquadOverrides squads={squads} setSquads={setSquads}
+                renderControl={(s, i, update) => (
+                  <RadioGroup row value={s.val || 'include'} onChange={(e) => update(i, { val: e.target.value })}>
+                    <FormControlLabel value="include"
+                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                      label="Include child games" />
+                    <FormControlLabel value="exclude"
+                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
+                      label="Exclude child games" />
+                  </RadioGroup>
+                )}
+              />
+            </Box>
+          </Box>
         </Box>
       );
     }
@@ -534,93 +681,15 @@
 
           {/* Numeric options */}
           <SectionTitle>Numeric options</SectionTitle>
-          <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
-              <Box>
-                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
-                  Game comparison - minimum participation minutes
-                </Typography>
-                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
-                  Only games where the players has played at least this number of minutes will be considered when calculating their game comparison values for the performance management reports. If this is left blank, all games will be included.
-                </Typography>
-              </Box>
-              <Box>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <TextField size="small" variant="filled" label="Minutes" defaultValue="60" sx={{ width: 220, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
-                  <RestoreDefault />
-                </Stack>
-                <AddSquadBtn />
-              </Box>
-            </Box>
-            <Divider />
-          </Box>
+          <NumericOptionsRow />
 
           {/* Competition IDs */}
           <SectionTitle>Competition IDs</SectionTitle>
-          <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
-              <Box>
-                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
-                  Game comparison - competition IDs
-                </Typography>
-                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
-                  The comma-separated list of competition IDs we use as games to include when calculating game comparison values for the performance management dashboards. If this is left blank, all competitions will be included.
-                </Typography>
-              </Box>
-              <Box>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Autocomplete
-                    size="small"
-                    multiple
-                    options={COMPETITION_OPTIONS}
-                    defaultValue={['Friendly', 'League', 'Cup']}
-                    renderTags={(selected) => (
-                      <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                        {selected.join(', ')}
-                      </span>
-                    )}
-                    sx={{ width: 490, flexShrink: 0 }}
-                    renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
-                  />
-                  <RestoreDefault />
-                </Stack>
-                <AddSquadBtn />
-              </Box>
-            </Box>
-            <Divider />
-          </Box>
+          <CompetitionIDsRow />
 
           {/* Boolean options */}
           <SectionTitle>Boolean options</SectionTitle>
-          <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
-              <Box>
-                <Typography sx={{ fontWeight: 600, fontSize: 14, color: PRIMARY }}>
-                  Include or exclude child games from squad game calendar
-                </Typography>
-                <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>
-                  Whether to include or exclude games played by the parent club's child entities.
-                </Typography>
-              </Box>
-              <Box>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <RadioGroup row defaultValue="include">
-                    <FormControlLabel
-                      value="include"
-                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                      label="Include child games"
-                    />
-                    <FormControlLabel
-                      value="exclude"
-                      control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
-                      label="Exclude child games"
-                    />
-                  </RadioGroup>
-                  <RestoreDefault />
-                </Stack>
-              </Box>
-            </Box>
-          </Box>
+          <BooleanOptionsRow />
 
           <Box sx={{ height: 48 }} />
           </Box>
