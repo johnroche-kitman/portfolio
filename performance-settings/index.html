@@ -92,7 +92,7 @@
       Box, Stack, Typography, Button, IconButton, Divider,
       Tabs, Tab, List, ListItemButton, ListItemText,
       Autocomplete, TextField, Radio, RadioGroup, FormControlLabel,
-      Avatar, Tooltip, Link, Alert
+      Avatar, Tooltip, Link, Alert, Checkbox
     } from '@mui/material';
 
     // ── Design tokens ──────────────────────────────────────────────
@@ -257,26 +257,13 @@
                   return (
                     <Stack key={i} direction="row" spacing={2} alignItems="flex-start">
                       <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Autocomplete
-                          size="small" multiple options={SQUAD_OPTIONS} value={s.squad}
-                          onChange={(_, v) => update(i, { squad: v })}
-                          renderTags={(sel) => (
-                            <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                              {sel.join(', ')}
-                            </span>
-                          )}
+                        <MultiSelect
+                          options={SQUAD_OPTIONS}
+                          value={s.squad}
+                          onChange={(v) => update(i, { squad: v })}
+                          label="Squad(s)"
+                          error={squadErr}
                           sx={{ width: '100%', mb: 1 }}
-                          renderInput={(p) => (
-                            <TextField
-                              {...p}
-                              label="Squad(s)"
-                              variant="filled"
-                              InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
-                              error={squadErr}
-                              helperText={squadErr ? 'Field required' : undefined}
-                              {...errProps(squadErr)}
-                            />
-                          )}
                         />
                         {renderControl(s, i, update, submitted)}
                       </Box>
@@ -306,6 +293,47 @@
           value={value}
           onChange={(_, v) => onChange && onChange(v)}
           disableClearable
+          sx={sx}
+          renderInput={(p) => (
+            <TextField
+              {...p}
+              label={label}
+              variant="filled"
+              InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
+              error={error}
+              helperText={error ? 'Field required' : undefined}
+              {...errProps(error)}
+            />
+          )}
+        />
+      );
+    }
+
+    // ── Multi-select with checkboxes ───────────────────────────────
+    function MultiSelect({ options, value, onChange, label, sx, error }) {
+      return (
+        <Autocomplete
+          size="small"
+          multiple
+          disableCloseOnSelect
+          options={options}
+          value={value}
+          onChange={(_, v) => onChange(v)}
+          renderTags={(sel) => (
+            <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
+              {sel.join(', ')}
+            </span>
+          )}
+          renderOption={(props, option, { selected }) => (
+            <li {...props}>
+              <Checkbox
+                size="small"
+                checked={selected}
+                sx={{ mr: 1, p: 0.5, color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }}
+              />
+              {option}
+            </li>
+          )}
           sx={sx}
           renderInput={(p) => (
             <TextField
@@ -609,26 +637,13 @@
             <Box>
               <Stack direction="row" spacing={2} alignItems="flex-start">
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Autocomplete
-                    size="small" multiple options={COMPETITION_OPTIONS} value={ids}
-                    onChange={(_, v) => { setIds(v); onDirty?.(); }}
-                    renderTags={(sel) => (
-                      <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                        {sel.join(', ')}
-                      </span>
-                    )}
+                  <MultiSelect
+                    options={COMPETITION_OPTIONS}
+                    value={ids}
+                    onChange={(v) => { setIds(v); onDirty?.(); }}
+                    label="Competition IDs"
+                    error={idsError}
                     sx={{ width: '100%' }}
-                    renderInput={(p) => (
-                      <TextField
-                        {...p}
-                        label="Competition IDs"
-                        variant="filled"
-                        InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
-                        error={idsError}
-                        helperText={idsError ? 'Field required' : undefined}
-                        {...errProps(idsError)}
-                      />
-                    )}
                   />
                   <SquadOverrides
                     squads={squads}
@@ -637,26 +652,13 @@
                     renderControl={(s, i, update, sub) => {
                       const iErr = sub && (!s.ids || s.ids.length === 0);
                       return (
-                        <Autocomplete
-                          size="small" multiple options={COMPETITION_OPTIONS} value={s.ids || []}
-                          onChange={(_, v) => { update(i, { ids: v }); onDirty?.(); }}
-                          renderTags={(sel) => (
-                            <span style={{ fontSize: 14, color: PRIMARY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '90%' }}>
-                              {sel.join(', ')}
-                            </span>
-                          )}
+                        <MultiSelect
+                          options={COMPETITION_OPTIONS}
+                          value={s.ids || []}
+                          onChange={(v) => { update(i, { ids: v }); onDirty?.(); }}
+                          label="Competition IDs"
+                          error={iErr}
                           sx={{ width: '100%' }}
-                          renderInput={(p) => (
-                            <TextField
-                              {...p}
-                              label="Competition IDs"
-                              variant="filled"
-                              InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
-                              error={iErr}
-                              helperText={iErr ? 'Field required' : undefined}
-                              {...errProps(iErr)}
-                            />
-                          )}
                         />
                       );
                     }}
@@ -958,7 +960,7 @@
               ref={compRef1}
               title="Game comparison - comparison type"
               description="The range of data for the game-to-game/overall comparison dashboards"
-              typeOpts={['Last X games']}
+              typeOpts={['Last X games', 'Last X Days']}
               defaultType="Last X games"
               defaultNum="10"
               onDirty={onDirty}
@@ -967,7 +969,7 @@
               ref={compRef2}
               title="Gameday +/- comparison - comparison type"
               description="The range of data for the game-day +/- comparison in the performance management dashboards"
-              typeOpts={['Last X Days']}
+              typeOpts={['Last X games', 'Last X Days']}
               defaultType="Last X Days"
               defaultNum="100"
               onDirty={onDirty}
