@@ -178,9 +178,9 @@
     const COMPETITION_OPTIONS = ['Friendly', 'League', 'Cup', 'Tournament', 'International', 'Champions League', 'Europa League'];
 
     // ── Shared sub-components ───────────────────────────────────────
-    function RestoreDefault() {
+    function RestoreDefault({ onRestore }) {
       return (
-        <Button size="small" sx={{ color: PRIMARY, fontWeight: 600, whiteSpace: 'nowrap', minWidth: 0, px: 0 }}>
+        <Button size="small" onClick={onRestore} sx={{ color: PRIMARY, fontWeight: 600, whiteSpace: 'nowrap', minWidth: 0, px: 0 }}>
           Restore default
         </Button>
       );
@@ -216,7 +216,7 @@
               </Typography>
               <Stack spacing={1.5}>
                 {squads.map((s, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="flex-start" sx={{ maxWidth: 540 }}>
+                  <Stack key={i} direction="row" spacing={1} alignItems="center" sx={{ maxWidth: 540 }}>
                     <Box sx={{ flex: 1 }}>
                       <Autocomplete
                         size="small" multiple options={SQUAD_OPTIONS} value={s.squad}
@@ -231,9 +231,11 @@
                       />
                       {renderControl(s, i, update)}
                     </Box>
-                    <IconButton size="small" onClick={() => removeSquad(i)} sx={{ mt: '14px' }}>
-                      <MI name="delete_outline" size={18} color={GREY100} />
-                    </IconButton>
+                    <Tooltip title="Remove squad setting" placement="top">
+                      <IconButton size="small" onClick={() => removeSquad(i)} sx={{ alignSelf: 'flex-start', mt: '7px' }}>
+                        <MI name="delete_outline" size={18} color={GREY100} />
+                      </IconButton>
+                    </Tooltip>
                   </Stack>
                 ))}
               </Stack>
@@ -260,10 +262,9 @@
 
     // ── Metric row ──────────────────────────────────────────────────
     function MetricRow({ metric }) {
+      const defaultSquads = (metric.squads || []).map(s => ({ squad: s.squad, value: s.value }));
       const [val, setVal] = useState(metric.value);
-      const [squads, setSquads] = useState(
-        (metric.squads || []).map(s => ({ squad: s.squad, value: s.value }))
-      );
+      const [squads, setSquads] = useState(defaultSquads);
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -278,7 +279,7 @@
             <Box>
               <Stack direction="row" spacing={2} alignItems="center">
                 <MetricSelect value={val} onChange={setVal} sx={{ width: 490, flexShrink: 0 }} />
-                <RestoreDefault />
+                <RestoreDefault onRestore={() => { setVal(metric.value); setSquads(defaultSquads); }} />
               </Stack>
               <SquadOverrides squads={squads} setSquads={setSquads}
                 renderControl={(s, i, update) => (
@@ -302,10 +303,22 @@
     }
 
     // ── Comparison row ──────────────────────────────────────────────
-    function ComparisonRow({ title, description, typeOpts, defaultType, numLabel, defaultNum }) {
+    const NO_NUM_TYPES = ['Season so far', 'Last season'];
+    function numLabelForType(t) {
+      if (!t) return 'Number';
+      if (t.toLowerCase().includes('game')) return 'Number of games';
+      if (t.toLowerCase().includes('day'))  return 'Number of days';
+      if (t.toLowerCase().includes('week')) return 'Number of weeks';
+      if (t.toLowerCase().includes('month')) return 'Number of months';
+      return 'Number';
+    }
+
+    function ComparisonRow({ title, description, typeOpts: baseOpts, defaultType, defaultNum }) {
+      const typeOpts = [...baseOpts, 'Season so far', 'Last season'];
       const [type, setType] = useState(defaultType);
       const [num, setNum]   = useState(defaultNum);
       const [squads, setSquads] = useState([]);
+      const showNum = !NO_NUM_TYPES.includes(type);
       return (
         <Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: '360px 1fr', columnGap: 4, py: 3, alignItems: 'flex-start' }}>
@@ -321,23 +334,31 @@
                   sx={{ width: 220, flexShrink: 0 }}
                   renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                 />
-                <TextField size="small" variant="filled" label={numLabel} value={num}
-                  onChange={(e) => setNum(e.target.value)} sx={{ width: 160, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
-                <RestoreDefault />
+                {showNum && (
+                  <TextField size="small" variant="filled" label={numLabelForType(type)} value={num}
+                    onChange={(e) => setNum(e.target.value)} sx={{ width: 180, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
+                )}
+                <RestoreDefault onRestore={() => { setType(defaultType); setNum(defaultNum); setSquads([]); }} />
               </Stack>
               <SquadOverrides squads={squads} setSquads={setSquads}
-                renderControl={(s, i, update) => (
-                  <Stack direction="row" spacing={1}>
-                    <Autocomplete
-                      size="small" options={typeOpts} value={s.type || typeOpts[0]}
-                      onChange={(_, v) => update(i, { type: v })} disableClearable
-                      sx={{ flex: 1 }}
-                      renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
-                    />
-                    <TextField size="small" variant="filled" label={numLabel} value={s.num || ''}
-                      onChange={(e) => update(i, { num: e.target.value })} sx={{ width: 130 }} InputLabelProps={{ shrink: true }} />
-                  </Stack>
-                )}
+                renderControl={(s, i, update) => {
+                  const sType = s.type || typeOpts[0];
+                  const sShowNum = !NO_NUM_TYPES.includes(sType);
+                  return (
+                    <Stack direction="row" spacing={1}>
+                      <Autocomplete
+                        size="small" options={typeOpts} value={sType}
+                        onChange={(_, v) => update(i, { type: v })} disableClearable
+                        sx={{ flex: 1 }}
+                        renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                      />
+                      {sShowNum && (
+                        <TextField size="small" variant="filled" label={numLabelForType(sType)} value={s.num || ''}
+                          onChange={(e) => update(i, { num: e.target.value })} sx={{ width: 160 }} InputLabelProps={{ shrink: true }} />
+                      )}
+                    </Stack>
+                  );
+                }}
               />
             </Box>
           </Box>
@@ -365,7 +386,7 @@
               <Stack direction="row" spacing={2} alignItems="center">
                 <TextField size="small" variant="filled" label="Minutes" value={minutes}
                   onChange={(e) => setMinutes(e.target.value)} sx={{ width: 220, flexShrink: 0 }} InputLabelProps={{ shrink: true }} />
-                <RestoreDefault />
+                <RestoreDefault onRestore={() => { setMinutes('60'); setSquads([]); }} />
               </Stack>
               <SquadOverrides squads={squads} setSquads={setSquads}
                 renderControl={(s, i, update) => (
@@ -408,7 +429,7 @@
                   sx={{ width: 490, flexShrink: 0 }}
                   renderInput={(p) => <TextField {...p} label="Competition IDs" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
                 />
-                <RestoreDefault />
+                <RestoreDefault onRestore={() => { setIds(['Friendly', 'League', 'Cup']); setSquads([]); }} />
               </Stack>
               <SquadOverrides squads={squads} setSquads={setSquads}
                 renderControl={(s, i, update) => (
@@ -457,7 +478,7 @@
                     control={<Radio size="small" sx={{ color: BLUE_GREY, '&.Mui-checked': { color: PRIMARY } }} />}
                     label="Exclude child games" />
                 </RadioGroup>
-                <RestoreDefault />
+                <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); }} />
               </Stack>
               <SquadOverrides squads={squads} setSquads={setSquads}
                 renderControl={(s, i, update) => (
@@ -667,7 +688,6 @@
             description="The range of data for the game-to-game/overall comparison dashboards"
             typeOpts={['Last X games', 'Last X weeks', 'Last X months']}
             defaultType="Last X games"
-            numLabel="Number of games"
             defaultNum="10"
           />
           <ComparisonRow
@@ -675,7 +695,6 @@
             description="The range of data for the game-day +/- comparison in the performance management dashboards"
             typeOpts={['Last X Days', 'Last X Weeks', 'Last X Months']}
             defaultType="Last X Days"
-            numLabel="Number of days"
             defaultNum="100"
           />
 
