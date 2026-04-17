@@ -240,8 +240,8 @@
     }
 
     // ── Reusable squad-specific overrides section ───────────────────
-    function SquadOverrides({ squads, setSquads, renderControl, submitted }) {
-      const addSquad = () => setSquads([...squads, { squad: [] }]);
+    function SquadOverrides({ squads, setSquads, renderControl, submitted, onAdd }) {
+      const addSquad = () => { setSquads([...squads, { squad: [] }]); onAdd?.(); };
       const removeSquad = (i) => setSquads(squads.filter((_, idx) => idx !== i));
       const update = (i, patch) => { const n = [...squads]; n[i] = { ...n[i], ...patch }; setSquads(n); };
       return (
@@ -397,6 +397,7 @@
                 squads={squads}
                 setSquads={(s) => { setSquads(s); onDirty?.(); }}
                 submitted={submitted}
+                onAdd={() => setSubmitted(false)}
                 renderControl={(s, i, update, sub) => (
                   <MetricSelect
                     value={s.value || ''}
@@ -494,6 +495,7 @@
                   squads={squads}
                   setSquads={(s) => { setSquads(s); onDirty?.(); }}
                   submitted={submitted}
+                  onAdd={() => setSubmitted(false)}
                   renderControl={(s, i, update, sub) => {
                     const sType = s.type || typeOpts[0];
                     const sShowNum = !NO_NUM_TYPES.includes(sType);
@@ -579,6 +581,7 @@
                   squads={squads}
                   setSquads={(s) => { setSquads(s); onDirty?.(); }}
                   submitted={submitted}
+                  onAdd={() => setSubmitted(false)}
                   renderControl={(s, i, update, sub) => {
                     const mErr = sub && !s.minutes;
                     return (
@@ -651,6 +654,7 @@
                   squads={squads}
                   setSquads={(s) => { setSquads(s); onDirty?.(); }}
                   submitted={submitted}
+                  onAdd={() => setSubmitted(false)}
                   renderControl={(s, i, update, sub) => {
                     const iErr = sub && (!s.ids || s.ids.length === 0);
                     return (
