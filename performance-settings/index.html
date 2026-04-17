@@ -877,7 +877,7 @@
     }
 
     // ── Main content ────────────────────────────────────────────────
-    function MainContent({ dirty, saveStatus, onSave, onDirty, onResetAll, metricRefs, compRef1, compRef2, numericRef, competitionRef, scrollRef }) {
+    function MainContent({ dirty, saveStatus, onSave, onDirty, onResetAll, metricRefs, compRef1, compRef2, numericRef, competitionRef }) {
       return (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           {/* Sticky header — does not scroll */}
@@ -917,7 +917,7 @@
           </Box>
 
           {/* Scrollable settings */}
-          <Box ref={scrollRef} sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
+          <Box id="settings-scroll" sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
 
             {/* Error banner */}
             {saveStatus === 'error' && (
@@ -1023,7 +1023,6 @@
       const compRef2      = useRef(null);
       const numericRef    = useRef(null);
       const competitionRef = useRef(null);
-      const scrollRef     = useRef(null);
 
       function handleSave() {
         const allRefs = [
@@ -1041,7 +1040,7 @@
         } else {
           setSaveStatus('error');
         }
-        scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => document.getElementById('settings-scroll')?.scrollTo({ top: 0, behavior: 'instant' }), 50);
       }
 
       return (
@@ -1066,7 +1065,6 @@
                 compRef2={compRef2}
                 numericRef={numericRef}
                 competitionRef={competitionRef}
-                scrollRef={scrollRef}
               />
             </Box>
           </Box>
