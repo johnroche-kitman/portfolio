@@ -352,9 +352,8 @@
 
     // ── Metric row ──────────────────────────────────────────────────
     const MetricRow = React.forwardRef(function MetricRow({ metric, onDirty }, ref) {
-      const defaultSquads = (metric.squads || []).map(s => ({ squad: s.squad, value: s.value }));
       const [val, setVal] = useState(metric.value);
-      const [squads, setSquads] = useState(defaultSquads);
+      const [squads, setSquads] = useState([]);
       const [submitted, setSubmitted] = useState(false);
 
       useImperativeHandle(ref, () => ({
