@@ -301,7 +301,7 @@
               variant="filled"
               InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
               error={error}
-              helperText={error ? 'Field required' : undefined}
+              helperText={error ? 'Input required' : undefined}
               {...errProps(error)}
             />
           )}
@@ -342,7 +342,7 @@
               variant="filled"
               InputLabelProps={{ ...p.InputLabelProps, shrink: true }}
               error={error}
-              helperText={error ? 'Field required' : undefined}
+              helperText={error ? 'Input required' : undefined}
               {...errProps(error)}
             />
           )}
@@ -481,7 +481,7 @@
                         sx={{ flex: 1 }}
                         InputLabelProps={{ shrink: true }}
                         error={numError}
-                        helperText={numError ? 'Field required' : undefined}
+                        helperText={numError ? 'Input required' : undefined}
                         {...errProps(numError)}
                       />
                     )}
@@ -513,7 +513,7 @@
                             sx={{ flex: 1 }}
                             InputLabelProps={{ shrink: true }}
                             error={sNumErr}
-                            helperText={sNumErr ? 'Field required' : undefined}
+                            helperText={sNumErr ? 'Input required' : undefined}
                             {...errProps(sNumErr)}
                           />
                         )}
@@ -568,7 +568,7 @@
                     sx={{ width: 220 }}
                     InputLabelProps={{ shrink: true }}
                     error={minutesError}
-                    helperText={minutesError ? 'Field required' : undefined}
+                    helperText={minutesError ? 'Input required' : undefined}
                     {...errProps(minutesError)}
                   />
                   <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
@@ -588,7 +588,7 @@
                         sx={{ width: 220 }}
                         InputLabelProps={{ shrink: true }}
                         error={mErr}
-                        helperText={mErr ? 'Field required' : undefined}
+                        helperText={mErr ? 'Input required' : undefined}
                         {...errProps(mErr)}
                       />
                     );
