@@ -745,18 +745,14 @@
       return (
         <Box sx={{
           width: 60, flexShrink: 0,
-          background: 'linear-gradient(180deg, #2B3548 0%, #1C2538 45%, #0F1929 75%, #121E30 100%)',
+          background: 'linear-gradient(180deg, #06060A 0%, #09090F 40%, #0C0E18 70%, #0E1422 100%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           position: 'sticky', top: 0, height: '100vh',
-          boxShadow: '4px 0 14px rgba(0,0,0,0.22)',
+          boxShadow: '4px 0 14px rgba(0,0,0,0.4), 0 25px 57px rgba(0,0,0,0.35)',
           zIndex: 20, overflowY: 'auto', overflowX: 'hidden',
         }}>
-          <Box sx={{
-            width: 36, height: 36, borderRadius: '8px', bgcolor: ACTIVE_NAV,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            mt: 1.5, mb: 2, flexShrink: 0,
-          }}>
-            <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: 16, fontFamily: "'Open Sans', sans-serif" }}>K</Typography>
+          <Box sx={{ mt: 1.5, mb: 2, flexShrink: 0, width: 36, height: 36 }}>
+            <img src="kitman-logo.png" alt="Kitman Labs" style={{ width: 36, height: 36, borderRadius: '50%', display: 'block' }} />
           </Box>
 
           <Stack sx={{ width: '100%', flex: 1 }} spacing={0}>
@@ -767,29 +763,29 @@
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   position: 'relative', cursor: 'pointer', flexShrink: 0,
                   bgcolor: item.active ? ACTIVE_NAV : 'transparent',
-                  '&:hover': { bgcolor: item.active ? ACTIVE_NAV : 'rgba(255,255,255,0.08)' },
+                  '&:hover': { bgcolor: item.active ? ACTIVE_NAV : 'rgba(255,255,255,0.07)' },
                 }}>
                   {item.active && (
                     <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: '#fff', borderRadius: '0 2px 2px 0' }} />
                   )}
-                  <MI name={item.icon} size={20} color={item.active ? '#fff' : 'rgba(255,255,255,0.7)'} />
+                  <MI name={item.icon} size={20} color={item.active ? '#fff' : 'rgba(255,255,255,0.55)'} />
                 </Box>
               </Tooltip>
             ))}
           </Stack>
 
           <Box sx={{ width: '100%', pb: 1, flexShrink: 0 }}>
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', mb: 1 }} />
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', mb: 1 }} />
             <Tooltip title="Help" placement="right">
               <Box sx={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
-                <MI name="help_outline" size={20} color="rgba(255,255,255,0.7)" />
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.07)' } }}>
+                <MI name="help_outline" size={20} color="rgba(255,255,255,0.55)" />
               </Box>
             </Tooltip>
             <Tooltip title="Close menu" placement="right">
               <Box sx={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
-                <MI name="keyboard_double_arrow_left" size={20} color="rgba(255,255,255,0.7)" />
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.07)' } }}>
+                <MI name="keyboard_double_arrow_left" size={20} color="rgba(255,255,255,0.55)" />
               </Box>
             </Tooltip>
           </Box>
