@@ -382,32 +382,30 @@
               </Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <MetricSelect
-                    value={val}
-                    onChange={(v) => { setVal(v); onDirty?.(); }}
-                    error={valError}
-                    sx={{ width: '100%' }}
-                  />
-                  <SquadOverrides
-                    squads={squads}
-                    setSquads={(s) => { setSquads(s); onDirty?.(); }}
-                    submitted={submitted}
-                    renderControl={(s, i, update, sub) => (
-                      <MetricSelect
-                        value={s.value || ''}
-                        onChange={(v) => { update(i, { value: v }); onDirty?.(); }}
-                        error={sub && !s.value}
-                        sx={{ width: '100%' }}
-                      />
-                    )}
-                  />
-                </Box>
+              <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: squads.length > 0 ? 0 : 0 }}>
+                <MetricSelect
+                  value={val}
+                  onChange={(v) => { setVal(v); onDirty?.(); }}
+                  error={valError}
+                  sx={{ flex: 1 }}
+                />
                 <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
-                  <RestoreDefault onRestore={() => { setVal(metric.value); setSquads(defaultSquads); setSubmitted(false); onDirty?.(); }} />
+                  <RestoreDefault onRestore={() => { setVal(metric.value); setSquads([]); setSubmitted(false); onDirty?.(); }} />
                 </Box>
               </Stack>
+              <SquadOverrides
+                squads={squads}
+                setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                submitted={submitted}
+                renderControl={(s, i, update, sub) => (
+                  <MetricSelect
+                    value={s.value || ''}
+                    onChange={(v) => { update(i, { value: v }); onDirty?.(); }}
+                    error={sub && !s.value}
+                    sx={{ width: '100%' }}
+                  />
+                )}
+              />
             </Box>
           </Box>
           <Divider />
@@ -467,9 +465,9 @@
               <Typography sx={{ fontSize: 14, color: GREY100, mt: 0.75, lineHeight: 1.43 }}>{description}</Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" spacing={1.5}>
+              <Box>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Stack direction="row" spacing={1.5} sx={{ flex: 1, minWidth: 0 }}>
                     <Autocomplete
                       size="small" options={typeOpts} value={type}
                       onChange={(_, v) => { setType(v); onDirty?.(); }} disableClearable
@@ -488,42 +486,42 @@
                       />
                     )}
                   </Stack>
-                  <SquadOverrides
-                    squads={squads}
-                    setSquads={(s) => { setSquads(s); onDirty?.(); }}
-                    submitted={submitted}
-                    renderControl={(s, i, update, sub) => {
-                      const sType = s.type || typeOpts[0];
-                      const sShowNum = !NO_NUM_TYPES.includes(sType);
-                      const sNumErr = sub && sShowNum && !s.num;
-                      return (
-                        <Stack direction="row" spacing={1.5}>
-                          <Autocomplete
-                            size="small" options={typeOpts} value={sType}
-                            onChange={(_, v) => { update(i, { type: v }); onDirty?.(); }} disableClearable
-                            sx={{ width: 220, flexShrink: 0 }}
-                            renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                  <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
+                    <RestoreDefault onRestore={() => { setType(defaultType); setNum(defaultNum); setSquads([]); setSubmitted(false); onDirty?.(); }} />
+                  </Box>
+                </Stack>
+                <SquadOverrides
+                  squads={squads}
+                  setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                  submitted={submitted}
+                  renderControl={(s, i, update, sub) => {
+                    const sType = s.type || typeOpts[0];
+                    const sShowNum = !NO_NUM_TYPES.includes(sType);
+                    const sNumErr = sub && sShowNum && !s.num;
+                    return (
+                      <Stack direction="row" spacing={1.5}>
+                        <Autocomplete
+                          size="small" options={typeOpts} value={sType}
+                          onChange={(_, v) => { update(i, { type: v }); onDirty?.(); }} disableClearable
+                          sx={{ width: 220, flexShrink: 0 }}
+                          renderInput={(p) => <TextField {...p} label="Type" variant="filled" InputLabelProps={{ ...p.InputLabelProps, shrink: true }} />}
+                        />
+                        {sShowNum && (
+                          <TextField
+                            size="small" variant="filled" label={numLabelForType(sType)} value={s.num || ''}
+                            onChange={(e) => { update(i, { num: e.target.value }); onDirty?.(); }}
+                            sx={{ flex: 1 }}
+                            InputLabelProps={{ shrink: true }}
+                            error={sNumErr}
+                            helperText={sNumErr ? 'Field required' : undefined}
+                            {...errProps(sNumErr)}
                           />
-                          {sShowNum && (
-                            <TextField
-                              size="small" variant="filled" label={numLabelForType(sType)} value={s.num || ''}
-                              onChange={(e) => { update(i, { num: e.target.value }); onDirty?.(); }}
-                              sx={{ flex: 1 }}
-                              InputLabelProps={{ shrink: true }}
-                              error={sNumErr}
-                              helperText={sNumErr ? 'Field required' : undefined}
-                              {...errProps(sNumErr)}
-                            />
-                          )}
-                        </Stack>
-                      );
-                    }}
-                  />
-                </Box>
-                <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
-                  <RestoreDefault onRestore={() => { setType(defaultType); setNum(defaultNum); setSquads([]); setSubmitted(false); onDirty?.(); }} />
-                </Box>
-              </Stack>
+                        )}
+                      </Stack>
+                    );
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
           <Divider />
@@ -562,8 +560,8 @@
               </Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
                   <TextField
                     size="small" variant="filled" label="Minutes" value={minutes}
                     onChange={(e) => { setMinutes(e.target.value); onDirty?.(); }}
@@ -573,30 +571,30 @@
                     helperText={minutesError ? 'Field required' : undefined}
                     {...errProps(minutesError)}
                   />
-                  <SquadOverrides
-                    squads={squads}
-                    setSquads={(s) => { setSquads(s); onDirty?.(); }}
-                    submitted={submitted}
-                    renderControl={(s, i, update, sub) => {
-                      const mErr = sub && !s.minutes;
-                      return (
-                        <TextField
-                          size="small" variant="filled" label="Minutes" value={s.minutes || ''}
-                          onChange={(e) => { update(i, { minutes: e.target.value }); onDirty?.(); }}
-                          sx={{ width: 220 }}
-                          InputLabelProps={{ shrink: true }}
-                          error={mErr}
-                          helperText={mErr ? 'Field required' : undefined}
-                          {...errProps(mErr)}
-                        />
-                      );
-                    }}
-                  />
-                </Box>
-                <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
-                  <RestoreDefault onRestore={() => { setMinutes('60'); setSquads([]); setSubmitted(false); onDirty?.(); }} />
-                </Box>
-              </Stack>
+                  <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
+                    <RestoreDefault onRestore={() => { setMinutes('60'); setSquads([]); setSubmitted(false); onDirty?.(); }} />
+                  </Box>
+                </Stack>
+                <SquadOverrides
+                  squads={squads}
+                  setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                  submitted={submitted}
+                  renderControl={(s, i, update, sub) => {
+                    const mErr = sub && !s.minutes;
+                    return (
+                      <TextField
+                        size="small" variant="filled" label="Minutes" value={s.minutes || ''}
+                        onChange={(e) => { update(i, { minutes: e.target.value }); onDirty?.(); }}
+                        sx={{ width: 220 }}
+                        InputLabelProps={{ shrink: true }}
+                        error={mErr}
+                        helperText={mErr ? 'Field required' : undefined}
+                        {...errProps(mErr)}
+                      />
+                    );
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
           <Divider />
@@ -635,39 +633,39 @@
               </Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
                   <MultiSelect
                     options={COMPETITION_OPTIONS}
                     value={ids}
                     onChange={(v) => { setIds(v); onDirty?.(); }}
                     label="Competition IDs"
                     error={idsError}
-                    sx={{ width: '100%' }}
+                    sx={{ flex: 1 }}
                   />
-                  <SquadOverrides
-                    squads={squads}
-                    setSquads={(s) => { setSquads(s); onDirty?.(); }}
-                    submitted={submitted}
-                    renderControl={(s, i, update, sub) => {
-                      const iErr = sub && (!s.ids || s.ids.length === 0);
-                      return (
-                        <MultiSelect
-                          options={COMPETITION_OPTIONS}
-                          value={s.ids || []}
-                          onChange={(v) => { update(i, { ids: v }); onDirty?.(); }}
-                          label="Competition IDs"
-                          error={iErr}
-                          sx={{ width: '100%' }}
-                        />
-                      );
-                    }}
-                  />
-                </Box>
-                <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
-                  <RestoreDefault onRestore={() => { setIds(['Friendly', 'League', 'Cup']); setSquads([]); setSubmitted(false); onDirty?.(); }} />
-                </Box>
-              </Stack>
+                  <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
+                    <RestoreDefault onRestore={() => { setIds(['Friendly', 'League', 'Cup']); setSquads([]); setSubmitted(false); onDirty?.(); }} />
+                  </Box>
+                </Stack>
+                <SquadOverrides
+                  squads={squads}
+                  setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                  submitted={submitted}
+                  renderControl={(s, i, update, sub) => {
+                    const iErr = sub && (!s.ids || s.ids.length === 0);
+                    return (
+                      <MultiSelect
+                        options={COMPETITION_OPTIONS}
+                        value={s.ids || []}
+                        onChange={(v) => { update(i, { ids: v }); onDirty?.(); }}
+                        label="Competition IDs"
+                        error={iErr}
+                        sx={{ width: '100%' }}
+                      />
+                    );
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
           <Divider />
@@ -712,25 +710,27 @@
               </Typography>
             </Box>
             <Box>
-              <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <RadioPair value={val} onChange={(v) => { setVal(v); onDirty?.(); }} />
-                  <SquadOverrides
-                    squads={squads}
-                    setSquads={(s) => { setSquads(s); onDirty?.(); }}
-                    submitted={false}
-                    renderControl={(s, i, update) => (
-                      <RadioPair
-                        value={s.val || 'include'}
-                        onChange={(v) => { update(i, { val: v }); onDirty?.(); }}
-                      />
-                    )}
-                  />
-                </Box>
-                <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
-                  <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); onDirty?.(); }} />
-                </Box>
-              </Stack>
+              <Box>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <RadioPair value={val} onChange={(v) => { setVal(v); onDirty?.(); }} />
+                  </Box>
+                  <Box sx={{ width: ACTION_W, flexShrink: 0, pt: '6px' }}>
+                    <RestoreDefault onRestore={() => { setVal('include'); setSquads([]); onDirty?.(); }} />
+                  </Box>
+                </Stack>
+                <SquadOverrides
+                  squads={squads}
+                  setSquads={(s) => { setSquads(s); onDirty?.(); }}
+                  submitted={false}
+                  renderControl={(s, i, update) => (
+                    <RadioPair
+                      value={s.val || 'include'}
+                      onChange={(v) => { update(i, { val: v }); onDirty?.(); }}
+                    />
+                  )}
+                />
+              </Box>
             </Box>
           </Box>
         </Box>
