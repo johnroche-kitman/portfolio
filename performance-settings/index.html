@@ -878,7 +878,9 @@
 
     // ── Main content ────────────────────────────────────────────────
     function MainContent({ dirty, saveStatus, onSave, onDirty, onResetAll, metricRefs, compRef1, compRef2, numericRef, competitionRef }) {
+      const [dashModal, setDashModal] = useState(false);
       return (
+        <>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
           {/* Sticky header — does not scroll */}
           <Box sx={{ flexShrink: 0, px: 4, pt: 3, pb: 0, bgcolor: '#fff', borderBottom: `1px solid ${DIVIDER}` }}>
@@ -896,6 +898,7 @@
                   variant="text"
                   size="small"
                   endIcon={<MI name="open_in_new" size={14} />}
+                  onClick={() => setDashModal(true)}
                   sx={{ color: PRIMARY, fontWeight: 600, px: 0,
                     '&:hover': { bgcolor: 'transparent', opacity: 0.75 } }}
                 >
@@ -993,6 +996,31 @@
             <Box sx={{ height: 48 }} />
           </Box>
         </Box>
+
+        {dashModal && (
+          <Box onClick={() => setDashModal(false)} sx={{
+            position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', zIndex: 1300,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Box onClick={(e) => e.stopPropagation()} sx={{
+              bgcolor: '#fff', borderRadius: 2, minWidth: 360, p: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.24)',
+            }}>
+              <Typography sx={{ fontWeight: 700, fontSize: 16, color: PRIMARY, mb: 1 }}>Open dashboard</Typography>
+              <Typography sx={{ fontSize: 14, color: GREY100, mb: 3 }}>
+                Performance management dashboard will open in a new window
+              </Typography>
+              <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                <Button size="small" onClick={() => setDashModal(false)} sx={{ color: GREY100, fontWeight: 600 }}>Cancel</Button>
+                <Button size="small" variant="contained" onClick={() => setDashModal(false)}
+                  sx={{ bgcolor: PRIMARY, color: '#fff', fontWeight: 600, boxShadow: 'none', '&:hover': { bgcolor: '#2e3a4e', boxShadow: 'none' } }}>
+                  OK
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
+        )}
+        </>
       );
     }
 
