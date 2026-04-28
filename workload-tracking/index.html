@@ -432,7 +432,7 @@
       const [workloadMode, setWorkloadMode] = useState('equal');
       const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
       const [manual, setManual] = useState({Mon:'10000',Tue:'10000',Wed:'10000',Thu:'10000',Fri:'10000',Sat:'10000',Sun:'10000'});
-      const [sliderKm, setSliderKm] = useState(10);
+      const [sliderKm, setSliderKm] = useState([8, 12]);
 
       return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
@@ -446,7 +446,7 @@
             <div style={{ marginBottom:24 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
                 <span style={{ fontSize:13, color:'#78909c' }}>Total distance</span>
-                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{sliderKm} km</span>
+                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{sliderKm[0]}–{sliderKm[1]} km</span>
               </div>
               <Slider
                 value={sliderKm}
