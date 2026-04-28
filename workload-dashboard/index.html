@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elite Performance Workload Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: #0a1628; color: #e2e8f0; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a3f5f; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/": "https://esm.sh/react@18.3.1/",
+      "react-dom": "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom"
+    }
+  }
+  </script>
+  <script type="text/babel" data-type="module" data-presets="react">
+    import React, { useState, useMemo, useCallback } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import {
+      LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+      Tooltip, Legend, ReferenceLine, ReferenceArea, ResponsiveContainer, Cell
+    } from 'recharts';
+
+    // ── CONSTANTS ─────────────────────────────────────────────────────────
+    const DAYS = ['MD-6','MD-5','MD-4','MD-3','MD-2','MD-1','MD','MD+1'];
+
+    const COHORTS = ['Starter','Non-Starter','Rehabbing','Part-time Loan','Senior Academy'];
+
+    const COHORT_COLOR = {
+      'Starter':        '#3b82f6',
+      'Non-Starter':    '#a855f7',
+      'Rehabbing':      '#f59e0b',
+      'Part-time Loan': '#10b981',
+      'Senior Academy': '#ec4899',
+    };
+
+    // Base daily loads (m) per cohort across the match week
+    const BASE = {
+      'Starter':        [4000, 6500, 5500, 5000, 3500, 2500, 10000, 1500],
+      'Non-Starter':    [4000, 6000, 5000, 4500, 4500, 3000,  4000, 4000],
+      'Rehabbing':      [1500, 2500, 2000, 2000, 1500, 1000,     0, 1500],
+      'Part-time Loan': [3500, 5500, 4500, 4500, 3500, 2500,  7500, 2500],
+      'Senior Academy': [3000, 4500, 3800, 3800, 3000, 2000,  5000, 1500],
+    };
+
+    // Ideal total weekly load per cohort (including game load for Starters)
+    const IDEAL = {
+      'Starter':        38500,
+      'Non-Starter':    35000,
+      'Rehabbing':      12500,
+      'Part-time Loan': 33500,
+      'Senior Academy': 26600,
+    };
+
+    // Historical mean daily load for background data generation
+    const HIST_MEAN = {
+      'Starter':        4900,
+      'Non-Starter':    4400,
+      'Rehabbing':      1600,
+      'Part-time Loan': 4100,
+      'Senior Academy': 3300,
+    };
+
+    const NAMES = {
+      'Starter':        ['J. Walker','M. Chen','L. Ferrari','A. Petrov','D. Santos'],
+      'Non-Starter':    ['T. Hughes','Y. Okafor','P. Ribeiro','K. Müller','S. Obi'],
+      'Rehabbing':      ['B. Carter','R. Costa','E. Larsson','K. Asante','J. Morris'],
+      'Part-time Loan': ['N. Bauer','E. Nkosi','M. Cruz','F. Eriksen','R. Doyle'],
+      'Senior Academy': ['A. Cole','T. Grant','O. Lima','Z. Hill','L. Park'],
+    };
+
+    const RISK_COLOR = { over:'#ef4444', under:'#3b82f6', caution:'#f59e0b', ok:'#22c55e' };
+    const RISK_LABEL = { over:'Overtraining', under:'Undertraining', caution:'Caution Zone', ok:'Optimal' };
+
+    // ── HELPERS ───────────────────────────────────────────────────────────
+    const rnd = (min, max) => Math.round(min + Math.random() * (max - min));
+    const fmt  = v => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v);
+
+    const S = {
+      card: { background:'#131f35', border:'1px solid #1e3155', borderRadius:12, padding:'16px 20px' },
+      badge: color => ({
+        display:'inline-flex', alignItems:'center', gap:3,
+        padding:'2px 8px', borderRadius:20,
+        fontSize:11, fontWeight:600, color, background:color+'22', border:`1px solid ${color}44`,
+      }),
+    };
+
+    const MI = ({ name, size=18, color='inherit', style }) => (
+      <span className="material-icons-outlined"
+        style={{ fontSize:size, lineHeight:1, color, display:'inline-flex', alignItems:'center',
+                 verticalAlign:'middle', userSelect:'none', ...style }}>
+        {name}
+      </span>
+    );
+
+    // ── DATA GENERATION ───────────────────────────────────────────────────
+    // fitness variants: 'high' = heavy recent block (chronic↑ → ACWR dips toward under),
+    //                   'low'  = just returning from rest (chronic↓ → ACWR spikes toward over),
+    //                   'normal' = baseline
+    const FITNESS_VARIANTS = ['normal','normal','normal','high','low'];
+
+    function makeHistory(cohort, variant) {
+      const mean = HIST_MEAN[cohort];
+      const scale = variant === 'high' ? 1.45 : variant === 'low' ? 0.52 : 1.0;
+      return Array.from({ length: 28 }, (_, i) => {
+        const isLight = i % 7 >= 5;
+        const base = (isLight ? mean * 0.45 : mean) * scale;
+        return Math.max(0, rnd(base * 0.82, base * 1.18));
+      });
+    }
+
+    function makeDayLoad(cohort, dayIdx) {
+      const base = BASE[cohort][dayIdx];
+      if (base === 0) return 0;
+      return Math.max(0, rnd(base * 0.88, base * 1.12));
+    }
+
+    function initPlayers(startDay) {
+      return COHORTS.flatMap(cohort =>
+        NAMES[cohort].map((name, idx) => {
+          const variant = FITNESS_VARIANTS[idx];
+          return {
+            name, cohort, variant,
+            history: makeHistory(cohort, variant),
+            weekLoads: Array.from({ length: startDay + 1 }, (_, i) => makeDayLoad(cohort, i)),
+          };
+        })
+      );
+    }
+
+    // ── METRICS ───────────────────────────────────────────────────────────
+    function calcMetrics(player, dayIndex) {
+      const all = [...player.history, ...player.weekLoads];
+
+      const acute   = all.slice(-7).reduce((s,v) => s+v, 0);
+      const chronic = all.slice(-28).reduce((s,v) => s+v, 0) / 4;
+      const acwr    = chronic > 0 ? +(acute / chronic).toFixed(2) : 0;
+
+      const weekSoFar = player.weekLoads.reduce((s,v) => s+v, 0);
+      const future    = BASE[player.cohort].slice(dayIndex + 1);
+      const projWeek  = weekSoFar + future.reduce((s,v) => s+v, 0);
+
+      const projAll    = [...all, ...future];
+      const projAcute  = projAll.slice(-7).reduce((s,v) => s+v, 0);
+      const projChron  = projAll.slice(-28).reduce((s,v) => s+v, 0) / 4;
+      const projACWR   = projChron > 0 ? +(projAcute / projChron).toFixed(2) : 0;
+
+      const ideal    = IDEAL[player.cohort];
+      const bandLow  = Math.round(ideal * 0.9);
+      const bandHigh = Math.round(ideal * 1.1);
+
+      const risk = projACWR > 1.5 ? 'over' : projACWR < 0.8 ? 'under' : projACWR > 1.3 ? 'caution' : 'ok';
+      const bandStatus = projWeek < bandLow ? 'under' : projWeek > bandHigh ? 'over' : 'ok';
+
+      return { acute, chronic, acwr, weekSoFar, projWeek, projACWR, ideal, bandLow, bandHigh, risk, bandStatus };
+    }
+
+    // ── HEADER ────────────────────────────────────────────────────────────
+    function Header({ dayIndex, onSimulate }) {
+      const canSim = dayIndex < DAYS.length - 1;
+      return (
+        <header style={{ background:'#0d1b2e', borderBottom:'1px solid #1e3155', padding:'0 24px',
+                         display:'flex', alignItems:'center', height:58, gap:16, flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:36, height:36, background:'#1d4ed8', borderRadius:8, display:'flex',
+                          alignItems:'center', justifyContent:'center' }}>
+              <MI name="sports_soccer" size={22} color="#fff" />
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:800, letterSpacing:.5, color:'#e2e8f0' }}>
+                PERFORMANCE HUB
+              </div>
+              <div style={{ fontSize:10, color:'#475569', letterSpacing:.5, textTransform:'uppercase' }}>
+                Elite Workload Dashboard
+              </div>
+            </div>
+          </div>
+
+          <div style={{ flex:1 }} />
+
+          {/* Match week progress */}
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            {DAYS.map((d, i) => (
+              <div key={d} title={d} style={{
+                width: i === dayIndex ? 28 : 8, height:8, borderRadius:4,
+                background: i < dayIndex ? '#3b82f6' : i === dayIndex ? '#60a5fa' : '#1e3155',
+                transition:'all .25s',
+              }} />
+            ))}
+          </div>
+
+          <div style={{ display:'flex', alignItems:'center', gap:8, background:'#1a2d4a',
+                        borderRadius:8, padding:'6px 14px', border:'1px solid #1e3155' }}>
+            <MI name="calendar_today" size={15} color="#64748b" />
+            <span style={{ fontSize:12, color:'#94a3b8' }}>Current Day:</span>
+            <span style={{ fontSize:14, fontWeight:700, color:'#60a5fa' }}>{DAYS[dayIndex]}</span>
+          </div>
+
+          <button onClick={onSimulate} disabled={!canSim} style={{
+            display:'flex', alignItems:'center', gap:6, padding:'8px 18px',
+            borderRadius:8, border:'none', cursor: canSim ? 'pointer' : 'not-allowed',
+            background: canSim ? '#1d4ed8' : '#1e3155', color: canSim ? '#fff' : '#475569',
+            fontSize:13, fontWeight:600, transition:'all .15s',
+          }}>
+            <MI name="skip_next" size={18} color={canSim ? '#fff' : '#475569'} />
+            {canSim ? `Simulate → ${DAYS[dayIndex+1]}` : 'Week Complete'}
+          </button>
+        </header>
+      );
+    }
+
+    // ── FILTER BAR ────────────────────────────────────────────────────────
+    function FilterBar({ activeCohort, setActiveCohort, activeMetric, setActiveMetric }) {
+      return (
+        <div style={{ background:'#0d1b2e', borderBottom:'1px solid #1e3155', padding:'8px 24px',
+                      display:'flex', alignItems:'center', gap:8, flexShrink:0, flexWrap:'wrap' }}>
+          <span style={{ fontSize:11, color:'#475569', fontWeight:600, textTransform:'uppercase',
+                         letterSpacing:.5, marginRight:4 }}>Cohort</span>
+          {['All', ...COHORTS].map(c => {
+            const active = activeCohort === c;
+            const col = COHORT_COLOR[c] || '#3b82f6';
+            return (
+              <button key={c} onClick={() => setActiveCohort(c)} style={{
+                padding:'4px 12px', borderRadius:20, border:'1px solid',
+                borderColor: active ? col : '#1e3155',
+                background: active ? col+'22' : 'transparent',
+                color: active ? col : '#64748b',
+                fontSize:12, fontWeight: active ? 600 : 400, cursor:'pointer', transition:'all .15s',
+              }}>
+                {c === 'All' ? 'All Players' : c === 'Part-time Loan' ? 'PT Loan' : c === 'Senior Academy' ? 'Academy' : c}
+              </button>
+            );
+          })}
+          <div style={{ flex:1 }} />
+          <span style={{ fontSize:11, color:'#475569', fontWeight:600, textTransform:'uppercase', letterSpacing:.5 }}>View</span>
+          {[['distance','Total Distance'],['acwr','ACWR']].map(([k,lbl]) => (
+            <button key={k} onClick={() => setActiveMetric(k)} style={{
+              padding:'4px 14px', borderRadius:20, border:'1px solid',
+              borderColor: activeMetric===k ? '#3b82f6' : '#1e3155',
+              background: activeMetric===k ? '#3b82f622' : 'transparent',
+              color: activeMetric===k ? '#60a5fa' : '#64748b',
+              fontSize:12, fontWeight: activeMetric===k ? 600 : 400, cursor:'pointer',
+            }}>{lbl}</button>
+          ))}
+        </div>
+      );
+    }
+
+    // ── SQUAD TABLE ───────────────────────────────────────────────────────
+    function SquadTable({ players, metrics, dayIndex, activeMetric }) {
+      const sorted = [...players].sort((a, b) => {
+        const ma = metrics[a.name], mb = metrics[b.name];
+        return activeMetric === 'acwr'
+          ? mb.projACWR - ma.projACWR
+          : mb.projWeek  - ma.projWeek;
+      });
+
+      const cols = ['Player','Cohort','Today','Week Total','vs Target','Proj.'+( activeMetric==='acwr' ? ' ACWR' : ' Total'),'Risk'];
+
+      return (
+        <div style={{ flex:1, overflow:'auto', minHeight:0 }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+            <thead style={{ position:'sticky', top:0, background:'#131f35', zIndex:1 }}>
+              <tr>
+                {cols.map(h => (
+                  <th key={h} style={{ padding:'10px 12px', textAlign:'left', color:'#475569',
+                                       fontWeight:600, fontSize:11, textTransform:'uppercase',
+                                       letterSpacing:.5, borderBottom:'1px solid #1e3155',
+                                       whiteSpace:'nowrap' }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((p, i) => {
+                const m = metrics[p.name];
+                const today = p.weekLoads[dayIndex] ?? 0;
+                const riskColor = RISK_COLOR[m.risk];
+                const maxW = m.bandHigh * 1.25;
+                const progPct = Math.min(100, (m.projWeek / maxW) * 100);
+                const lowPct  = (m.bandLow  / maxW) * 100;
+                const highPct = (m.bandHigh / maxW) * 100;
+                const shortCohort = p.cohort === 'Part-time Loan' ? 'PT Loan' : p.cohort === 'Senior Academy' ? 'Academy' : p.cohort;
+
+                return (
+                  <tr key={p.name} style={{ borderBottom:'1px solid #1e315530',
+                    background: i%2===0 ? 'transparent' : '#0d1b2e40' }}>
+                    <td style={{ padding:'9px 12px', fontWeight:500, color:'#cbd5e1', whiteSpace:'nowrap' }}>{p.name}</td>
+                    <td style={{ padding:'9px 12px' }}>
+                      <span style={S.badge(COHORT_COLOR[p.cohort])}>{shortCohort}</span>
+                    </td>
+                    <td style={{ padding:'9px 12px', color:'#94a3b8', fontVariantNumeric:'tabular-nums' }}>
+                      {today.toLocaleString()}
+                    </td>
+                    <td style={{ padding:'9px 12px', fontWeight:600, color:'#e2e8f0', fontVariantNumeric:'tabular-nums' }}>
+                      {m.weekSoFar.toLocaleString()}
+                    </td>
+                    <td style={{ padding:'9px 12px', minWidth:150 }}>
+                      <div style={{ position:'relative', height:7, background:'#1e3155', borderRadius:4, overflow:'hidden' }}>
+                        <div style={{ position:'absolute', left:`${lowPct}%`, width:`${highPct-lowPct}%`,
+                                      height:'100%', background:'#22c55e1a' }} />
+                        <div style={{ position:'absolute', left:0, width:`${progPct}%`, height:'100%',
+                                      background:riskColor, borderRadius:4, transition:'width .3s' }} />
+                        <div style={{ position:'absolute', left:`${lowPct}%`, top:0, width:1, height:'100%', background:'#22c55e60' }} />
+                        <div style={{ position:'absolute', left:`${highPct}%`, top:0, width:1, height:'100%', background:'#22c55e60' }} />
+                      </div>
+                      <div style={{ fontSize:10, color:'#334155', marginTop:2 }}>
+                        {m.bandLow.toLocaleString()}–{m.bandHigh.toLocaleString()} m
+                      </div>
+                    </td>
+                    <td style={{ padding:'9px 12px', fontWeight:700, color:riskColor, fontVariantNumeric:'tabular-nums' }}>
+                      {activeMetric === 'acwr' ? m.projACWR.toFixed(2) : m.projWeek.toLocaleString()+'m'}
+                    </td>
+                    <td style={{ padding:'9px 12px' }}>
+                      {m.risk === 'ok'
+                        ? <span style={{ color:'#22c55e', fontSize:12, display:'flex', alignItems:'center', gap:4 }}>
+                            <MI name="check_circle" size={14} color="#22c55e" /> OK
+                          </span>
+                        : <span style={S.badge(riskColor)}>
+                            <MI name={m.risk==='over'?'arrow_upward':m.risk==='under'?'arrow_downward':'warning'} size={11} color={riskColor} />
+                            {RISK_LABEL[m.risk]}
+                          </span>
+                      }
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    // ── TREND CHART ───────────────────────────────────────────────────────
+    function TrendChart({ players, dayIndex, activeCohort }) {
+      const cohortsToShow = activeCohort === 'All' ? COHORTS : [activeCohort];
+
+      const data = useMemo(() => DAYS.map((day, i) => {
+        const entry = { day };
+        cohortsToShow.forEach(cohort => {
+          const cp = players.filter(p => p.cohort === cohort);
+          if (!cp.length) return;
+          if (i <= dayIndex) {
+            const avg = cp.reduce((s,p) => s + (p.weekLoads[i] ?? 0), 0) / cp.length;
+            entry[cohort] = Math.round(avg);
+          }
+          if (i >= dayIndex) {
+            entry[cohort+'_p'] = i <= dayIndex
+              ? Math.round(cp.reduce((s,p) => s + (p.weekLoads[i] ?? 0), 0) / cp.length)
+              : BASE[cohort][i];
+          }
+        });
+        return entry;
+      }), [players, dayIndex, activeCohort]);
+
+      const tooltipFormatter = (v, name) => [
+        v.toLocaleString()+'m',
+        name.endsWith('_p') ? name.slice(0,-2)+' (proj.)' : name,
+      ];
+
+      return (
+        <div style={{ width:'100%', height:'100%', minHeight:200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top:8, right:20, left:0, bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e3155" />
+              <XAxis dataKey="day" tick={{ fill:'#64748b', fontSize:12 }} axisLine={{ stroke:'#1e3155' }} tickLine={false} />
+              <YAxis tick={{ fill:'#64748b', fontSize:11 }} axisLine={false} tickLine={false} tickFormatter={fmt} width={42} />
+              <Tooltip contentStyle={{ background:'#131f35', border:'1px solid #1e3155', borderRadius:8, fontSize:12 }}
+                       labelStyle={{ color:'#94a3b8', fontWeight:600 }} itemStyle={{ color:'#e2e8f0' }}
+                       formatter={tooltipFormatter} />
+              <Legend wrapperStyle={{ fontSize:12, paddingTop:8 }}
+                      formatter={n => n.endsWith('_p') ? null : <span style={{ color:'#94a3b8' }}>{n}</span>} />
+              {/* current day marker */}
+              <ReferenceLine x={DAYS[dayIndex]} stroke="#3b82f640" strokeWidth={2} strokeDasharray="4 3" label={{ value:'Now', fill:'#3b82f6', fontSize:11, position:'top' }} />
+              {cohortsToShow.map(cohort => (
+                <React.Fragment key={cohort}>
+                  <Line type="monotone" dataKey={cohort} stroke={COHORT_COLOR[cohort]} strokeWidth={2.5}
+                        dot={{ r:4, fill:COHORT_COLOR[cohort], strokeWidth:0 }} connectNulls={false} name={cohort} />
+                  <Line type="monotone" dataKey={cohort+'_p'} stroke={COHORT_COLOR[cohort]} strokeWidth={2}
+                        strokeDasharray="6 4" dot={false} connectNulls legendType="none" name={cohort+'_p'} />
+                </React.Fragment>
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      );
+    }
+
+    // ── COHORT COMPARISON ─────────────────────────────────────────────────
+    function CohortComparison({ players, dayIndex }) {
+      const data = useMemo(() => COHORTS.map(cohort => {
+        const cp = players.filter(p => p.cohort === cohort);
+        if (!cp.length) return null;
+
+        const avgCurrent = cp.reduce((sum, p) => {
+          const soFar = p.weekLoads.reduce((s,v) => s+v, 0);
+          const fut   = BASE[cohort].slice(dayIndex+1).reduce((s,v) => s+v, 0);
+          return sum + soFar + fut;
+        }, 0) / cp.length;
+
+        // Previous 3 weeks from history (most recent 3×7 days)
+        const prevAvg = [0,1,2].map(wk => {
+          const s = 21 - wk*7, e = s+7;
+          return cp.reduce((sum, p) => sum + p.history.slice(s,e).reduce((a,b)=>a+b,0), 0) / cp.length;
+        }).reduce((s,v)=>s+v,0) / 3;
+
+        const short = cohort === 'Part-time Loan' ? 'PT Loan' : cohort === 'Senior Academy' ? 'Academy' : cohort;
+        return {
+          cohort: short,
+          'This Week': Math.round(avgCurrent),
+          'Prev 3 Wks Avg': Math.round(prevAvg),
+          ideal: IDEAL[cohort],
+          color: COHORT_COLOR[cohort],
+        };
+      }).filter(Boolean), [players, dayIndex]);
+
+      return (
+        <div style={{ width:'100%', height:'100%', minHeight:200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top:8, right:20, left:0, bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e3155" vertical={false} />
+              <XAxis dataKey="cohort" tick={{ fill:'#64748b', fontSize:12 }} axisLine={{ stroke:'#1e3155' }} tickLine={false} />
+              <YAxis tick={{ fill:'#64748b', fontSize:11 }} axisLine={false} tickLine={false} tickFormatter={fmt} width={42} />
+              <Tooltip contentStyle={{ background:'#131f35', border:'1px solid #1e3155', borderRadius:8, fontSize:12 }}
+                       labelStyle={{ color:'#94a3b8', fontWeight:600 }} itemStyle={{ color:'#e2e8f0' }}
+                       formatter={v => [v.toLocaleString()+'m']} />
+              <Legend wrapperStyle={{ fontSize:12, paddingTop:8 }} formatter={n => <span style={{ color:'#94a3b8' }}>{n}</span>} />
+              <Bar dataKey="This Week" radius={[4,4,0,0]} maxBarSize={44}>
+                {data.map(d => <Cell key={d.cohort} fill={d.color} />)}
+              </Bar>
+              <Bar dataKey="Prev 3 Wks Avg" fill="#334155" radius={[4,4,0,0]} maxBarSize={44} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      );
+    }
+
+    // ── ACWR SUMMARY CARDS ────────────────────────────────────────────────
+    function SummaryCards({ players, metrics }) {
+      const counts = { over:0, caution:0, ok:0, under:0 };
+      players.forEach(p => counts[metrics[p.name].risk]++);
+      const total = players.length;
+
+      return (
+        <div style={{ display:'flex', gap:12, flexShrink:0 }}>
+          {[
+            { key:'over',    label:'Overtraining',  icon:'trending_up'   },
+            { key:'caution', label:'Caution',        icon:'warning'       },
+            { key:'ok',      label:'Optimal',        icon:'check_circle'  },
+            { key:'under',   label:'Undertraining',  icon:'trending_down' },
+          ].map(({ key, label, icon }) => (
+            <div key={key} style={{ ...S.card, padding:'12px 16px', display:'flex',
+                                    alignItems:'center', gap:12, flex:1 }}>
+              <div style={{ width:40, height:40, borderRadius:10, background:RISK_COLOR[key]+'18',
+                            display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <MI name={icon} size={22} color={RISK_COLOR[key]} />
+              </div>
+              <div>
+                <div style={{ fontSize:26, fontWeight:800, color:RISK_COLOR[key], lineHeight:1 }}>
+                  {counts[key]}
+                </div>
+                <div style={{ fontSize:11, color:'#64748b', marginTop:2 }}>{label}</div>
+              </div>
+              <div style={{ marginLeft:'auto', fontSize:11, color:'#334155', alignSelf:'flex-end' }}>
+                {total > 0 ? Math.round(counts[key]/total*100) : 0}%
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // ── ALERTS PANEL ──────────────────────────────────────────────────────
+    function AlertsPanel({ players, metrics }) {
+      const alerts = players
+        .map(p => ({ ...p, m: metrics[p.name] }))
+        .filter(p => p.m.risk !== 'ok')
+        .sort((a,b) => {
+          const ord = { over:0, under:1, caution:2 };
+          return ord[a.m.risk] - ord[b.m.risk];
+        });
+
+      return (
+        <div style={{ ...S.card, display:'flex', flexDirection:'column', gap:0, flex:1, overflow:'hidden' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12, flexShrink:0 }}>
+            <MI name="notification_important" size={18} color="#f59e0b" />
+            <span style={{ fontSize:13, fontWeight:700, color:'#e2e8f0' }}>Injury Risk Alerts</span>
+            <span style={{ marginLeft:'auto', ...S.badge(alerts.length > 0 ? '#ef4444' : '#22c55e') }}>
+              {alerts.length}
+            </span>
+          </div>
+
+          <div style={{ flex:1, overflowY:'auto' }}>
+            {alerts.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'20px 0', color:'#22c55e', fontSize:13 }}>
+                <MI name="verified" size={28} color="#22c55e" style={{ display:'block', margin:'0 auto 8px' }} />
+                All players within safe limits
+              </div>
+            ) : alerts.map(p => {
+              const col = RISK_COLOR[p.m.risk];
+              return (
+                <div key={p.name} style={{ background:col+'0f', border:`1px solid ${col}30`,
+                  borderRadius:8, padding:'9px 12px', marginBottom:8,
+                  display:'flex', alignItems:'center', gap:10 }}>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:col, flexShrink:0 }} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:'#e2e8f0' }}>{p.name}</div>
+                    <div style={{ fontSize:11, color:'#64748b' }}>
+                      {p.cohort} · ACWR {p.m.projACWR.toFixed(2)}
+                    </div>
+                  </div>
+                  <span style={S.badge(col)}>{RISK_LABEL[p.m.risk]}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Cohort outlier note */}
+          {alerts.length > 0 && (
+            <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid #1e3155', fontSize:11, color:'#475569', flexShrink:0 }}>
+              <MI name="info" size={13} color="#475569" style={{ marginRight:4 }} />
+              Projected ACWR threshold: &lt;0.80 or &gt;1.50
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── DAILY PLANNER ─────────────────────────────────────────────────────
+    function DailyPlanner({ players, dayIndex }) {
+      const tomorrowIdx = dayIndex + 1;
+      const tomorrowDay = tomorrowIdx < DAYS.length ? DAYS[tomorrowIdx] : null;
+
+      return (
+        <div style={{ ...S.card, flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+            <MI name="event_note" size={18} color="#3b82f6" />
+            <span style={{ fontSize:13, fontWeight:700, color:'#e2e8f0' }}>
+              {tomorrowDay ? `Tomorrow: ${tomorrowDay}` : 'Match Week Complete'}
+            </span>
+          </div>
+
+          {!tomorrowDay ? (
+            <div style={{ fontSize:12, color:'#475569', textAlign:'center', padding:'8px 0' }}>
+              No further sessions scheduled.
+            </div>
+          ) : (
+            <div>
+              {COHORTS.map(cohort => {
+                const cohortPlayers = players.filter(p => p.cohort === cohort);
+                if (!cohortPlayers.length) return null;
+                const target = BASE[cohort][tomorrowIdx];
+                const isTopUp = cohort === 'Non-Starter' && (tomorrowIdx === 6 || tomorrowIdx === 7);
+                const isGame  = cohort === 'Starter' && tomorrowIdx === 6;
+                const isRest  = target === 0;
+                const short   = cohort === 'Part-time Loan' ? 'PT Loan' : cohort === 'Senior Academy' ? 'Academy' : cohort;
+                return (
+                  <div key={cohort} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 0',
+                                             borderBottom:'1px solid #1e315540' }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:COHORT_COLOR[cohort], flexShrink:0 }} />
+                    <span style={{ fontSize:12, color:'#94a3b8', flex:1 }}>{short}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color: isRest ? '#475569' : '#e2e8f0',
+                                   fontVariantNumeric:'tabular-nums' }}>
+                      {isRest ? '—' : target.toLocaleString()+'m'}
+                    </span>
+                    {isGame   && <span style={S.badge('#3b82f6')}>Game</span>}
+                    {isTopUp  && <span style={S.badge('#10b981')}>Top-Up</span>}
+                    {isRest   && <span style={S.badge('#475569')}>Rest</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── APP ───────────────────────────────────────────────────────────────
+    const START_DAY = 2; // begin at MD-4
+
+    function App() {
+      const [dayIndex, setDayIndex] = useState(START_DAY);
+      const [players, setPlayers] = useState(() => initPlayers(START_DAY));
+      const [activeCohort, setActiveCohort] = useState('All');
+      const [activeMetric, setActiveMetric] = useState('distance');
+      const [activeTab, setActiveTab] = useState('squad');
+
+      const metrics = useMemo(() => {
+        const m = {};
+        players.forEach(p => { m[p.name] = calcMetrics(p, dayIndex); });
+        return m;
+      }, [players, dayIndex]);
+
+      const filteredPlayers = useMemo(() =>
+        activeCohort === 'All' ? players : players.filter(p => p.cohort === activeCohort),
+        [players, activeCohort]
+      );
+
+      const handleSimulate = useCallback(() => {
+        if (dayIndex >= DAYS.length - 1) return;
+        const nd = dayIndex + 1;
+        setPlayers(prev => prev.map(p => ({
+          ...p,
+          weekLoads: [...p.weekLoads, makeDayLoad(p.cohort, nd)],
+        })));
+        setDayIndex(nd);
+      }, [dayIndex]);
+
+      const tabs = [
+        { key:'squad',      label:'Squad Overview',      icon:'grid_view'  },
+        { key:'trend',      label:'Trend Analysis',      icon:'show_chart' },
+        { key:'comparison', label:'Cohort Comparison',   icon:'bar_chart'  },
+      ];
+
+      return (
+        <div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden' }}>
+          <Header dayIndex={dayIndex} onSimulate={handleSimulate} />
+          <FilterBar activeCohort={activeCohort} setActiveCohort={setActiveCohort}
+                     activeMetric={activeMetric} setActiveMetric={setActiveMetric} />
+
+          {/* Summary row */}
+          <div style={{ padding:'14px 24px 0', flexShrink:0 }}>
+            <SummaryCards players={filteredPlayers} metrics={metrics} />
+          </div>
+
+          {/* Main body */}
+          <div style={{ flex:1, display:'flex', gap:16, padding:'14px 24px 20px',
+                        overflow:'hidden', minHeight:0 }}>
+
+            {/* Left: chart panel */}
+            <div style={{ flex:1, display:'flex', flexDirection:'column', gap:12, minWidth:0 }}>
+              {/* Tab bar */}
+              <div style={{ display:'flex', gap:4, background:'#131f35', borderRadius:10,
+                            padding:4, border:'1px solid #1e3155', flexShrink:0 }}>
+                {tabs.map(t => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
+                      flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                      padding:'8px 12px', borderRadius:7, border:'none', cursor:'pointer',
+                      background: active ? '#1e3a5f' : 'transparent',
+                      color: active ? '#60a5fa' : '#64748b',
+                      fontSize:13, fontWeight: active ? 600 : 400, transition:'all .15s',
+                    }}>
+                      <MI name={t.icon} size={16} color={active ? '#60a5fa' : '#64748b'} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Chart card */}
+              <div style={{ ...S.card, flex:1, display:'flex', flexDirection:'column',
+                            overflow:'hidden', minHeight:0, gap:12 }}>
+                {activeTab === 'squad' && (
+                  <SquadTable players={filteredPlayers} metrics={metrics}
+                               dayIndex={dayIndex} activeMetric={activeMetric} />
+                )}
+                {activeTab === 'trend' && (
+                  <>
+                    <div style={{ fontSize:12, color:'#475569', flexShrink:0 }}>
+                      Daily load by cohort — solid line: actual &nbsp;·&nbsp; dashed: projected
+                    </div>
+                    <div style={{ flex:1, minHeight:0 }}>
+                      <TrendChart players={filteredPlayers} dayIndex={dayIndex} activeCohort={activeCohort} />
+                    </div>
+                  </>
+                )}
+                {activeTab === 'comparison' && (
+                  <>
+                    <div style={{ fontSize:12, color:'#475569', flexShrink:0 }}>
+                      Projected week total vs previous 3-game-week average (cohort avg.)
+                    </div>
+                    <div style={{ flex:1, minHeight:0 }}>
+                      <CohortComparison players={filteredPlayers} dayIndex={dayIndex} />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Right: sidebar */}
+            <div style={{ width:300, display:'flex', flexDirection:'column', gap:14,
+                          flexShrink:0, minHeight:0, overflow:'hidden' }}>
+              <AlertsPanel players={filteredPlayers} metrics={metrics} />
+              <DailyPlanner players={filteredPlayers} dayIndex={dayIndex} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
