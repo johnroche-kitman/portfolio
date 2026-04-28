@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workload Tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: #f5f6f8; color: #1a2332; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #c0c8d4; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/": "https://esm.sh/react@18.3.1/",
+      "react-dom": "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "@mui/material": "https://esm.sh/@mui/material@5.16.7?external=react,react-dom,@emotion/react,@emotion/styled",
+      "@mui/icons-material": "https://esm.sh/@mui/icons-material@5.16.7?external=react,react-dom,@emotion/react,@emotion/styled,@mui/material",
+      "@emotion/react": "https://esm.sh/@emotion/react@11.13.3?external=react",
+      "@emotion/styled": "https://esm.sh/@emotion/styled@11.13.0?external=react,@emotion/react",
+      "recharts": "https://esm.sh/recharts@2.12.7?external=react,react-dom"
+    }
+  }
+  </script>
+  <script type="text/babel" data-type="module" data-presets="react">
+    import React, { useState, useMemo } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import {
+      Box, Typography, Tabs, Tab, Chip, Button, IconButton,
+      Dialog, DialogTitle, DialogContent, DialogActions,
+      RadioGroup, FormControlLabel, Radio, Checkbox,
+      TextField, Divider, Tooltip, ToggleButton, ToggleButtonGroup,
+      Select, MenuItem, FormControl, InputLabel, Table, TableBody,
+      TableCell, TableHead, TableRow, TableContainer, Paper
+    } from '@mui/material';
+    import {
+      BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+      Legend, ResponsiveContainer, Cell
+    } from 'recharts';
+
+    // ── THEME COLOURS ──────────────────────────────────────────────────────────
+    const NAV_BG    = '#0c1824';
+    const NAV_WIDTH = 60;
+    const TEAL      = '#00b4a6';
+    const RED_RISK  = '#c0392b';
+    const OVER_CLR  = '#e53935';
+    const UNDER_CLR = '#7b1fa2';
+    const TRACK_CLR = '#00897b';
+
+    // ── MOCK DATA ──────────────────────────────────────────────────────────────
+    const GD_LABELS = ['GD-5','GD-4','GD-3','GD-2','GD-1','GD'];
+
+    function makeGdData() {
+      const types = ['under','over','target','over','under','future'];
+      return GD_LABELS.map((lbl, i) => ({
+        label: lbl,
+        type: types[i],
+        pct: types[i] === 'future' ? 0 : 60 + Math.round(Math.random()*25),
+        deltaLabel: types[i] === 'under' ? `${10+i*10} UNDER`
+          : types[i] === 'over' ? `${20+i*10} OVER`
+          : types[i] === 'target' ? 'ON TARGET' : ''
+      }));
+    }
+
+    const GROUPS = ['Starter','Non starter','Rehab','Academy','On loan'];
+
+    const PLAYERS = [
+      { id:1, name:'Dan Jones', pos:'LB', group:'Starter' },
+      { id:2, name:'Marcus Webb', pos:'CB', group:'Starter' },
+      { id:3, name:'Tom Brady', pos:'GK', group:'Starter' },
+      { id:4, name:'James Hunt', pos:'CM', group:'Non starter' },
+      { id:5, name:'Luca Rossi', pos:'RW', group:'Non starter' },
+      { id:6, name:'Felix Meyer', pos:'ST', group:'Rehab' },
+      { id:7, name:'Ali Hassan', pos:'LW', group:'Rehab' },
+      { id:8, name:'Chris Lane', pos:'CB', group:'Rehab' },
+      { id:9, name:'Pedro Silva', pos:'RB', group:'Academy' },
+      { id:10, name:'Sam Wright', pos:'CM', group:'Academy' },
+      { id:11, name:'Yuki Tanaka', pos:'AM', group:'On loan' },
+      { id:12, name:'Ben Carter', pos:'ST', group:'On loan' },
+    ].map((p, i) => {
+      const acwr = +(1.2 + (i % 5)*0.15 + (i%3)*0.1 - (i%2)*0.05).toFixed(1);
+      const status = acwr > 1.5 ? 'over' : acwr < 0.8 ? 'under' : 'target';
+      return {
+        ...p,
+        todayM: 3500 + i*200,
+        weekToDate: 9800 + i*300,
+        weekDelta: i%3===0 ? -(800+i*50) : (600+i*80),
+        rolling7: 11500 + i*150,
+        acwr,
+        status,
+        risk: acwr > 1.5 ? 'High' : acwr < 0.8 ? 'Low' : 'Medium',
+        targetTomorrow: 9000 + i*100,
+        gdData: makeGdData(),
+      };
+    });
+
+    const GROUP_STATS = GROUPS.map((g, i) => ({
+      group: g,
+      todayM: 4000 + i*200,
+      weekToDate: 10000 + i*300,
+      weekDelta: -(1600 - i*100),
+      rolling7: 12000 + i*200,
+      acwr: +(1.8 + i*0.1).toFixed(1),
+      risk: 'High',
+      targetTomorrow: 10000 + i*500,
+      gdData: makeGdData(),
+      thisWeek: 453 + i*40,
+      threeWeekAvg: 460 + i*30,
+    }));
+
+    // ── GD MINI BAR ────────────────────────────────────────────────────────────
+    function GdCell({ day }) {
+      if (day.type === 'future') {
+        return (
+          <Box sx={{ width:44, mx:'auto', display:'flex', flexDirection:'column', alignItems:'center', gap:'2px' }}>
+            <Box sx={{ width:44, height:42, bgcolor:'#d8dce2', borderRadius:'2px 2px 0 0' }} />
+          </Box>
+        );
+      }
+      const barH = 42;
+      const fillH = Math.round(barH * day.pct / 100);
+      const overH = day.type === 'over' ? 4 : 0;
+      const clr = day.type === 'over' ? '#e53935' : day.type === 'under' ? '#263b52' : '#1e3a5f';
+
+      return (
+        <Box sx={{ width:44, mx:'auto', display:'flex', flexDirection:'column', alignItems:'center' }}>
+          <Box sx={{ width:44, height:barH, position:'relative', overflow:'visible' }}>
+            {overH > 0 && (
+              <Box sx={{ position:'absolute', top:-overH, left:0, width:44, height:overH, bgcolor:'#e53935', borderRadius:'2px 2px 0 0' }} />
+            )}
+            <Box sx={{ position:'absolute', bottom:0, left:0, width:44, height:fillH, bgcolor:clr }} />
+            <Box sx={{ position:'absolute', bottom:0, left:0, width:44, height:barH-fillH, bgcolor:'#8fa0b4', opacity:0.25 }} />
+          </Box>
+          <Typography sx={{ fontSize:'9px', fontWeight:700, color: day.type==='over'?'#e53935': day.type==='under'?'#5a6e84':'#1e7a6d', mt:'3px', lineHeight:1, textAlign:'center' }}>
+            {day.label}
+          </Typography>
+          <Typography sx={{ fontSize:'8px', color:'#8fa0b4', lineHeight:1, textAlign:'center' }}>
+            {day.deltaLabel}
+          </Typography>
+        </Box>
+      );
+    }
+
+    // ── STATUS CHIP ────────────────────────────────────────────────────────────
+    function RiskChip({ risk }) {
+      const map = { High:{ bg:'#c0392b', color:'#fff' }, Medium:{ bg:'#e67e22', color:'#fff' }, Low:{ bg:'#27ae60', color:'#fff' } };
+      const s = map[risk] || map.Medium;
+      return <Box sx={{ bgcolor:s.bg, color:s.color, borderRadius:20, px:1.5, py:.3, fontSize:11, fontWeight:700, display:'inline-block', whiteSpace:'nowrap' }}>{risk}</Box>;
+    }
+
+    function GroupChip({ group }) {
+      return <Chip label={group} size="small" sx={{ fontSize:11, height:22, bgcolor:'#eef0f4', color:'#4a5568' }} />;
+    }
+
+    function fmtM(v) { return v >= 1000 ? `${(v/1000).toFixed(0)}k` : v; }
+
+    // ── TARGET MODAL ───────────────────────────────────────────────────────────
+    const DAYS_OF_WEEK = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    function TargetModal({ open, onClose, targetLabel }) {
+      const [metric, setMetric] = useState('distance');
+      const [workloadMode, setWorkloadMode] = useState('equal');
+      const [checkedDays, setCheckedDays] = useState({ Mon:true, Tue:false, Wed:true, Thu:true, Fri:true, Sat:false, Sun:false });
+      const [manualValues, setManualValues] = useState({ Mon:'2,000', Wed:'2,000', Thu:'2,000', Fri:'2,000' });
+
+      const toggleDay = (day) => {
+        setCheckedDays(prev => ({ ...prev, [day]: !prev[day] }));
+      };
+
+      const activeDays = DAYS_OF_WEEK.filter(d => checkedDays[d]);
+
+      return (
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx:{ borderRadius:2 } }}>
+          <DialogTitle sx={{ fontWeight:700, fontSize:18, pb:1 }}>
+            Set regular gameweek target
+          </DialogTitle>
+          <DialogContent sx={{ pt:0 }}>
+            {/* Metric dropdown */}
+            <FormControl variant="standard" fullWidth sx={{ mb:2 }}>
+              <InputLabel shrink>Total distance (m)</InputLabel>
+              <Select value={metric} onChange={e=>setMetric(e.target.value)} sx={{ mt:2 }}>
+                <MenuItem value="distance">20–22k</MenuItem>
+                <MenuItem value="acwr">ACWR</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Typography sx={{ fontWeight:600, fontSize:14, mb:1 }}>Workload</Typography>
+            <RadioGroup value={workloadMode} onChange={e=>setWorkloadMode(e.target.value)}>
+              <FormControlLabel value="equal" control={<Radio size="small" />} label={<Typography sx={{fontSize:14}}>Apply equal to all training days</Typography>} />
+              <FormControlLabel value="manual" control={<Radio size="small" />} label={<Typography sx={{fontSize:14}}>Set each manually</Typography>} />
+            </RadioGroup>
+
+            <Typography sx={{ fontWeight:600, fontSize:14, mt:2, mb:1 }}>Select training days</Typography>
+            <Box sx={{ display:'flex', gap:'14px', mb: workloadMode==='manual' ? 1 : 0 }}>
+              {DAYS_OF_WEEK.map(d => (
+                <Box key={d} sx={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+                  <Typography sx={{ fontSize:12, color:'#555', fontWeight:500 }}>{d}</Typography>
+                  <Checkbox
+                    checked={!!checkedDays[d]}
+                    onChange={() => toggleDay(d)}
+                    size="small"
+                    sx={{ p:0 }}
+                  />
+                </Box>
+              ))}
+            </Box>
+
+            {workloadMode === 'manual' && (
+              <Box sx={{ display:'flex', gap:'8px', flexWrap:'wrap', mt:1 }}>
+                {activeDays.map(d => (
+                  <TextField
+                    key={d}
+                    label={d}
+                    size="small"
+                    value={manualValues[d] || ''}
+                    onChange={e => setManualValues(prev => ({ ...prev, [d]: e.target.value }))}
+                    sx={{ width:72 }}
+                    inputProps={{ style:{ fontSize:13, textAlign:'center' } }}
+                  />
+                ))}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ px:3, pb:2 }}>
+            <Button onClick={onClose} variant="text" sx={{ color:'#555', textTransform:'none' }}>Cancel</Button>
+            <Button onClick={onClose} variant="contained" sx={{ bgcolor:'#1a2f4a', textTransform:'none', '&:hover':{ bgcolor:'#243d5e' } }}>Done</Button>
+          </DialogActions>
+        </Dialog>
+      );
+    }
+
+    // ── INDIVIDUALS TAB ────────────────────────────────────────────────────────
+    function IndividualsTab({ metricMode }) {
+      const [filterStatus, setFilterStatus] = useState(null);
+
+      const counts = useMemo(() => ({
+        over:   PLAYERS.filter(p => p.status==='over').length,
+        target: PLAYERS.filter(p => p.status==='target').length,
+        under:  PLAYERS.filter(p => p.status==='under').length,
+      }), []);
+
+      const filtered = useMemo(() => {
+        if (!filterStatus) return PLAYERS;
+        return PLAYERS.filter(p => p.status === filterStatus);
+      }, [filterStatus]);
+
+      const handleCard = (status) => {
+        setFilterStatus(prev => prev === status ? null : status);
+      };
+
+      return (
+        <Box>
+          {/* Summary cards */}
+          <Box sx={{ display:'flex', gap:2, mb:3 }}>
+            {/* Overtraining */}
+            <Box
+              onClick={() => handleCard('over')}
+              sx={{
+                cursor:'pointer', borderRadius:2, p:2, width:200, position:'relative', overflow:'hidden',
+                bgcolor: filterStatus==='over' ? '#c0392b' : '#fdf0f0',
+                border: `2px solid ${filterStatus==='over'?'#c0392b':'#f5c6c6'}`,
+                transition:'all .2s',
+              }}
+            >
+              <Box sx={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+                <Typography sx={{ fontSize:64, fontWeight:800, lineHeight:1, color: filterStatus==='over'?'#fff':'#c0392b' }}>
+                  {counts.over}
+                </Typography>
+                <span className="material-icons-outlined" style={{ fontSize:22, color: filterStatus==='over'?'#fff':'#c0392b', mt:1 }}>swap_vert</span>
+              </Box>
+              <Typography sx={{ fontSize:13, fontWeight:500, color: filterStatus==='over'?'rgba(255,255,255,.85)':'#a93226' }}>
+                Overtraining
+              </Typography>
+            </Box>
+
+            {/* On track */}
+            <Box
+              onClick={() => handleCard('target')}
+              sx={{
+                cursor:'pointer', borderRadius:2, p:2, width:200,
+                bgcolor: filterStatus==='target' ? TRACK_CLR : '#f0faf8',
+                border: `2px solid ${filterStatus==='target'?TRACK_CLR:'#b2dfdb'}`,
+                transition:'all .2s',
+              }}
+            >
+              <Typography sx={{ fontSize:64, fontWeight:800, lineHeight:1, color: filterStatus==='target'?'#fff':TRACK_CLR }}>
+                {counts.target}
+              </Typography>
+              <Typography sx={{ fontSize:13, fontWeight:500, color: filterStatus==='target'?'rgba(255,255,255,.85)':'#00695c' }}>
+                On track
+              </Typography>
+            </Box>
+
+            {/* Undertraining */}
+            <Box
+              onClick={() => handleCard('under')}
+              sx={{
+                cursor:'pointer', borderRadius:2, p:2, width:200,
+                bgcolor: filterStatus==='under' ? UNDER_CLR : '#fdf5ff',
+                border: `2px solid ${filterStatus==='under'?UNDER_CLR:'#e1bee7'}`,
+                transition:'all .2s',
+              }}
+            >
+              <Typography sx={{ fontSize:64, fontWeight:800, lineHeight:1, color: filterStatus==='under'?'#fff':UNDER_CLR }}>
+                {counts.under}
+              </Typography>
+              <Typography sx={{ fontSize:13, fontWeight:500, color: filterStatus==='under'?'rgba(255,255,255,.85)':'#6a1b9a' }}>
+                Undertraining
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Table */}
+          <TableContainer component={Paper} elevation={0} sx={{ border:'1px solid #e4e8ee', borderRadius:2, overflow:'auto' }}>
+            <Table size="small" sx={{ minWidth: 1100 }}>
+              <TableHead>
+                <TableRow sx={{ bgcolor:'#f7f8fa' }}>
+                  {['Athlete','Group','Today (m)','Week to date','7 day rolling avg.','ACWR',
+                    ...GD_LABELS.map((l,i) => i===4?'TODAY':''),
+                    'Target tomorrow','Risk'
+                  ].map((h,i) => (
+                    <TableCell key={i} sx={{ fontSize:11, fontWeight:700, color:'#6b7a8d', whiteSpace:'nowrap',
+                      ...(i >= 6 && i <= 11 ? { width:56, px:'4px', textAlign:'center' } : {})
+                    }}>
+                      {/* TODAY marker above GD-1 */}
+                      {h}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* GD sub-header row */}
+                <TableRow sx={{ bgcolor:'#f7f8fa' }}>
+                  {[null,null,null,null,null,null,...GD_LABELS,null,null].map((lbl,i) => (
+                    <TableCell key={i} sx={{
+                      fontSize:10, fontWeight:600, color: i===10?'#1a2332':'#8fa0b4',
+                      textAlign: i>=6&&i<=11 ? 'center':'left',
+                      px: i>=6&&i<=11 ? '4px':'16px',
+                      py:'2px', borderBottom:'none',
+                      ...(i===10 ? { color:'#1e3a5f', borderTop:'2px solid #1e3a5f' } : {})
+                    }}>
+                      {lbl}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filtered.map((p, ri) => (
+                  <TableRow key={p.id} sx={{ bgcolor: ri%2===0?'#fff':'#fafbfc', '&:hover':{ bgcolor:'#f0f4ff' } }}>
+                    <TableCell sx={{ py:'10px' }}>
+                      <Typography sx={{ fontSize:13, fontWeight:600 }}>{p.name}</Typography>
+                      <Typography sx={{ fontSize:11, color:'#8fa0b4' }}>{p.pos}</Typography>
+                    </TableCell>
+                    <TableCell><GroupChip group={p.group} /></TableCell>
+                    <TableCell sx={{ fontSize:13 }}>{p.todayM.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Typography sx={{ fontSize:13 }}>{p.weekToDate.toLocaleString()}</Typography>
+                      <Typography sx={{ fontSize:11, color: p.weekDelta<0?'#e53935':'#27ae60' }}>
+                        ({p.weekDelta>0?'+':''}{p.weekDelta.toLocaleString()} {p.weekDelta<0?'under':'over'})
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ fontSize:13 }}>{p.rolling7.toLocaleString()}</TableCell>
+                    <TableCell sx={{ fontSize:13, fontWeight:600, color: p.acwr>1.5?'#e53935': p.acwr<0.8?'#7b1fa2':'#1e7a6d' }}>
+                      {p.acwr}
+                    </TableCell>
+                    {p.gdData.map((day, di) => (
+                      <TableCell key={di} sx={{ px:'4px', py:'8px', textAlign:'center' }}>
+                        <GdCell day={day} />
+                      </TableCell>
+                    ))}
+                    <TableCell sx={{ fontSize:13, whiteSpace:'nowrap' }}>{fmtM(p.targetTomorrow)}</TableCell>
+                    <TableCell><RiskChip risk={p.risk} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      );
+    }
+
+    // ── GROUPS TAB ─────────────────────────────────────────────────────────────
+    const CHART_COLORS = { thisWeek:'#00e5d4', threeWeek:'#7c3aed' };
+
+    function GroupsTab({ metricMode }) {
+      const chartData = GROUP_STATS.map(g => ({
+        name: g.group,
+        'This week': g.thisWeek,
+        '3 week average': g.threeWeekAvg,
+      }));
+
+      return (
+        <Box>
+          <TableContainer component={Paper} elevation={0} sx={{ border:'1px solid #e4e8ee', borderRadius:2, overflow:'auto', mb:3 }}>
+            <Table size="small" sx={{ minWidth: 1050 }}>
+              <TableHead>
+                <TableRow sx={{ bgcolor:'#f7f8fa' }}>
+                  {['Group','Today (m)','Week to date','7 day rolling avg.','ACWR','','','','','','','Target tomorrow','Risk'].map((h,i) => (
+                    <TableCell key={i} sx={{ fontSize:11, fontWeight:700, color:'#6b7a8d', whiteSpace:'nowrap',
+                      ...(i>=5&&i<=10 ? { width:56, px:'4px' }:{})
+                    }}>{h}</TableCell>
+                  ))}
+                </TableRow>
+                <TableRow sx={{ bgcolor:'#f7f8fa' }}>
+                  {[null,null,null,null,null,...GD_LABELS,null,null].map((lbl,i) => (
+                    <TableCell key={i} sx={{
+                      fontSize:10, fontWeight:600, color:'#8fa0b4',
+                      textAlign: i>=5&&i<=10?'center':'left',
+                      px: i>=5&&i<=10?'4px':'16px', py:'2px', borderBottom:'none'
+                    }}>{lbl}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {GROUP_STATS.map((g, ri) => (
+                  <TableRow key={g.group} sx={{ bgcolor: ri%2===0?'#fff':'#fafbfc', '&:hover':{ bgcolor:'#f0f4ff' } }}>
+                    <TableCell><GroupChip group={g.group} /></TableCell>
+                    <TableCell sx={{ fontSize:13 }}>{g.todayM.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Typography sx={{ fontSize:13 }}>{g.weekToDate.toLocaleString()}</Typography>
+                      <Typography sx={{ fontSize:11, color:'#e53935' }}>({g.weekDelta.toLocaleString()} over)</Typography>
+                    </TableCell>
+                    <TableCell sx={{ fontSize:13 }}>{g.rolling7.toLocaleString()}</TableCell>
+                    <TableCell sx={{ fontSize:13, fontWeight:600, color:'#e53935' }}>{g.acwr}</TableCell>
+                    {g.gdData.map((day, di) => (
+                      <TableCell key={di} sx={{ px:'4px', py:'8px', textAlign:'center' }}>
+                        <GdCell day={day} />
+                      </TableCell>
+                    ))}
+                    <TableCell sx={{ fontSize:13 }}>{fmtM(g.targetTomorrow)}</TableCell>
+                    <TableCell><RiskChip risk={g.risk} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Group comparison chart */}
+          <Paper elevation={0} sx={{ border:'1px solid #e4e8ee', borderRadius:2, p:3 }}>
+            <Typography sx={{ fontWeight:700, fontSize:16, mb:2 }}>Group comparison</Typography>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={chartData} barCategoryGap="30%" barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e4e8ee" />
+                <XAxis dataKey="name" tick={{ fontSize:12, fill:'#6b7a8d' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize:11, fill:'#6b7a8d' }} axisLine={false} tickLine={false} label={{ value:'Metres', angle:-90, position:'insideLeft', style:{ fontSize:11, fill:'#6b7a8d' } }} />
+                <RTooltip contentStyle={{ fontSize:12, borderRadius:8 }} />
+                <Legend iconType="square" wrapperStyle={{ fontSize:12 }} />
+                <Bar dataKey="This week" fill={CHART_COLORS.thisWeek} radius={[3,3,0,0]} />
+                <Bar dataKey="3 week average" fill={CHART_COLORS.threeWeek} radius={[3,3,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Box>
+      );
+    }
+
+    // ── NAV ────────────────────────────────────────────────────────────────────
+    const NAV_ICONS = ['dashboard','fitness_center','bar_chart','people','calendar_today','assignment','settings'];
+
+    function SideNav() {
+      return (
+        <Box sx={{
+          width: NAV_WIDTH, flexShrink:0, bgcolor: NAV_BG, display:'flex',
+          flexDirection:'column', alignItems:'center', pt:1.5, pb:2, gap:0,
+          borderRight:'1px solid rgba(255,255,255,.07)'
+        }}>
+          {/* Logo */}
+          <Box sx={{ width:36, height:36, borderRadius:1.5, bgcolor:'#1a3a5c', mb:3, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Box component="img" src="/Chelsea_FC.svg.png" sx={{ width:28, height:28, objectFit:'contain' }} onError={e=>{ e.target.style.display='none'; }} />
+          </Box>
+          {NAV_ICONS.map((ic, i) => (
+            <Tooltip key={i} title={ic.replace(/_/g,' ')} placement="right">
+              <Box sx={{
+                width:40, height:40, borderRadius:1.5, mb:0.5, display:'flex', alignItems:'center', justifyContent:'center',
+                bgcolor: i===4 ? 'rgba(255,255,255,.12)' : 'transparent',
+                cursor:'pointer', '&:hover':{ bgcolor:'rgba(255,255,255,.08)' }, position:'relative'
+              }}>
+                <span className="material-icons-outlined" style={{ fontSize:20, color: i===4?'#fff':'rgba(255,255,255,.45)' }}>{ic}</span>
+                {i===4 && <Box sx={{ position:'absolute', left:0, top:4, width:3, height:32, bgcolor:'#00b4a6', borderRadius:'0 2px 2px 0' }} />}
+              </Box>
+            </Tooltip>
+          ))}
+          <Box sx={{ flex:1 }} />
+          <Box sx={{ width:40, height:40, borderRadius:20, bgcolor:'#2a4a6a', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span className="material-icons-outlined" style={{ fontSize:18, color:'rgba(255,255,255,.7)' }}>person</span>
+          </Box>
+        </Box>
+      );
+    }
+
+    // ── APP ────────────────────────────────────────────────────────────────────
+    function App() {
+      const [tab, setTab] = useState(0);
+      const [metricMode, setMetricMode] = useState('distance');
+      const [modalOpen, setModalOpen] = useState(false);
+      const [gameweek, setGameweek] = useState('IS7-Wolves');
+      const [regularTarget, setRegularTarget] = useState('20–22k');
+      const [rehabTarget, setRehabTarget] = useState('10-12k');
+
+      return (
+        <Box sx={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+          <SideNav />
+
+          {/* Main content */}
+          <Box sx={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', bgcolor:'#fff' }}>
+
+            {/* Top bar */}
+            <Box sx={{ px:3, py:1, display:'flex', alignItems:'center', borderBottom:'1px solid #e4e8ee', bgcolor:'#fff', minHeight:48 }}>
+              <Typography sx={{ fontSize:12, color:'#8fa0b4' }}>Planning</Typography>
+              <Box sx={{ flex:1 }} />
+              <Typography sx={{ fontSize:12, color:'#4a5568', mr:1 }}>Primary Squad</Typography>
+              <span className="material-icons-outlined" style={{ fontSize:16, color:'#8fa0b4' }}>expand_more</span>
+              <Box sx={{ width:32, height:32, borderRadius:20, bgcolor:'#dde2ec', ml:1.5, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <span className="material-icons-outlined" style={{ fontSize:16, color:'#4a5568' }}>person</span>
+              </Box>
+            </Box>
+
+            {/* Page heading row */}
+            <Box sx={{ px:3, py:1.5, display:'flex', alignItems:'center', borderBottom:'1px solid #e4e8ee', bgcolor:'#fff' }}>
+              <Typography sx={{ fontSize:22, fontWeight:700, color:'#1a2332' }}>Workload tracking</Typography>
+              <Box sx={{ flex:1 }} />
+              {/* Metric toggle */}
+              <ToggleButtonGroup
+                value={metricMode}
+                exclusive
+                onChange={(_, v) => v && setMetricMode(v)}
+                size="small"
+                sx={{ border:'1px solid #d0d5de', borderRadius:1 }}
+              >
+                <ToggleButton value="distance" sx={{ px:2, py:.5, fontSize:12, textTransform:'none', fontWeight:500, '&.Mui-selected':{ bgcolor:'#e8eaf6', color:'#1a2332' } }}>
+                  Total distance (m)
+                </ToggleButton>
+                <ToggleButton value="acwr" sx={{ px:2, py:.5, fontSize:12, textTransform:'none', fontWeight:500, '&.Mui-selected':{ bgcolor:'#e8eaf6', color:'#1a2332' } }}>
+                  ACWR
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <Tooltip title="Settings">
+                <IconButton size="small" sx={{ ml:1 }}>
+                  <span className="material-icons-outlined" style={{ fontSize:20, color:'#6b7a8d' }}>settings</span>
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            {/* Controls row */}
+            <Box sx={{ px:3, py:1, display:'flex', alignItems:'flex-end', gap:3, borderBottom:'1px solid #e4e8ee', bgcolor:'#fff' }}>
+              {/* Gameweek */}
+              <Box>
+                <Typography sx={{ fontSize:10, color:'#8fa0b4', mb:.3 }}>Gameweek</Typography>
+                <Box sx={{ display:'flex', alignItems:'center', gap:.5, cursor:'pointer', borderBottom:'1px solid #1a2332', pb:.3 }}>
+                  <Typography sx={{ fontSize:14, fontWeight:500 }}>{gameweek}</Typography>
+                  <span className="material-icons-outlined" style={{ fontSize:18, color:'#6b7a8d' }}>calendar_today</span>
+                </Box>
+              </Box>
+
+              {/* Regular target */}
+              <Box onClick={() => setModalOpen(true)} sx={{ cursor:'pointer' }}>
+                <Typography sx={{ fontSize:10, color:'#8fa0b4', mb:.3 }}>Regular target</Typography>
+                <Box sx={{ display:'flex', alignItems:'center', gap:.5, borderBottom:'1px solid #1a2332', pb:.3, minWidth:120 }}>
+                  <Typography sx={{ fontSize:14, fontWeight:500, flex:1 }}>{regularTarget}</Typography>
+                  <span className="material-icons-outlined" style={{ fontSize:18, color:'#6b7a8d' }}>arrow_drop_down</span>
+                </Box>
+              </Box>
+
+              {/* Rehab target */}
+              <Box>
+                <Typography sx={{ fontSize:10, color:'#8fa0b4', mb:.3 }}>Rehab target</Typography>
+                <Box sx={{ display:'flex', alignItems:'center', gap:.5, cursor:'pointer', borderBottom:'1px solid #1a2332', pb:.3, minWidth:100 }}>
+                  <Typography sx={{ fontSize:14, fontWeight:500, flex:1 }}>{rehabTarget}</Typography>
+                  <span className="material-icons-outlined" style={{ fontSize:18, color:'#6b7a8d' }}>arrow_drop_down</span>
+                </Box>
+              </Box>
+
+              {/* + add */}
+              <Tooltip title="Add target">
+                <IconButton size="small">
+                  <span className="material-icons-outlined" style={{ fontSize:20, color:'#6b7a8d' }}>add</span>
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            {/* Tabs */}
+            <Box sx={{ px:3, borderBottom:'1px solid #e4e8ee', bgcolor:'#fff' }}>
+              <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{
+                minHeight:42,
+                '& .MuiTab-root': { minHeight:42, textTransform:'none', fontSize:14, fontWeight:500, color:'#6b7a8d', px:2 },
+                '& .Mui-selected': { color:'#1a2332', fontWeight:700 },
+                '& .MuiTabs-indicator': { bgcolor:'#1a2332', height:3 }
+              }}>
+                <Tab label="Individuals" />
+                <Tab label="Groups" />
+              </Tabs>
+            </Box>
+
+            {/* Tab content */}
+            <Box sx={{ flex:1, overflow:'auto', p:3 }}>
+              {tab === 0 && <IndividualsTab metricMode={metricMode} />}
+              {tab === 1 && <GroupsTab metricMode={metricMode} />}
+            </Box>
+          </Box>
+
+          {/* Modal */}
+          <TargetModal open={modalOpen} onClose={() => setModalOpen(false)} targetLabel={regularTarget} />
+        </Box>
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
