@@ -128,8 +128,8 @@
       risk: ['High','Medium','High','Low','Medium'][i],
       targetTomorrow: [10000, 7500, 4000, 7500, 8500][i],
       gdData: GD_PATTERNS[i % GD_PATTERNS.length],
-      thisWeek: [453, 600, 200, 420, 380][i],
-      avg3wk:   [460, 500, 210, 400, 360][i],
+      thisWeek: [62400, 48200, 21500, 57800, 53600][i],
+      avg3wk:   [65100, 51800, 24300, 60200, 57400][i],
     }));
 
     const CHART_DATA = GROUP_ROWS.map(g => ({
@@ -151,7 +151,8 @@
       const isTarget  = t === 'target';
       const BAR_H     = 42;
       const stripeH   = Math.max(2, Math.round(f * BAR_H));
-      const barBg     = isFuture ? GD_FUTURE : isTarget ? TEAL_NUM : GD_NAVY;
+      const stripePattern = `repeating-linear-gradient(-45deg, #2d3a4e 0px, #2d3a4e 3px, #3d4e64 3px, #3d4e64 6px)`;
+      const barBg     = isFuture ? GD_FUTURE : isTarget ? TEAL_NUM : stripePattern;
       const deltaColor = isOver ? GD_RED : isTarget ? TEAL_NUM : isUnder ? GD_PURPLE : BODY_LIGHT;
 
       const tipContent = isFuture
