@@ -432,7 +432,7 @@
       const [workloadMode, setWorkloadMode] = useState('equal');
       const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
       const [manual, setManual] = useState({Mon:'10000',Tue:'10000',Wed:'10000',Thu:'10000',Fri:'10000',Sat:'10000',Sun:'10000'});
-      const [sliderKm, setSliderKm] = useState([10, 20]);
+      const [sliderKm, setSliderKm] = useState([8, 20]);
 
       return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
@@ -450,7 +450,7 @@
               </div>
               <Slider
                 value={sliderKm}
-                min={0} max={60} step={10} marks
+                min={0} max={60} step={4} marks
                 onChange={(_, v) => setSliderKm(v)}
                 sx={{
                   color: TAB_BLUE,
