@@ -418,7 +418,7 @@
                   {p.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
                   ))}
-                  <td style={TD}>{(p.targetTomorrow/1000).toFixed(0)}km</td>
+                  <td style={TD}>{metricFmt(metricVal(p.targetTomorrow, metric), metric)}</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={p.risk} /></td>
                 </tr>
               ))}
