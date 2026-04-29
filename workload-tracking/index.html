@@ -48,7 +48,7 @@
       Tabs, Tab, Tooltip,
     } from '@mui/material';
     import {
-      BarChart, Bar, XAxis, YAxis, CartesianGrid,
+      LineChart, Line, ReferenceLine, BarChart, Bar, XAxis, YAxis, CartesianGrid,
       Tooltip as RTooltip, Legend, ResponsiveContainer
     } from 'recharts';
 
@@ -69,6 +69,33 @@
     const BODY_TEXT  = '#37474f';
     const BODY_LIGHT = '#90a4ae';
     const BORDER     = '#e0e3e7';
+
+    // ── METRIC CONFIG ─────────────────────────────────────────────────────────────
+    const METRIC_CONFIG = {
+      distance:     { label:'Total distance',      unit:'m',    col:'Today',  scale:1.000 },
+      accels_dist:  { label:'Accels distance',     unit:'m',    col:'Accels (m)', scale:0.18 },
+      accels_count: { label:'Accels count',        unit:'',     col:'Accels',     scale:0.003 },
+      decels_dist:  { label:'Decels distance',     unit:'m',    col:'Decels (m)', scale:0.17 },
+      decels_count: { label:'Decels count',        unit:'',     col:'Decels',     scale:0.0028 },
+      sprint_dist:  { label:'Sprint distance',     unit:'m',    col:'Sprint (m)', scale:0.06 },
+      hmld:         { label:'HMLD',                unit:'m',    col:'HMLD',       scale:0.25 },
+      hsr:          { label:'High Speed running',  unit:'m',    col:'HSR (m)',    scale:0.12 },
+      dist_per_min: { label:'Distance per minute', unit:'m/min',col:'Dist/min',   scale:null },
+    };
+
+    function metricVal(baseM, metric) {
+      const cfg = METRIC_CONFIG[metric];
+      if (!cfg) return baseM;
+      if (metric === 'dist_per_min') return (baseM / 90).toFixed(1);
+      return Math.round(baseM * cfg.scale);
+    }
+
+    function metricFmt(val, metric) {
+      if (val == null) return '—';
+      const cfg = METRIC_CONFIG[metric];
+      const unit = cfg?.unit || '';
+      return unit ? `${Number(val).toLocaleString()}${unit}` : Number(val).toLocaleString();
+    }
 
     // ── DATA ──────────────────────────────────────────────────────────────────────
     const GD_DAYS = ['GD-5','GD-4','GD-2','GD-1','GD'];
@@ -137,6 +164,64 @@
       'This week': g.thisWeek,
       '3 week average': g.avg3wk,
     }));
+
+    // ── LOAD MODAL (shared by player rows and group rows) ─────────────────────────
+    function LoadModal({ subject, onClose }) {
+      if (!subject) return null;
+
+      const playedDays = subject.gdData.filter(gd => gd.t !== 'future' && gd.a != null);
+      const dailyAvg = playedDays.length
+        ? Math.round(playedDays.reduce((s, gd) => s + gd.a, 0) / playedDays.length)
+        : null;
+
+      const chartData = GD_DAYS.map((day, i) => {
+        const gd = subject.gdData[i];
+        const isFuture = gd.t === 'future' || gd.a == null;
+        return { day, 'This gameweek': isFuture ? null : gd.a };
+      });
+
+      const isGroup = !!subject.group && !subject.pos;
+      const title = isGroup ? subject.group : subject.name;
+      const sub   = isGroup ? 'Group load by game day' : 'Load by game day';
+
+      return (
+        <Dialog open={!!subject} onClose={onClose} maxWidth="sm" fullWidth
+          PaperProps={{ elevation:4, sx:{ borderRadius:'4px', m:2 } }}>
+          <DialogTitle sx={{ fontSize:18, fontWeight:600, pb:0, pt:3, px:3, color:'#212121' }}>
+            {title}
+            <span style={{ fontSize:13, fontWeight:400, color:BODY_LIGHT, marginLeft:8 }}>{sub}</span>
+          </DialogTitle>
+          <DialogContent sx={{ px:3, pt:2, pb:2 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={chartData} margin={{ top:8, right:16, bottom:4, left:16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eeeeee" vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize:12, fill:TH_COLOR }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize:11, fill:TH_COLOR }} axisLine={false} tickLine={false}
+                  tickFormatter={v => `${(v/1000).toFixed(0)}km`} />
+                <RTooltip
+                  formatter={(v, name) => v != null ? [`${v.toLocaleString()}m`, name] : ['-', name]}
+                  contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12, paddingTop:12 }} />
+                <Line type="monotone" dataKey="This gameweek" stroke={TAB_BLUE} strokeWidth={2}
+                  dot={{ r:4, fill:TAB_BLUE, strokeWidth:0 }} connectNulls={false} />
+                {dailyAvg != null && (
+                  <ReferenceLine y={dailyAvg} stroke={TEAL_NUM} strokeWidth={1.5} strokeDasharray="5 4"
+                    label={{ value:`Avg ${(dailyAvg/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </DialogContent>
+          <DialogActions sx={{ px:3, pb:3, pt:0, justifyContent:'flex-end' }}>
+            <Button onClick={onClose} variant="contained"
+              sx={{ textTransform:'none', fontSize:13, bgcolor:TAB_BLUE, px:2.5, py:.75,
+                borderRadius:'4px', boxShadow:'none',
+                '&:hover':{ bgcolor:'#2d3a4e', boxShadow:'none' } }}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      );
+    }
 
     // ── GD BAR ────────────────────────────────────────────────────────────────────
     // Red stripe at TOP = over target (proportional to overage)
@@ -255,9 +340,10 @@
     }
 
     // ── INDIVIDUALS TABLE ─────────────────────────────────────────────────────────
-    function IndividualsTable({ rows }) {
+    function IndividualsTable({ rows, metric }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
+      const [selectedSubject, setSelectedSubject] = useState(null);
 
       function handleSort(col) {
         if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -288,13 +374,14 @@
       const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' }; // GD-1 — no TODAY marker
 
       return (
+        <>
         <div style={{ overflowX:'auto' }}>
           <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1060 }}>
             <thead>
               <tr>
                 {thSort('name',          'Athlete', { paddingLeft:24 })}
                 {thSort('group',         'Group')}
-                {thSort('todayM',        'Today')}
+                {thSort('todayM',        METRIC_CONFIG[metric]?.col || 'Today')}
                 {thSort('weekToDate',    'Week to date')}
                 {thSort('rolling7',      '7 day rolling avg.')}
                 {thSort('acwr',         'ACWR')}
@@ -309,7 +396,7 @@
             </thead>
             <tbody>
               {sorted.map((p) => (
-                <tr key={p.id} className="data-row">
+                <tr key={p.id} className="data-row" onClick={() => setSelectedSubject(p)} style={{ cursor:'pointer' }}>
                   <td style={{ ...TD, paddingLeft:24 }}>
                     <div style={{ padding:'12px 0 10px' }}>
                       <div style={{ fontWeight:500, fontSize:13 }}>{p.name}</div>
@@ -317,12 +404,12 @@
                     </div>
                   </td>
                   <td style={TD}><GroupChip label={p.group} /></td>
-                  <td style={TD}>{p.todayM.toLocaleString()}</td>
+                  <td style={TD}>{metricFmt(metricVal(p.todayM, metric), metric)}</td>
                   <td style={TD}>
-                    <div>{p.weekToDate.toLocaleString()}</div>
-                    {p.weekOver > 0 && <div style={{ fontSize:11, color:'#e57373' }}>({p.weekOver.toLocaleString()} over)</div>}
+                    <div>{metricFmt(metricVal(p.weekToDate, metric), metric)}</div>
+                    {p.weekOver > 0 && metric === 'distance' && <div style={{ fontSize:11, color:'#e57373' }}>({p.weekOver.toLocaleString()} over)</div>}
                   </td>
-                  <td style={TD}>{p.rolling7.toLocaleString()}</td>
+                  <td style={TD}>{metricFmt(metricVal(p.rolling7, metric), metric)}</td>
                   <td style={TD}>{p.acwr}</td>
                   {p.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
@@ -334,13 +421,16 @@
             </tbody>
           </table>
         </div>
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} />
+        </>
       );
     }
 
     // ── GROUPS TABLE ──────────────────────────────────────────────────────────────
-    function GroupsTable({ rows }) {
+    function GroupsTable({ rows, metric }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
+      const [selectedSubject, setSelectedSubject] = useState(null);
 
       function handleSort(col) {
         if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -371,12 +461,13 @@
       const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' }; // GD-1 — no TODAY marker
 
       return (
+        <>
         <div style={{ overflowX:'auto' }}>
           <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1000 }}>
             <thead>
               <tr>
                 {thSort('group',         'Group', { paddingLeft:24 })}
-                {thSort('todayM',        'Today')}
+                {thSort('todayM',        METRIC_CONFIG[metric]?.col || 'Today')}
                 {thSort('weekToDate',    'Week to date')}
                 {thSort('rolling7',      '7 day rolling avg.')}
                 {thSort('acwr',         'ACWR')}
@@ -391,14 +482,14 @@
             </thead>
             <tbody>
               {sorted.map((g) => (
-                <tr key={g.group} className="data-row">
+                <tr key={g.group} className="data-row" onClick={() => setSelectedSubject(g)} style={{ cursor:'pointer' }}>
                   <td style={{ ...TD, paddingLeft:24 }}><GroupChip label={g.group} /></td>
-                  <td style={TD}>{g.todayM.toLocaleString()}</td>
+                  <td style={TD}>{metricFmt(metricVal(g.todayM, metric), metric)}</td>
                   <td style={TD}>
-                    <div>{g.weekToDate.toLocaleString()}</div>
-                    {g.weekOver > 0 && <div style={{ fontSize:11, color:'#e57373' }}>({g.weekOver.toLocaleString()} over)</div>}
+                    <div>{metricFmt(metricVal(g.weekToDate, metric), metric)}</div>
+                    {g.weekOver > 0 && metric === 'distance' && <div style={{ fontSize:11, color:'#e57373' }}>({g.weekOver.toLocaleString()} over)</div>}
                   </td>
-                  <td style={TD}>{g.rolling7.toLocaleString()}</td>
+                  <td style={TD}>{metricFmt(metricVal(g.rolling7, metric), metric)}</td>
                   <td style={TD}>{g.acwr}</td>
                   {g.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
@@ -410,6 +501,8 @@
             </tbody>
           </table>
         </div>
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} />
+        </>
       );
     }
 
@@ -896,21 +989,27 @@
                     <SummaryCard count={counts.target} label="On track"      color={TEAL_NUM}   active={filterStatus==='target'} onClick={() => setFilterStatus(f => f==='target' ? null : 'target')} />
                     <SummaryCard count={counts.under}  label="Undertraining" color={PURPLE_NUM} active={filterStatus==='under'}  onClick={() => setFilterStatus(f => f==='under'  ? null : 'under')} />
                   </div>
-                  <IndividualsTable rows={filtered} />
+                  <IndividualsTable rows={filtered} metric={metric} />
                 </>
               )}
 
               {tab === 1 && (
                 <>
-                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} /></div>
+                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} /></div>
                   <div style={{ margin:'24px 24px', border:`1px solid ${BORDER}`, borderRadius:4, padding:'20px 24px 16px' }}>
-                    <div style={{ fontSize:16, fontWeight:400, color:BODY_TEXT, marginBottom:16 }}>Group comparison</div>
+                    <div style={{ fontSize:16, fontWeight:400, color:BODY_TEXT, marginBottom:16 }}>Group comparison — {METRIC_CONFIG[metric]?.label || 'Total distance'}</div>
                     <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={CHART_DATA} barCategoryGap="35%" barGap={3} margin={{ top:4, right:8, bottom:20, left:16 }}>
+                      <BarChart
+                        data={GROUP_ROWS.map(g => ({
+                          name: g.group,
+                          'This week':      Number(metricVal(g.thisWeek, metric)),
+                          '3 week average': Number(metricVal(g.avg3wk,   metric)),
+                        }))}
+                        barCategoryGap="35%" barGap={3} margin={{ top:4, right:8, bottom:20, left:16 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#eeeeee" vertical={false} />
                         <XAxis dataKey="name" tick={<CustomXAxisTick />} axisLine={false} tickLine={false} height={40} />
                         <YAxis tick={{ fontSize:11, fill:TH_COLOR }} axisLine={false} tickLine={false}
-                          label={{ value:'Metres', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
+                          label={{ value: METRIC_CONFIG[metric]?.unit || 'm', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
                         <RTooltip cursor={{ fill:'transparent' }} contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
                         <Legend iconType="square" iconSize={12} wrapperStyle={{ fontSize:12, color:TH_COLOR, paddingTop:8 }} />
                         <Bar dataKey="This week"      fill="#26C6DA" radius={[2,2,0,0]} label={{ position:'top', fontSize:11, fontWeight:600, fill:'#26C6DA' }} />
