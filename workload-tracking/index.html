@@ -255,7 +255,7 @@
     // Purple stripe at BOTTOM = under target (proportional to shortfall)
     // All dark navy = on target | Light grey = future day
     const GD_PURPLE = '#7b1fa2';
-    function GdBar({ gd }) {
+    function GdBar({ gd, metric = 'distance' }) {
       const { t, d, f = 0, a, tgt } = gd;
       const isFuture  = t === 'future';
       const isOver    = t === 'over';
@@ -267,10 +267,13 @@
       const barBg     = isFuture ? GD_FUTURE : isTarget ? TEAL_NUM : stripePattern;
       const deltaColor = isOver ? GD_RED : isTarget ? TEAL_NUM : isUnder ? GD_PURPLE : BODY_LIGHT;
 
+      const cfg = METRIC_CONFIG[metric] || METRIC_CONFIG.distance;
+      const fmtVal = v => v != null ? `${metricVal(v, metric).toLocaleString()}${cfg.unit}` : null;
+
       const tipContent = isFuture
-        ? (tgt ? `Target: ${tgt.toLocaleString()}m` : '')
+        ? (tgt ? `Target: ${fmtVal(tgt)}` : '')
         : (a != null && tgt != null)
-          ? `${a.toLocaleString()}m / ${tgt.toLocaleString()}m`
+          ? `${fmtVal(a)} / ${fmtVal(tgt)}`
           : '';
 
       const bar = (
@@ -441,7 +444,7 @@
                   <td style={TD}>{metricFmt(metricVal(p.rolling7, metric), metric)}</td>
                   <td style={TD}>{p.acwr}</td>
                   {p.gdData.map((gd, di) => (
-                    <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
+                    <td key={di} style={TD_GD}><GdBar gd={gd} metric={metric} /></td>
                   ))}
                   <td style={TD}>{metricFmt(metricVal(p.targetTomorrow, metric), metric)}</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={p.risk} /></td>
