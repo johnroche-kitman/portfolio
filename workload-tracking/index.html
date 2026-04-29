@@ -231,10 +231,6 @@
                   stroke="#26C6DA" strokeWidth={2} strokeDasharray="4 3"
                   dot={{ r:3, fill:'#26C6DA', strokeWidth:0 }}
                   hide={!!hidden['Daily load']} connectNulls={false} />
-                {totalLoad > 0 && !hidden['Cumulative load'] && (
-                  <ReferenceLine y={totalLoad} stroke={TEAL_NUM} strokeWidth={1.5} strokeDasharray="5 4"
-                    label={{ value:`GW total: ${(totalLoad/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
-                )}
               </LineChart>
             </ResponsiveContainer>
           </DialogContent>
