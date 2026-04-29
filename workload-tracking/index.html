@@ -1179,7 +1179,7 @@
                         <CartesianGrid strokeDasharray="3 3" stroke="#eeeeee" vertical={false} />
                         <XAxis dataKey="name" tick={<CustomXAxisTick />} axisLine={false} tickLine={false} height={40} />
                         <YAxis tick={{ fontSize:11, fill:TH_COLOR }} axisLine={false} tickLine={false}
-                          label={{ value: METRIC_CONFIG[metric]?.unit || 'm', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
+                          label={{ value: METRIC_CONFIG[metric]?.unit ?? 'm', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
                         <RTooltip cursor={{ fill:'transparent' }} contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
                         <Legend iconType="square" iconSize={12} wrapperStyle={{ fontSize:12, color:TH_COLOR, paddingTop:8 }} />
                         <Bar dataKey="This week"      fill="#26C6DA" radius={[2,2,0,0]} label={{ position:'top', fontSize:11, fontWeight:600, fill:'#26C6DA' }} />
