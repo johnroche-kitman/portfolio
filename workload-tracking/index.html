@@ -94,8 +94,13 @@
       if (prev == null) return null;
       const diff = current - prev;
       const pct = Math.abs(diff) / prev;
-      const icon = pct < 0.01 ? 'trending_flat' : diff > 0 ? 'trending_up' : 'trending_down';
-      return <span className="material-icons" style={{ fontSize:16, color:BODY_LIGHT, marginLeft:4, verticalAlign:'middle' }}>{icon}</span>;
+      const icon  = pct < 0.01 ? 'trending_flat'  : diff > 0 ? 'trending_up'   : 'trending_down';
+      const label = pct < 0.01 ? 'Trending flat' : diff > 0 ? 'Trending up' : 'Trending down';
+      return (
+        <Tooltip title={label} placement="top">
+          <span className="material-icons" style={{ fontSize:16, color:BODY_LIGHT, marginLeft:4, verticalAlign:'middle', cursor:'default' }}>{icon}</span>
+        </Tooltip>
+      );
     }
 
     function metricVal(baseM, metric) {
@@ -663,6 +668,36 @@
                 );
               })}
             </tbody>
+            {(() => {
+              const n = sorted.length || 1;
+              const avg = {
+                todayM:         Math.round(sorted.reduce((s,g) => s + g.todayM,         0) / n),
+                weekToDate:     Math.round(sorted.reduce((s,g) => s + g.weekToDate,     0) / n),
+                rolling7:       Math.round(sorted.reduce((s,g) => s + g.rolling7,       0) / n),
+                acwr:           Math.round(sorted.reduce((s,g) => s + g.acwr,           0) / n * 10) / 10,
+                targetTomorrow: Math.round(sorted.reduce((s,g) => s + g.targetTomorrow, 0) / n),
+              };
+              const AVG_BG = '#f0f4f8';
+              const ftTD = { ...TD, background:AVG_BG, borderTop:`2px solid ${BORDER}`, borderBottom:'none' };
+              return (
+                <tfoot style={{ position:'sticky', bottom:0, zIndex:2 }}>
+                  <tr>
+                    <td style={{ ...ftTD, paddingLeft:24 }}>
+                      <div style={{ fontWeight:600, fontSize:12, color:TH_COLOR, textTransform:'uppercase', letterSpacing:'0.04em', padding:'10px 0 8px' }}>Group avg</div>
+                    </td>
+                    <td style={ftTD}>{metricFmt(metricVal(avg.todayM, metric), metric)}</td>
+                    <td style={ftTD}>{metricFmt(metricVal(avg.weekToDate, metric), metric)}</td>
+                    <td style={ftTD}>{metricFmt(metricVal(avg.rolling7, metric), metric)}</td>
+                    <td style={ftTD}>
+                      <span style={{ fontWeight:600, color:acwrColor(avg.acwr) }}>{avg.acwr}</span>
+                    </td>
+                    {gdDays.map((_, di) => <td key={di} style={{ ...ftTD, padding:'8px 4px', textAlign:'center' }} />)}
+                    <td style={ftTD}>{metricFmt(metricVal(avg.targetTomorrow, metric), metric)}</td>
+                    <td style={{ ...ftTD, paddingRight:24 }} />
+                  </tr>
+                </tfoot>
+              );
+            })()}
           </table>
         <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} gdDays={gdDays} />
         </>
