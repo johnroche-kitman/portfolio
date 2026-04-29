@@ -1134,7 +1134,7 @@
                   </div>
                 </div>
               </div>
-              <CtrlInput label="Regular target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; return c.unit ? `${regularTarget[0]}–${regularTarget[1]} ${c.unit}` : `${regularTarget[0]}–${regularTarget[1]}`; })()} onClick={() => setModalOpen(true)} />
+              <CtrlInput label="Gameweek target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; return c.unit ? `${regularTarget[0]}–${regularTarget[1]} ${c.unit}` : `${regularTarget[0]}–${regularTarget[1]}`; })()} onClick={() => setModalOpen(true)} />
               <CtrlInput label={rehabName} value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; const half = regularTarget.map(v => Math.round(v/2*10)/10); return c.unit ? `${half[0]}–${half[1]} ${c.unit}` : `${half[0]}–${half[1]}`; })()} onClick={() => setRehabModalOpen(true)} />
               <Tooltip title="Add target" placement="bottom">
                 <button style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center' }}>
