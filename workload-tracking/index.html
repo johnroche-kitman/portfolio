@@ -72,15 +72,15 @@
 
     // ── METRIC CONFIG ─────────────────────────────────────────────────────────────
     const METRIC_CONFIG = {
-      distance:     { label:'Total distance',      unit:'metres',  col:'Today',      scale:1.000 },
-      accels_dist:  { label:'Accels distance',     unit:'metres',  col:'Accels (m)', scale:0.18 },
-      accels_count: { label:'Accels count',        unit:'count',   col:'Accels',     scale:0.003 },
-      decels_dist:  { label:'Decels distance',     unit:'metres',  col:'Decels (m)', scale:0.17 },
-      decels_count: { label:'Decels count',        unit:'count',   col:'Decels',     scale:0.0028 },
-      sprint_dist:  { label:'Sprint distance',     unit:'metres',  col:'Sprint (m)', scale:0.06 },
-      hmld:         { label:'HMLD',                unit:'metres',  col:'HMLD',       scale:0.25 },
-      hsr:          { label:'High Speed running',  unit:'metres',  col:'HSR (m)',    scale:0.12 },
-      dist_per_min: { label:'Distance per minute', unit:'m/min',   col:'Dist/min',   scale:null },
+      distance:     { label:'Total distance',      unit:'m',    axisUnit:'metres',  col:'Today',      scale:1.000 },
+      accels_dist:  { label:'Accels distance',     unit:'m',    axisUnit:'metres',  col:'Accels (m)', scale:0.18 },
+      accels_count: { label:'Accels count',        unit:'',     axisUnit:'count',   col:'Accels',     scale:0.003 },
+      decels_dist:  { label:'Decels distance',     unit:'m',    axisUnit:'metres',  col:'Decels (m)', scale:0.17 },
+      decels_count: { label:'Decels count',        unit:'',     axisUnit:'count',   col:'Decels',     scale:0.0028 },
+      sprint_dist:  { label:'Sprint distance',     unit:'m',    axisUnit:'metres',  col:'Sprint (m)', scale:0.06 },
+      hmld:         { label:'HMLD',                unit:'m',    axisUnit:'metres',  col:'HMLD',       scale:0.25 },
+      hsr:          { label:'High Speed running',  unit:'m',    axisUnit:'metres',  col:'HSR (m)',    scale:0.12 },
+      dist_per_min: { label:'Distance per minute', unit:'m/min',axisUnit:'m/min',   col:'Dist/min',   scale:null },
     };
 
     function acwrColor(v) {
@@ -1280,7 +1280,7 @@
                         <CartesianGrid strokeDasharray="3 3" stroke="#eeeeee" vertical={false} />
                         <XAxis dataKey="name" tick={<CustomXAxisTick />} axisLine={false} tickLine={false} height={40} />
                         <YAxis tick={{ fontSize:11, fill:TH_COLOR }} axisLine={false} tickLine={false}
-                          label={{ value: METRIC_CONFIG[metric]?.unit ?? 'm', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
+                          label={{ value: METRIC_CONFIG[metric]?.axisUnit ?? 'metres', angle:-90, position:'insideLeft', dx:-8, style:{ fontSize:11, fill:TH_COLOR } }} />
                         <RTooltip cursor={{ fill:'transparent' }} contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
                         <Legend iconType="square" iconSize={12} wrapperStyle={{ fontSize:12, color:TH_COLOR, paddingTop:8 }} />
                         <Bar dataKey="This week"      fill="#26C6DA" radius={[2,2,0,0]} label={{ position:'top', fontSize:11, fontWeight:600, fill:'#26C6DA' }} />
