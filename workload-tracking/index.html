@@ -434,18 +434,19 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none', clipPath: scrolled ? 'inset(0 0 -10px 0)' : 'none' };
       function thSort(col, label, style = {}) {
         return (
-          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
+          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...style }}>
             {label}<SortArrow col={col} sortCol={sortCol} sortDir={sortDir} />
           </th>
         );
       }
 
-      const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
-      const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
-      const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
+      const gdThStyle    = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
+      const todayThStyle = { ...TH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
+      const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
+
+      const theadStyle = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none' };
 
       const trainingDays = Math.max(1, gdDays.filter(d => d !== 'GD').length);
       const todayTargetMin = (targetKm[0] * 1000) / trainingDays;
@@ -454,7 +455,7 @@
       return (
         <>
         <table style={{ borderCollapse:'separate', borderSpacing:0, width:'100%', minWidth:1060 }}>
-            <thead>
+            <thead style={theadStyle}>
               <tr>
                 {thSort('name',       'Athlete', { paddingLeft:24 })}
                 {thSort('group',      'Group')}
@@ -536,24 +537,24 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none', clipPath: scrolled ? 'inset(0 0 -10px 0)' : 'none' };
-
       function thSort(col, label, style = {}) {
         return (
-          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
+          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...style }}>
             {label}<SortArrow col={col} sortCol={sortCol} sortDir={sortDir} />
           </th>
         );
       }
 
-      const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
-      const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
-      const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
+      const gdThStyle    = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
+      const todayThStyle = { ...TH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
+      const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
+
+      const theadStyle = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none' };
 
       return (
         <>
         <table style={{ borderCollapse:'separate', borderSpacing:0, width:'100%', minWidth:1000 }}>
-            <thead>
+            <thead style={theadStyle}>
               <tr>
                 {thSort('group',      'Group', { paddingLeft:24 })}
                 {thSort('todayM',     METRIC_CONFIG[metric]?.col || 'Today')}
