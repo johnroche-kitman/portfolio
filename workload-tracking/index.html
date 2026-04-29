@@ -294,7 +294,7 @@
               <tr>
                 {thSort('name',          'Athlete', { paddingLeft:24 })}
                 {thSort('group',         'Group')}
-                {thSort('todayM',        'Today (m)')}
+                {thSort('todayM',        'Today')}
                 {thSort('weekToDate',    'Week to date')}
                 {thSort('rolling7',      '7 day rolling avg.')}
                 {thSort('acwr',         'ACWR')}
@@ -304,7 +304,7 @@
                 <th style={gdRegStyle}>GD-1</th>
                 <th style={todayThStyle}>GD</th>
                 {thSort('targetTomorrow','Target tomorrow')}
-                {thSort('risk',          'Risk', { paddingRight:24 })}
+                {thSort('risk',          'Injury risk', { paddingRight:24 })}
               </tr>
             </thead>
             <tbody>
@@ -376,7 +376,7 @@
             <thead>
               <tr>
                 {thSort('group',         'Group', { paddingLeft:24 })}
-                {thSort('todayM',        'Today (m)')}
+                {thSort('todayM',        'Today')}
                 {thSort('weekToDate',    'Week to date')}
                 {thSort('rolling7',      '7 day rolling avg.')}
                 {thSort('acwr',         'ACWR')}
@@ -386,7 +386,7 @@
                 <th style={gdRegStyle}>GD-1</th>
                 <th style={todayThStyle}>GD</th>
                 {thSort('targetTomorrow','Target tomorrow')}
-                {thSort('risk',          'Risk', { paddingRight:24 })}
+                {thSort('risk',          'Injury risk', { paddingRight:24 })}
               </tr>
             </thead>
             <tbody>
@@ -661,26 +661,35 @@
             </div>
 
             {/* Page title row */}
-            <div style={{ display:'flex', alignItems:'center', padding:'12px 24px', borderBottom:`1px solid ${BORDER}`, flexShrink:0 }}>
+            <div style={{ display:'flex', alignItems:'center', padding:'12px 24px', flexShrink:0 }}>
               <span style={{ fontSize:20, fontWeight:400, color:'#37474f', letterSpacing:'0.01em' }}>
                 Workload tracking
               </span>
               <div style={{ flex:1 }} />
-              <div style={{ display:'flex', border:`1px solid #c5cae9`, borderRadius:4, overflow:'hidden', height:40 }}>
-                {[
-                  { v:'distance', l:'Total distance (m)' },
-                  { v:'acwr',     l:'ACWR' },
-                ].map(({ v, l }, i) => (
-                  <button key={v} onClick={() => setMetric(v)} style={{
-                    height:40, padding:'0 14px', cursor:'pointer',
-                    fontSize:13, fontWeight: metric===v ? 500 : 400,
-                    background: metric===v ? '#F0F1F3' : '#fff',
-                    color: TAB_BLUE,
-                    border: 'none',
-                    borderRight: i === 0 ? `1px solid #c5cae9` : 'none',
-                    transition:'background .15s',
-                  }}>{l}</button>
-                ))}
+              <div style={{ position:'relative' }}>
+                <select
+                  value={metric}
+                  onChange={e => setMetric(e.target.value)}
+                  style={{
+                    appearance:'none', WebkitAppearance:'none',
+                    background:'#f5f5f5',
+                    border:'none', borderBottom:`1px solid ${BODY_TEXT}`,
+                    borderRadius:'2px 2px 0 0',
+                    padding:'5px 32px 6px 10px',
+                    fontSize:13, color:BODY_TEXT, cursor:'pointer',
+                    outline:'none', minWidth:180,
+                  }}>
+                  <option value="distance">Total distance</option>
+                  <option value="accels_dist">Accels distance</option>
+                  <option value="accels_count">Accels count</option>
+                  <option value="decels_dist">Decels distance</option>
+                  <option value="decels_count">Decels count</option>
+                  <option value="sprint_dist">Sprint distance</option>
+                  <option value="hmld">HMLD</option>
+                  <option value="hsr">High Speed running</option>
+                  <option value="dist_per_min">Distance per minute</option>
+                </select>
+                <span className="material-icons" style={{ position:'absolute', right:6, top:'50%', transform:'translateY(-50%)', fontSize:18, color:BODY_TEXT, pointerEvents:'none' }}>arrow_drop_down</span>
               </div>
               <Tooltip title="Settings">
                 <button style={{ marginLeft:8, background:'none', border:'none', cursor:'pointer', display:'flex', alignItems:'center', padding:6, borderRadius:4 }}>
