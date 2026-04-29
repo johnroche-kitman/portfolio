@@ -437,6 +437,7 @@
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
+      const [colFilters, setColFilters] = useState({ name:'', group:'', risk:'', acwr:'' });
 
       function handleSort(col) {
         if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -452,7 +453,27 @@
         return map[col] ?? null;
       }
 
-      const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
+      const filtered = useMemo(() => rows.filter(p => {
+        if (colFilters.name  && !p.name.toLowerCase().includes(colFilters.name.toLowerCase())) return false;
+        if (colFilters.group && p.group !== colFilters.group) return false;
+        if (colFilters.risk  && p.risk  !== colFilters.risk)  return false;
+        if (colFilters.acwr) {
+          if (colFilters.acwr === '>1.5'  && p.acwr <= 1.5) return false;
+          if (colFilters.acwr === '1.3–1.5' && (p.acwr <= 1.3 || p.acwr > 1.5)) return false;
+          if (colFilters.acwr === '0.8–1.3' && (p.acwr < 0.8  || p.acwr > 1.3)) return false;
+          if (colFilters.acwr === '<0.8'  && p.acwr >= 0.8) return false;
+        }
+        return true;
+      }), [rows, colFilters]);
+
+      const sorted = useSortedRows(filtered, sortCol, sortDir, getVal);
+
+      const filterSel = {
+        fontSize:11, color:BODY_TEXT, background:'#f5f7f9', border:`1px solid ${BORDER}`,
+        borderRadius:3, padding:'3px 4px', width:'100%', outline:'none', cursor:'pointer',
+      };
+      const filterInput = { ...filterSel, cursor:'text' };
+      const filterTD = { padding:'4px 12px 6px', background:'#fff', borderBottom:`1px solid ${BORDER}` };
 
       function thSort(col, label, style = {}) {
         return (
@@ -490,6 +511,37 @@
                 })}
                 {thSort('targetTomorrow','Target tomorrow')}
                 {thSort('risk',          'Injury risk', { paddingRight:24 })}
+              </tr>
+              <tr>
+                <td style={{ ...filterTD, paddingLeft:24 }}>
+                  <input placeholder="Search…" value={colFilters.name}
+                    onChange={e => setColFilters(f => ({ ...f, name: e.target.value }))}
+                    style={filterInput} />
+                </td>
+                <td style={filterTD}>
+                  <select value={colFilters.group} onChange={e => setColFilters(f => ({ ...f, group: e.target.value }))} style={filterSel}>
+                    <option value="">All</option>
+                    {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </td>
+                <td style={filterTD} /><td style={filterTD} /><td style={filterTD} />
+                <td style={filterTD}>
+                  <select value={colFilters.acwr} onChange={e => setColFilters(f => ({ ...f, acwr: e.target.value }))} style={filterSel}>
+                    <option value="">All</option>
+                    <option value=">1.5">&gt;1.5</option>
+                    <option value="1.3–1.5">1.3–1.5</option>
+                    <option value="0.8–1.3">0.8–1.3</option>
+                    <option value="<0.8">&lt;0.8</option>
+                  </select>
+                </td>
+                {gdDays.map((_, di) => <td key={di} style={filterTD} />)}
+                <td style={filterTD} />
+                <td style={{ ...filterTD, paddingRight:24 }}>
+                  <select value={colFilters.risk} onChange={e => setColFilters(f => ({ ...f, risk: e.target.value }))} style={filterSel}>
+                    <option value="">All</option>
+                    <option>High</option><option>Medium</option><option>Low</option>
+                  </select>
+                </td>
               </tr>
             </thead>
             <tbody>
