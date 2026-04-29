@@ -814,19 +814,29 @@
 
             {/* Controls row */}
             <div style={{ display:'flex', alignItems:'center', gap:16, padding:'10px 24px 8px', flexShrink:0 }}>
-              <div style={{ position:'relative', minWidth:180 }}>
-                <div style={{ fontSize:10, color:BODY_TEXT, lineHeight:1, marginBottom:2, paddingLeft:10, paddingTop:5 }}>Gameweek</div>
-                <div style={{ display:'flex', alignItems:'center', background:'#f5f5f5', borderRadius:'2px 2px 0 0', borderBottom:`1px solid ${BODY_TEXT}`, padding:'0 10px 6px' }}>
-                  <select
-                    value={gameweek}
-                    onChange={e => setGameweek(e.target.value)}
-                    style={{ appearance:'none', WebkitAppearance:'none', background:'transparent', border:'none', fontSize:13, color:BODY_TEXT, cursor:'pointer', outline:'none', flex:1 }}>
-                    <option>IS7-Wolves</option>
-                    <option>IS8-Chelsea</option>
-                    <option>IS9-ManUtd</option>
-                    <option>IS10-Arsenal</option>
-                  </select>
-                  <span className="material-icons" style={{ fontSize:18, color:BODY_TEXT, pointerEvents:'none' }}>calendar_today</span>
+              <div style={{ minWidth:180 }}>
+                <div style={{ background:'#f5f5f5', borderRadius:'2px 2px 0 0', borderBottom:`1px solid ${BODY_TEXT}`, padding:'5px 10px 6px' }}>
+                  <div style={{ fontSize:10, color:BODY_TEXT, lineHeight:1, marginBottom:2 }}>Gameweek</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:2 }}>
+                    <select
+                      value={gameweek}
+                      onChange={e => setGameweek(e.target.value)}
+                      style={{ appearance:'none', WebkitAppearance:'none', background:'transparent', border:'none', fontSize:13, color:BODY_TEXT, cursor:'pointer', outline:'none', flex:1, padding:0 }}>
+                      <option>IS1-Brentford</option>
+                      <option>IS2-Leicester</option>
+                      <option>IS3-Brighton</option>
+                      <option>IS4-Everton</option>
+                      <option>IS5-Fulham</option>
+                      <option>IS6-Newcastle</option>
+                      <option>IS7-Wolves</option>
+                      <option>IS8-Chelsea</option>
+                      <option>IS9-ManUtd</option>
+                      <option>IS10-Arsenal</option>
+                      <option>IS11-Liverpool</option>
+                      <option>IS12-Spurs</option>
+                    </select>
+                    <span className="material-icons" style={{ fontSize:18, color:BODY_TEXT, pointerEvents:'none' }}>calendar_today</span>
+                  </div>
                 </div>
               </div>
               <CtrlInput label="Regular target" value="20–22km" onClick={() => setModalOpen(true)} />
