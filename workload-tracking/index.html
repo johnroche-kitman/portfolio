@@ -206,9 +206,9 @@
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12, paddingTop:12 }} />
                 <Line type="monotone" dataKey="Cumulative load" stroke={TAB_BLUE} strokeWidth={2}
                   dot={{ r:4, fill:TAB_BLUE, strokeWidth:0 }} connectNulls={false} />
-                {dailyAvg != null && (
+                {totalLoad > 0 && (
                   <ReferenceLine y={totalLoad} stroke={TEAL_NUM} strokeWidth={1.5} strokeDasharray="5 4"
-                    label={{ value:`Avg/day ${(dailyAvg/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
+                    label={{ value:`GW avg: ${(totalLoad/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
                 )}
               </LineChart>
             </ResponsiveContainer>
@@ -500,7 +500,7 @@
                   {g.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
                   ))}
-                  <td style={TD}>{(g.targetTomorrow/1000).toFixed(0)}km</td>
+                  <td style={TD}>{metricFmt(metricVal(g.targetTomorrow, metric), metric)}</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={g.risk} /></td>
                 </tr>
               ))}
