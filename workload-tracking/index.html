@@ -434,7 +434,7 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none', clipPath: scrolled ? 'inset(0 0 -10px 0)' : 'none' };
       function thSort(col, label, style = {}) {
         return (
           <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
@@ -536,7 +536,7 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 4px 8px rgba(0,0,0,0.15)' : 'none', clipPath: scrolled ? 'inset(0 0 -10px 0)' : 'none' };
 
       function thSort(col, label, style = {}) {
         return (
