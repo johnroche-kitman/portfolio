@@ -112,31 +112,31 @@
     const GROUPS = ['Starter','Non starter','Rehab','Academy','On loan'];
 
     const RAW_PLAYERS = [
-      {id:1,  name:'Dan Jones',      pos:'LB',  group:'Starter',     acwr:1.8, risk:'High',   todayM:4200, weekToDate:11000, weekOver:1800, rolling7:12500, targetTomorrow:10000},
-      {id:2,  name:'Marcus Webb',    pos:'CB',  group:'Starter',     acwr:1.9, risk:'High',   todayM:3900, weekToDate:10500, weekOver:500,  rolling7:11800, targetTomorrow:10000},
-      {id:3,  name:'Tom Brady',      pos:'GK',  group:'Starter',     acwr:0.9, risk:'Low',    todayM:3100, weekToDate:9200,  weekOver:200,  rolling7:10500, targetTomorrow:9000},
-      {id:4,  name:'Aaron Reid',     pos:'RB',  group:'Starter',     acwr:1.7, risk:'High',   todayM:4500, weekToDate:11200, weekOver:1200, rolling7:12800, targetTomorrow:10500},
-      {id:5,  name:'Kyle Foster',    pos:'CB',  group:'Starter',     acwr:1.0, risk:'Low',    todayM:3700, weekToDate:9800,  weekOver:0,    rolling7:11200, targetTomorrow:9500},
-      {id:6,  name:'Owen Clarke',    pos:'CM',  group:'Starter',     acwr:1.2, risk:'Low',    todayM:3800, weekToDate:10100, weekOver:100,  rolling7:11600, targetTomorrow:9800},
-      {id:7,  name:'Ryan Moss',      pos:'AM',  group:'Starter',     acwr:1.6, risk:'High',   todayM:4100, weekToDate:10800, weekOver:800,  rolling7:12200, targetTomorrow:10000},
-      {id:8,  name:'Scott Allen',    pos:'ST',  group:'Starter',     acwr:1.1, risk:'Low',    todayM:3600, weekToDate:9600,  weekOver:0,    rolling7:11000, targetTomorrow:9200},
-      {id:9,  name:'James Hunt',     pos:'CM',  group:'Non starter', acwr:1.8, risk:'High',   todayM:2800, weekToDate:7500,  weekOver:500,  rolling7:8500,  targetTomorrow:7000},
-      {id:10, name:'Luca Rossi',     pos:'RW',  group:'Non starter', acwr:1.1, risk:'Medium', todayM:3000, weekToDate:8000,  weekOver:0,    rolling7:9000,  targetTomorrow:7500},
-      {id:11, name:'Euan Blair',     pos:'LW',  group:'Non starter', acwr:0.9, risk:'Low',    todayM:2900, weekToDate:7800,  weekOver:0,    rolling7:8800,  targetTomorrow:7200},
-      {id:12, name:'Nathan Park',    pos:'CB',  group:'Non starter', acwr:1.5, risk:'Medium', todayM:3100, weekToDate:8200,  weekOver:200,  rolling7:9200,  targetTomorrow:7800},
-      {id:13, name:'Callum West',    pos:'RB',  group:'Non starter', acwr:1.7, risk:'High',   todayM:2700, weekToDate:7200,  weekOver:700,  rolling7:8200,  targetTomorrow:6800},
-      {id:14, name:'Felix Meyer',    pos:'ST',  group:'Rehab',       acwr:0.7, risk:'High',   todayM:1500, weekToDate:4000,  weekOver:0,    rolling7:4500,  targetTomorrow:4000},
-      {id:15, name:'Ali Hassan',     pos:'LW',  group:'Rehab',       acwr:0.6, risk:'High',   todayM:1200, weekToDate:3200,  weekOver:0,    rolling7:3800,  targetTomorrow:3500},
-      {id:16, name:'Chris Lane',     pos:'CB',  group:'Rehab',       acwr:0.8, risk:'Medium', todayM:1800, weekToDate:4800,  weekOver:0,    rolling7:5200,  targetTomorrow:4500},
-      {id:17, name:'Joe Murphy',     pos:'GK',  group:'Rehab',       acwr:0.5, risk:'High',   todayM:900,  weekToDate:2400,  weekOver:0,    rolling7:2800,  targetTomorrow:2500},
-      {id:18, name:'Pedro Silva',    pos:'RB',  group:'Academy',     acwr:1.8, risk:'High',   todayM:3200, weekToDate:8500,  weekOver:500,  rolling7:9500,  targetTomorrow:8000},
-      {id:19, name:'Sam Wright',     pos:'CM',  group:'Academy',     acwr:0.8, risk:'Medium', todayM:2800, weekToDate:7400,  weekOver:0,    rolling7:8400,  targetTomorrow:7000},
-      {id:20, name:'Leo Burns',      pos:'LB',  group:'Academy',     acwr:1.3, risk:'Low',    todayM:3000, weekToDate:8000,  weekOver:0,    rolling7:9000,  targetTomorrow:7500},
-      {id:21, name:"Finn O'Brien",   pos:'AM',  group:'Academy',     acwr:0.7, risk:'High',   todayM:2600, weekToDate:6800,  weekOver:0,    rolling7:7800,  targetTomorrow:6500},
-      {id:22, name:'Yuki Tanaka',    pos:'AM',  group:'On loan',     acwr:1.8, risk:'High',   todayM:3500, weekToDate:9200,  weekOver:1200, rolling7:10500, targetTomorrow:9000},
-      {id:23, name:'Ben Carter',     pos:'ST',  group:'On loan',     acwr:1.4, risk:'Medium', todayM:3200, weekToDate:8500,  weekOver:500,  rolling7:9500,  targetTomorrow:8000},
-      {id:24, name:'Hugo Diaz',      pos:'RW',  group:'On loan',     acwr:1.0, risk:'Low',    todayM:3000, weekToDate:7900,  weekOver:0,    rolling7:9000,  targetTomorrow:7500},
-      {id:25, name:'Marc Lefort',    pos:'CB',  group:'On loan',     acwr:1.6, risk:'High',   todayM:3800, weekToDate:9800,  weekOver:800,  rolling7:11000, targetTomorrow:9000},
+      {id:1,  name:'Dan Jones',      pos:'LB',  group:'Starter',     acwr:1.8, risk:'High',   todayM:4200, weekToDate:11000, weekOver:1800, weekUnder:0,   rolling7:12500, targetTomorrow:10000},
+      {id:2,  name:'Marcus Webb',    pos:'CB',  group:'Starter',     acwr:1.9, risk:'High',   todayM:3900, weekToDate:10500, weekOver:500,  weekUnder:0,   rolling7:11800, targetTomorrow:10000},
+      {id:3,  name:'Tom Brady',      pos:'GK',  group:'Starter',     acwr:0.9, risk:'Low',    todayM:3100, weekToDate:9200,  weekOver:200,  weekUnder:0,   rolling7:10500, targetTomorrow:9000},
+      {id:4,  name:'Aaron Reid',     pos:'RB',  group:'Starter',     acwr:1.7, risk:'High',   todayM:4500, weekToDate:11200, weekOver:1200, weekUnder:0,   rolling7:12800, targetTomorrow:10500},
+      {id:5,  name:'Kyle Foster',    pos:'CB',  group:'Starter',     acwr:1.0, risk:'Low',    todayM:3700, weekToDate:9800,  weekOver:0,    weekUnder:0,   rolling7:11200, targetTomorrow:9500},
+      {id:6,  name:'Owen Clarke',    pos:'CM',  group:'Starter',     acwr:1.2, risk:'Low',    todayM:3800, weekToDate:10100, weekOver:100,  weekUnder:0,   rolling7:11600, targetTomorrow:9800},
+      {id:7,  name:'Ryan Moss',      pos:'AM',  group:'Starter',     acwr:1.6, risk:'High',   todayM:4100, weekToDate:10800, weekOver:800,  weekUnder:0,   rolling7:12200, targetTomorrow:10000},
+      {id:8,  name:'Scott Allen',    pos:'ST',  group:'Starter',     acwr:1.1, risk:'Low',    todayM:3600, weekToDate:9600,  weekOver:0,    weekUnder:400, rolling7:11000, targetTomorrow:9200},
+      {id:9,  name:'James Hunt',     pos:'CM',  group:'Non starter', acwr:1.8, risk:'High',   todayM:2800, weekToDate:7500,  weekOver:500,  weekUnder:0,   rolling7:8500,  targetTomorrow:7000},
+      {id:10, name:'Luca Rossi',     pos:'RW',  group:'Non starter', acwr:1.1, risk:'Medium', todayM:3000, weekToDate:8000,  weekOver:0,    weekUnder:600, rolling7:9000,  targetTomorrow:7500},
+      {id:11, name:'Euan Blair',     pos:'LW',  group:'Non starter', acwr:0.9, risk:'Low',    todayM:2900, weekToDate:7800,  weekOver:0,    weekUnder:0,   rolling7:8800,  targetTomorrow:7200},
+      {id:12, name:'Nathan Park',    pos:'CB',  group:'Non starter', acwr:1.5, risk:'Medium', todayM:3100, weekToDate:8200,  weekOver:200,  weekUnder:0,   rolling7:9200,  targetTomorrow:7800},
+      {id:13, name:'Callum West',    pos:'RB',  group:'Non starter', acwr:1.7, risk:'High',   todayM:2700, weekToDate:7200,  weekOver:700,  weekUnder:0,   rolling7:8200,  targetTomorrow:6800},
+      {id:14, name:'Felix Meyer',    pos:'ST',  group:'Rehab',       acwr:0.7, risk:'High',   todayM:1500, weekToDate:4000,  weekOver:0,    weekUnder:800, rolling7:4500,  targetTomorrow:4000},
+      {id:15, name:'Ali Hassan',     pos:'LW',  group:'Rehab',       acwr:0.6, risk:'High',   todayM:1200, weekToDate:3200,  weekOver:0,    weekUnder:500, rolling7:3800,  targetTomorrow:3500},
+      {id:16, name:'Chris Lane',     pos:'CB',  group:'Rehab',       acwr:0.8, risk:'Medium', todayM:1800, weekToDate:4800,  weekOver:0,    weekUnder:0,   rolling7:5200,  targetTomorrow:4500},
+      {id:17, name:'Joe Murphy',     pos:'GK',  group:'Rehab',       acwr:0.5, risk:'High',   todayM:900,  weekToDate:2400,  weekOver:0,    weekUnder:900, rolling7:2800,  targetTomorrow:2500},
+      {id:18, name:'Pedro Silva',    pos:'RB',  group:'Academy',     acwr:1.8, risk:'High',   todayM:3200, weekToDate:8500,  weekOver:500,  weekUnder:0,   rolling7:9500,  targetTomorrow:8000},
+      {id:19, name:'Sam Wright',     pos:'CM',  group:'Academy',     acwr:0.8, risk:'Medium', todayM:2800, weekToDate:7400,  weekOver:0,    weekUnder:300, rolling7:8400,  targetTomorrow:7000},
+      {id:20, name:'Leo Burns',      pos:'LB',  group:'Academy',     acwr:1.3, risk:'Low',    todayM:3000, weekToDate:8000,  weekOver:0,    weekUnder:0,   rolling7:9000,  targetTomorrow:7500},
+      {id:21, name:"Finn O'Brien",   pos:'AM',  group:'Academy',     acwr:0.7, risk:'High',   todayM:2600, weekToDate:6800,  weekOver:0,    weekUnder:700, rolling7:7800,  targetTomorrow:6500},
+      {id:22, name:'Yuki Tanaka',    pos:'AM',  group:'On loan',     acwr:1.8, risk:'High',   todayM:3500, weekToDate:9200,  weekOver:1200, weekUnder:0,   rolling7:10500, targetTomorrow:9000},
+      {id:23, name:'Ben Carter',     pos:'ST',  group:'On loan',     acwr:1.4, risk:'Medium', todayM:3200, weekToDate:8500,  weekOver:500,  weekUnder:0,   rolling7:9500,  targetTomorrow:8000},
+      {id:24, name:'Hugo Diaz',      pos:'RW',  group:'On loan',     acwr:1.0, risk:'Low',    todayM:3000, weekToDate:7900,  weekOver:0,    weekUnder:0,   rolling7:9000,  targetTomorrow:7500},
+      {id:25, name:'Marc Lefort',    pos:'CB',  group:'On loan',     acwr:1.6, risk:'High',   todayM:3800, weekToDate:9800,  weekOver:800,  weekUnder:0,   rolling7:11000, targetTomorrow:9000},
     ];
 
     const PLAYERS = RAW_PLAYERS.map((p, i) => ({
@@ -149,7 +149,8 @@
       group: g,
       todayM: [4000, 3000, 1800, 3000, 3400][i],
       weekToDate: [10000, 8000, 4000, 8000, 9000][i],
-      weekOver: [1600, 500, 0, 0, 800][i],
+      weekOver:  [1600, 500,  0,   0, 800][i],
+      weekUnder: [0,    0,   600, 300, 0  ][i],
       rolling7: [12000, 9000, 4500, 9000, 10000][i],
       acwr: [1.8, 1.4, 0.7, 1.2, 1.5][i],
       risk: ['High','Medium','High','Low','Medium'][i],
@@ -170,14 +171,15 @@
       if (!subject) return null;
 
       const playedDays = subject.gdData.filter(gd => gd.t !== 'future' && gd.a != null);
-      const dailyAvg = playedDays.length
-        ? Math.round(playedDays.reduce((s, gd) => s + gd.a, 0) / playedDays.length)
-        : null;
+      const totalLoad = playedDays.reduce((s, gd) => s + gd.a, 0);
+      const dailyAvg = playedDays.length ? Math.round(totalLoad / playedDays.length) : null;
 
+      let cumul = 0;
       const chartData = GD_DAYS.map((day, i) => {
         const gd = subject.gdData[i];
         const isFuture = gd.t === 'future' || gd.a == null;
-        return { day, 'This gameweek': isFuture ? null : gd.a };
+        if (!isFuture) cumul += gd.a;
+        return { day, 'Cumulative load': isFuture ? null : cumul };
       });
 
       const isGroup = !!subject.group && !subject.pos;
@@ -202,11 +204,11 @@
                   formatter={(v, name) => v != null ? [`${v.toLocaleString()}m`, name] : ['-', name]}
                   contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:12, paddingTop:12 }} />
-                <Line type="monotone" dataKey="This gameweek" stroke={TAB_BLUE} strokeWidth={2}
+                <Line type="monotone" dataKey="Cumulative load" stroke={TAB_BLUE} strokeWidth={2}
                   dot={{ r:4, fill:TAB_BLUE, strokeWidth:0 }} connectNulls={false} />
                 {dailyAvg != null && (
-                  <ReferenceLine y={dailyAvg} stroke={TEAL_NUM} strokeWidth={1.5} strokeDasharray="5 4"
-                    label={{ value:`Avg ${(dailyAvg/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
+                  <ReferenceLine y={totalLoad} stroke={TEAL_NUM} strokeWidth={1.5} strokeDasharray="5 4"
+                    label={{ value:`Avg/day ${(dailyAvg/1000).toFixed(1)}km`, position:'insideTopRight', fontSize:11, fill:TEAL_NUM }} />
                 )}
               </LineChart>
             </ResponsiveContainer>
@@ -407,7 +409,9 @@
                   <td style={TD}>{metricFmt(metricVal(p.todayM, metric), metric)}</td>
                   <td style={TD}>
                     <div>{metricFmt(metricVal(p.weekToDate, metric), metric)}</div>
-                    {p.weekOver > 0 && metric === 'distance' && <div style={{ fontSize:11, color:'#e57373' }}>({p.weekOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && p.weekOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({p.weekOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && p.weekUnder > 0 && <div style={{ fontSize:11, color:GD_PURPLE }}>({p.weekUnder.toLocaleString()} under)</div>}
+                    {metric === 'distance' && p.weekOver === 0 && p.weekUnder === 0 && <div style={{ fontSize:11, color:TEAL_NUM }}>(On target)</div>}
                   </td>
                   <td style={TD}>{metricFmt(metricVal(p.rolling7, metric), metric)}</td>
                   <td style={TD}>{p.acwr}</td>
@@ -487,7 +491,9 @@
                   <td style={TD}>{metricFmt(metricVal(g.todayM, metric), metric)}</td>
                   <td style={TD}>
                     <div>{metricFmt(metricVal(g.weekToDate, metric), metric)}</div>
-                    {g.weekOver > 0 && metric === 'distance' && <div style={{ fontSize:11, color:'#e57373' }}>({g.weekOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && g.weekOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({g.weekOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && g.weekUnder > 0 && <div style={{ fontSize:11, color:GD_PURPLE }}>({g.weekUnder.toLocaleString()} under)</div>}
+                    {metric === 'distance' && g.weekOver === 0 && g.weekUnder === 0 && <div style={{ fontSize:11, color:TEAL_NUM }}>(On target)</div>}
                   </td>
                   <td style={TD}>{metricFmt(metricVal(g.rolling7, metric), metric)}</td>
                   <td style={TD}>{g.acwr}</td>
