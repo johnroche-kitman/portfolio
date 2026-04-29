@@ -453,7 +453,7 @@
 
       return (
         <>
-        <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1060 }}>
+        <table style={{ borderCollapse:'separate', borderSpacing:0, width:'100%', minWidth:1060 }}>
             <thead>
               <tr>
                 {thSort('name',       'Athlete', { paddingLeft:24 })}
@@ -536,22 +536,23 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
+
       function thSort(col, label, style = {}) {
         return (
-          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...style }}>
+          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
             {label}<SortArrow col={col} sortCol={sortCol} sortDir={sortDir} />
           </th>
         );
       }
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
       const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
       const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
       const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
 
       return (
         <>
-        <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1000 }}>
+        <table style={{ borderCollapse:'separate', borderSpacing:0, width:'100%', minWidth:1000 }}>
             <thead>
               <tr>
                 {thSort('group',      'Group', { paddingLeft:24 })}
