@@ -48,8 +48,8 @@
       Tabs, Tab, Tooltip,
     } from '@mui/material';
     import {
-      LineChart, Line, ReferenceLine, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-      Tooltip as RTooltip, Legend, ResponsiveContainer
+      ComposedChart, LineChart, Line, Area, ReferenceLine, BarChart, Bar,
+      XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend, ResponsiveContainer
     } from 'recharts';
 
     // ── PALETTE ───────────────────────────────────────────────────────────────────
@@ -96,6 +96,18 @@
       const unit = cfg?.unit || '';
       return unit ? `${Number(val).toLocaleString()}${unit}` : Number(val).toLocaleString();
     }
+
+    const METRIC_SLIDER_CONFIG = {
+      distance:     { min:0, max:60,  step:2,   unit:'km',    dflt:[10, 20] },
+      sprint_dist:  { min:0, max:6,   step:0.2, unit:'km',    dflt:[0.6, 1.2] },
+      hmld:         { min:0, max:16,  step:0.5, unit:'km',    dflt:[2.5, 5] },
+      hsr:          { min:0, max:8,   step:0.5, unit:'km',    dflt:[1, 2] },
+      accels_dist:  { min:0, max:10,  step:0.5, unit:'km',    dflt:[1, 2] },
+      accels_count: { min:0, max:200, step:5,   unit:'',      dflt:[30, 60] },
+      decels_dist:  { min:0, max:10,  step:0.5, unit:'km',    dflt:[1, 2] },
+      decels_count: { min:0, max:200, step:5,   unit:'',      dflt:[30, 60] },
+      dist_per_min: { min:0, max:150, step:5,   unit:'m/min', dflt:[80, 100] },
+    };
 
     // ── DATA ──────────────────────────────────────────────────────────────────────
     const GD_DAYS = ['GD-5','GD-4','GD-2','GD-1','GD'];
@@ -167,13 +179,10 @@
     }));
 
     // ── LOAD MODAL (shared by player rows and group rows) ─────────────────────────
-    function LoadModal({ subject, onClose }) {
+    function LoadModal({ subject, onClose, targetKm = [10, 20] }) {
       if (!subject) return null;
 
       const [hidden, setHidden] = useState({});
-
-      const playedDays = subject.gdData.filter(gd => gd.t !== 'future' && gd.a != null);
-      const totalLoad = playedDays.reduce((s, gd) => s + gd.a, 0);
 
       let cumul = 0;
       const chartData = GD_DAYS.map((day, i) => {
@@ -184,11 +193,15 @@
           day,
           'Cumulative load': isFuture ? null : cumul,
           'Daily load':      isFuture ? null : gd.a,
+          targetMin: targetKm[0] * 1000 * (i + 1),
+          'Target band': targetKm[1] * 1000 * (i + 1),
         };
       });
 
-      function handleLegendClick(e) {
-        const key = e.dataKey;
+      function handleLegendClick(data, index, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const key = data && data.dataKey;
+        if (!key) return;
         setHidden(prev => ({ ...prev, [key]: !prev[key] }));
       }
 
@@ -204,25 +217,35 @@
             <span style={{ fontSize:13, fontWeight:400, color:BODY_LIGHT, marginLeft:8 }}>{sub}</span>
           </DialogTitle>
           <DialogContent sx={{ px:3, pt:2, pb:2 }}>
+            <div onClick={e => e.stopPropagation()}>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData} margin={{ top:8, right:16, bottom:4, left:16 }}>
+              <ComposedChart data={chartData} margin={{ top:8, right:16, bottom:4, left:16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eeeeee" vertical={false} />
                 <XAxis dataKey="day" tick={{ fontSize:12, fill:TH_COLOR }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize:11, fill:TH_COLOR }} axisLine={false} tickLine={false}
                   tickFormatter={v => `${(v/1000).toFixed(0)}km`} />
                 <RTooltip
-                  formatter={(v, name) => v != null ? [`${v.toLocaleString()}m`, name] : ['-', name]}
+                  formatter={(v, name) => {
+                    if (name === 'targetMin' || name === 'Target band') return null;
+                    return v != null ? [`${v.toLocaleString()}m`, name] : ['-', name];
+                  }}
                   contentStyle={{ fontSize:12, borderRadius:4, border:`1px solid ${BORDER}` }} />
                 <Legend
-                  iconType="circle" iconSize={8}
+                  iconSize={10}
                   onClick={handleLegendClick}
                   wrapperStyle={{ fontSize:12, paddingTop:12, cursor:'pointer' }}
-                  formatter={(value) => (
-                    <span style={{ color: hidden[value] ? '#cfd8dc' : BODY_TEXT, textDecoration: hidden[value] ? 'line-through' : 'none' }}>
-                      {value}
-                    </span>
-                  )}
+                  formatter={(value, entry) => {
+                    if (value === 'targetMin') return null;
+                    const isHidden = !!hidden[value];
+                    return (
+                      <span style={{ color: isHidden ? '#cfd8dc' : BODY_TEXT, textDecoration: isHidden ? 'line-through' : 'none' }}>
+                        {value}
+                      </span>
+                    );
+                  }}
                 />
+                <Area type="linear" dataKey="Target band" fill="#b2dfdb" stroke="none" fillOpacity={0.5} legendType="rect" tooltipType="none" isAnimationActive={false} hide={!!hidden['Target band']} />
+                <Area type="linear" dataKey="targetMin" fill="#fff" stroke="none" fillOpacity={1} legendType="none" tooltipType="none" isAnimationActive={false} hide={!!hidden['Target band']} />
                 <Line type="monotone" dataKey="Cumulative load"
                   stroke={TAB_BLUE} strokeWidth={2}
                   dot={{ r:4, fill:TAB_BLUE, strokeWidth:0 }}
@@ -231,8 +254,9 @@
                   stroke="#26C6DA" strokeWidth={2} strokeDasharray="4 3"
                   dot={{ r:3, fill:'#26C6DA', strokeWidth:0 }}
                   hide={!!hidden['Daily load']} connectNulls={false} />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
+            </div>
           </DialogContent>
           <DialogActions sx={{ px:3, pb:3, pt:0, justifyContent:'flex-end' }}>
             <Button onClick={onClose} variant="contained"
@@ -366,7 +390,7 @@
     }
 
     // ── INDIVIDUALS TABLE ─────────────────────────────────────────────────────────
-    function IndividualsTable({ rows, metric }) {
+    function IndividualsTable({ rows, metric, targetKm = [10, 20] }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -449,13 +473,13 @@
             </tbody>
           </table>
         </div>
-        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} />
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} />
         </>
       );
     }
 
     // ── GROUPS TABLE ──────────────────────────────────────────────────────────────
-    function GroupsTable({ rows, metric }) {
+    function GroupsTable({ rows, metric, targetKm = [10, 20] }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -531,7 +555,7 @@
             </tbody>
           </table>
         </div>
-        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} />
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} />
         </>
       );
     }
@@ -551,11 +575,16 @@
     // ── TARGET MODAL ──────────────────────────────────────────────────────────────
     const DAYS_OF_WEEK = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-    function TargetModal({ open, onClose }) {
+    function TargetModal({ open, onClose, targetKm, onTargetChange, metric = 'distance' }) {
       const [workloadMode, setWorkloadMode] = useState('equal');
       const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
       const [manual, setManual] = useState({Mon:'10000',Tue:'10000',Wed:'10000',Thu:'10000',Fri:'10000',Sat:'10000',Sun:'10000'});
-      const [sliderKm, setSliderKm] = useState([8, 20]);
+
+      const sliderCfg = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance;
+      const metricLabel = METRIC_CONFIG[metric]?.label || 'Total distance';
+      const valLabel = sliderCfg.unit
+        ? `${targetKm[0]}–${targetKm[1]} ${sliderCfg.unit}`
+        : `${targetKm[0]}–${targetKm[1]}`;
 
       return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
@@ -568,13 +597,13 @@
             {/* Slider */}
             <div style={{ marginBottom:24 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
-                <span style={{ fontSize:13, color:'#78909c' }}>Total distance</span>
-                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{sliderKm[0]}–{sliderKm[1]} km</span>
+                <span style={{ fontSize:13, color:'#78909c' }}>{metricLabel}</span>
+                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{valLabel}</span>
               </div>
               <Slider
-                value={sliderKm}
-                min={0} max={60} step={2} marks
-                onChange={(_, v) => setSliderKm(v)}
+                value={targetKm}
+                min={sliderCfg.min} max={sliderCfg.max} step={sliderCfg.step} marks
+                onChange={(_, v) => onTargetChange(v)}
                 sx={{
                   color: TAB_BLUE,
                   height:4,
@@ -583,8 +612,8 @@
                 }}
               />
               <div style={{ display:'flex', justifyContent:'space-between', marginTop:-4 }}>
-                <span style={{ fontSize:11, color:'#90a4ae' }}>0 km</span>
-                <span style={{ fontSize:11, color:'#90a4ae' }}>60 km</span>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>{sliderCfg.min}{sliderCfg.unit ? ' '+sliderCfg.unit : ''}</span>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>{sliderCfg.max}{sliderCfg.unit ? ' '+sliderCfg.unit : ''}</span>
               </div>
             </div>
 
@@ -664,11 +693,18 @@
     }
 
     // ── REHAB TARGET MODAL ────────────────────────────────────────────────────────
-    function RehabModal({ open, onClose }) {
+    function RehabModal({ open, onClose, metric = 'distance' }) {
       const [workloadMode, setWorkloadMode] = useState('equal');
       const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
       const [manual, setManual] = useState({Mon:'4000',Tue:'4000',Wed:'4000',Thu:'4000',Fri:'4000',Sat:'4000',Sun:'4000'});
-      const [sliderKm, setSliderKm] = useState([4, 8]);
+      const baseCfg = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance;
+      const rehabMax = Math.round(baseCfg.max / 2);
+      const rehabDflt = [baseCfg.dflt[0] / 2, baseCfg.dflt[1] / 2];
+      const [sliderVal, setSliderVal] = useState(rehabDflt);
+      const metricLabel = METRIC_CONFIG[metric]?.label || 'Total distance';
+      const valLabel = baseCfg.unit
+        ? `${sliderVal[0]}–${sliderVal[1]} ${baseCfg.unit}`
+        : `${sliderVal[0]}–${sliderVal[1]}`;
 
       return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
@@ -680,13 +716,13 @@
 
             <div style={{ marginBottom:24 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
-                <span style={{ fontSize:13, color:'#78909c' }}>Total distance</span>
-                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{sliderKm[0]}–{sliderKm[1]} km</span>
+                <span style={{ fontSize:13, color:'#78909c' }}>{metricLabel}</span>
+                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{valLabel}</span>
               </div>
               <Slider
-                value={sliderKm}
-                min={0} max={30} step={2} marks
-                onChange={(_, v) => setSliderKm(v)}
+                value={sliderVal}
+                min={0} max={rehabMax} step={baseCfg.step} marks
+                onChange={(_, v) => setSliderVal(v)}
                 sx={{
                   color: TAB_BLUE,
                   height:4,
@@ -695,8 +731,8 @@
                 }}
               />
               <div style={{ display:'flex', justifyContent:'space-between', marginTop:-4 }}>
-                <span style={{ fontSize:11, color:'#90a4ae' }}>0 km</span>
-                <span style={{ fontSize:11, color:'#90a4ae' }}>30 km</span>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>0{baseCfg.unit ? ' '+baseCfg.unit : ''}</span>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>{rehabMax}{baseCfg.unit ? ' '+baseCfg.unit : ''}</span>
               </div>
             </div>
 
@@ -868,6 +904,13 @@
       const [modalOpen, setModalOpen] = useState(false);
       const [rehabModalOpen, setRehabModalOpen] = useState(false);
       const [gameweek, setGameweek] = useState('IS7-Wolves');
+      const [regularTarget, setRegularTarget] = useState([10, 20]);
+
+      function handleMetricChange(newMetric) {
+        setMetric(newMetric);
+        const cfg = METRIC_SLIDER_CONFIG[newMetric] || METRIC_SLIDER_CONFIG.distance;
+        setRegularTarget(cfg.dflt);
+      }
 
       const counts = useMemo(() => ({
         over:   PLAYERS.filter(p => p.status === 'over').length,
@@ -906,7 +949,7 @@
               <div style={{ position:'relative' }}>
                 <select
                   value={metric}
-                  onChange={e => setMetric(e.target.value)}
+                  onChange={e => handleMetricChange(e.target.value)}
                   style={{
                     appearance:'none', WebkitAppearance:'none',
                     background:'transparent',
@@ -989,8 +1032,8 @@
                   </div>
                 </div>
               </div>
-              <CtrlInput label="Regular target" value="20–22km" onClick={() => setModalOpen(true)} />
-              <CtrlInput label="Rehab target" value="10-12km" onClick={() => setRehabModalOpen(true)} />
+              <CtrlInput label="Regular target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; return c.unit ? `${regularTarget[0]}–${regularTarget[1]} ${c.unit}` : `${regularTarget[0]}–${regularTarget[1]}`; })()} onClick={() => setModalOpen(true)} />
+              <CtrlInput label="Rehab target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; const half = regularTarget.map(v => Math.round(v/2*10)/10); return c.unit ? `${half[0]}–${half[1]} ${c.unit}` : `${half[0]}–${half[1]}`; })()} onClick={() => setRehabModalOpen(true)} />
               <button style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center' }}>
                 <span className="material-icons-outlined" style={{ fontSize:22, color:TH_COLOR }}>add</span>
               </button>
@@ -1019,13 +1062,13 @@
                     <SummaryCard count={counts.target} label="On track"      color={TEAL_NUM}   active={filterStatus==='target'} onClick={() => setFilterStatus(f => f==='target' ? null : 'target')} />
                     <SummaryCard count={counts.under}  label="Undertraining" color={PURPLE_NUM} active={filterStatus==='under'}  onClick={() => setFilterStatus(f => f==='under'  ? null : 'under')} />
                   </div>
-                  <IndividualsTable rows={filtered} metric={metric} />
+                  <IndividualsTable rows={filtered} metric={metric} targetKm={regularTarget} />
                 </>
               )}
 
               {tab === 1 && (
                 <>
-                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} /></div>
+                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} targetKm={regularTarget} /></div>
                   <div style={{ margin:'24px 24px', border:`1px solid ${BORDER}`, borderRadius:4, padding:'20px 24px 16px' }}>
                     <div style={{ fontSize:16, fontWeight:400, color:BODY_TEXT, marginBottom:16 }}>Group comparison — {METRIC_CONFIG[metric]?.label || 'Total distance'}</div>
                     <ResponsiveContainer width="100%" height={260}>
@@ -1052,8 +1095,8 @@
             </div>
           </div>
 
-          <TargetModal open={modalOpen} onClose={() => setModalOpen(false)} />
-          <RehabModal open={rehabModalOpen} onClose={() => setRehabModalOpen(false)} />
+          <TargetModal open={modalOpen} onClose={() => setModalOpen(false)} targetKm={regularTarget} onTargetChange={setRegularTarget} metric={metric} />
+          <RehabModal open={rehabModalOpen} onClose={() => setRehabModalOpen(false)} metric={metric} />
         </div>
       );
     }
