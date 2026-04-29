@@ -94,10 +94,8 @@
       if (prev == null) return null;
       const diff = current - prev;
       const pct = Math.abs(diff) / prev;
-      if (pct < 0.01) return <span style={{ fontSize:13, color:BODY_LIGHT, marginLeft:4 }}>→</span>;
-      return diff > 0
-        ? <span style={{ fontSize:13, color:TEAL_NUM,  marginLeft:4 }}>↑</span>
-        : <span style={{ fontSize:13, color:RED_NUM,   marginLeft:4 }}>↓</span>;
+      const icon = pct < 0.01 ? 'trending_flat' : diff > 0 ? 'trending_up' : 'trending_down';
+      return <span className="material-icons" style={{ fontSize:16, color:BODY_LIGHT, marginLeft:4, verticalAlign:'middle' }}>{icon}</span>;
     }
 
     function metricVal(baseM, metric) {
@@ -490,43 +488,6 @@
               </tr>
             </thead>
             <tbody>
-              {(() => {
-                const n = sorted.length || 1;
-                const avg = {
-                  todayM:        Math.round(sorted.reduce((s,p) => s + p.todayM,        0) / n),
-                  weekToDate:    Math.round(sorted.reduce((s,p) => s + p.weekToDate,    0) / n),
-                  rolling7:      Math.round(sorted.reduce((s,p) => s + p.rolling7,      0) / n),
-                  rolling7Prev:  Math.round(sorted.reduce((s,p) => s + (p.rolling7Prev||p.rolling7), 0) / n),
-                  acwr:          Math.round(sorted.reduce((s,p) => s + p.acwr,          0) / n * 10) / 10,
-                  targetTomorrow:Math.round(sorted.reduce((s,p) => s + p.targetTomorrow,0) / n),
-                };
-                const AVG_BG = '#f0f4f8';
-                const avgTD = { ...TD, background:AVG_BG, borderBottom:`1px solid ${BORDER}` };
-                return (
-                  <tr style={{ background:AVG_BG }}>
-                    <td style={{ ...avgTD, paddingLeft:24 }}>
-                      <div style={{ padding:'10px 0 8px' }}>
-                        <div style={{ fontWeight:600, fontSize:12, color:TH_COLOR, textTransform:'uppercase', letterSpacing:'0.04em' }}>Squad avg</div>
-                      </div>
-                    </td>
-                    <td style={avgTD} />
-                    <td style={avgTD}>{metricFmt(metricVal(avg.todayM, metric), metric)}</td>
-                    <td style={avgTD}>{metricFmt(metricVal(avg.weekToDate, metric), metric)}</td>
-                    <td style={avgTD}>
-                      <div style={{ display:'flex', alignItems:'center' }}>
-                        {metricFmt(metricVal(avg.rolling7, metric), metric)}
-                        <TrendArrow current={avg.rolling7} prev={avg.rolling7Prev} />
-                      </div>
-                    </td>
-                    <td style={avgTD}>
-                      <span style={{ fontWeight:600, color:acwrColor(avg.acwr) }}>{avg.acwr}</span>
-                    </td>
-                    {gdDays.map((_, di) => <td key={di} style={{ ...avgTD, padding:'8px 4px', textAlign:'center' }} />)}
-                    <td style={avgTD}>{metricFmt(metricVal(avg.targetTomorrow, metric), metric)}</td>
-                    <td style={{ ...avgTD, paddingRight:24 }} />
-                  </tr>
-                );
-              })()}
               {sorted.map((p) => {
                 const visibleGd = p.gdData.slice(-gdDays.length);
                 const todayOver  = metric === 'distance' ? Math.max(0, p.todayM - todayTargetMax) : 0;
@@ -570,6 +531,43 @@
                 );
               })}
             </tbody>
+            {(() => {
+              const n = sorted.length || 1;
+              const avg = {
+                todayM:         Math.round(sorted.reduce((s,p) => s + p.todayM,         0) / n),
+                weekToDate:     Math.round(sorted.reduce((s,p) => s + p.weekToDate,     0) / n),
+                rolling7:       Math.round(sorted.reduce((s,p) => s + p.rolling7,       0) / n),
+                rolling7Prev:   Math.round(sorted.reduce((s,p) => s + (p.rolling7Prev||p.rolling7), 0) / n),
+                acwr:           Math.round(sorted.reduce((s,p) => s + p.acwr,           0) / n * 10) / 10,
+                targetTomorrow: Math.round(sorted.reduce((s,p) => s + p.targetTomorrow, 0) / n),
+              };
+              const AVG_BG = '#f0f4f8';
+              const ftTD = { ...TD, background:AVG_BG, borderTop:`2px solid ${BORDER}`, borderBottom:'none' };
+              return (
+                <tfoot style={{ position:'sticky', bottom:0, zIndex:2 }}>
+                  <tr>
+                    <td style={{ ...ftTD, paddingLeft:24 }}>
+                      <div style={{ fontWeight:600, fontSize:12, color:TH_COLOR, textTransform:'uppercase', letterSpacing:'0.04em', padding:'10px 0 8px' }}>Squad avg</div>
+                    </td>
+                    <td style={ftTD} />
+                    <td style={ftTD}>{metricFmt(metricVal(avg.todayM, metric), metric)}</td>
+                    <td style={ftTD}>{metricFmt(metricVal(avg.weekToDate, metric), metric)}</td>
+                    <td style={ftTD}>
+                      <div style={{ display:'flex', alignItems:'center' }}>
+                        {metricFmt(metricVal(avg.rolling7, metric), metric)}
+                        <TrendArrow current={avg.rolling7} prev={avg.rolling7Prev} />
+                      </div>
+                    </td>
+                    <td style={ftTD}>
+                      <span style={{ fontWeight:600, color:acwrColor(avg.acwr) }}>{avg.acwr}</span>
+                    </td>
+                    {gdDays.map((_, di) => <td key={di} style={{ ...ftTD, padding:'8px 4px', textAlign:'center' }} />)}
+                    <td style={ftTD}>{metricFmt(metricVal(avg.targetTomorrow, metric), metric)}</td>
+                    <td style={{ ...ftTD, paddingRight:24 }} />
+                  </tr>
+                </tfoot>
+              );
+            })()}
           </table>
         <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} gdDays={gdDays} />
         </>
