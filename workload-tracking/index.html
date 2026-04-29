@@ -205,6 +205,7 @@
       weekOver:      [1600, 500,  0,   0, 800, 0  ][i],
       weekUnder:     [0,    0,   600, 300, 0,  400][i],
       rolling7:      [12000, 9000, 4500, 9000, 10000, 9800][i],
+      rolling7Prev:  [11200, 9400, 4200, 8700,  9600, 9800][i],
       acwr:          [1.8, 1.4, 0.7, 1.2, 1.5, 1.0][i],
       risk:          ['High','Medium','High','Low','Medium','Low'][i],
       targetTomorrow:[10000, 7500, 4000, 7500, 8500, 8000][i],
@@ -678,8 +679,15 @@
                     {metric === 'distance' && g.weekUnder > 0 && <div style={{ fontSize:11, color:GD_PURPLE }}>({g.weekUnder.toLocaleString()} under)</div>}
                     {metric === 'distance' && g.weekOver === 0 && g.weekUnder === 0 && <div style={{ fontSize:11, color:TEAL_NUM }}>(On target)</div>}
                   </td>
-                  <td style={TD}>{metricFmt(metricVal(g.rolling7, metric), metric)}</td>
-                  <td style={TD}>{g.acwr}</td>
+                  <td style={TD}>
+                    <div style={{ display:'flex', alignItems:'center' }}>
+                      {metricFmt(metricVal(g.rolling7, metric), metric)}
+                      <TrendArrow current={g.rolling7} prev={g.rolling7Prev} />
+                    </div>
+                  </td>
+                  <td style={TD}>
+                    <span style={{ fontWeight:600, color:acwrColor(g.acwr) }}>{g.acwr}</span>
+                  </td>
                   {visibleGd.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} metric={metric} /></td>
                   ))}
