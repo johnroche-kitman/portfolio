@@ -640,7 +640,7 @@
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
           PaperProps={{ elevation:4, sx:{ borderRadius:'4px', m:2 } }}>
           <DialogTitle sx={{ fontSize:20, fontWeight:700, pb:1, pt:3, px:3, color:'#212121' }}>
-            Set regular gameweek target
+            Set gameweek target
           </DialogTitle>
           <DialogContent sx={{ px:3, pt:1, pb:0 }}>
 
@@ -893,7 +893,13 @@
             </div>
 
           </DialogContent>
-          <DialogActions sx={{ px:3, pb:3, pt:2, justifyContent:'flex-end', gap:.5 }}>
+          <DialogActions sx={{ px:3, pb:3, pt:2, justifyContent:'space-between', gap:.5 }}>
+            <Button onClick={onClose} variant="text"
+              sx={{ textTransform:'none', fontSize:13, color:'#c62828', px:0, py:.75, minWidth:0,
+                '&:hover':{ background:'none', textDecoration:'underline' } }}>
+              Remove
+            </Button>
+            <div style={{ display:'flex', gap:4 }}>
             <Button onClick={onClose} variant="text"
               sx={{ textTransform:'none', fontSize:13, color:'#546e7a', px:2, py:.75, minWidth:0 }}>
               Cancel
@@ -904,6 +910,7 @@
                 '&:hover':{ bgcolor:'#2d3a4e', boxShadow:'none' } }}>
               Done
             </Button>
+            </div>
           </DialogActions>
         </Dialog>
       );
