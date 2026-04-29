@@ -327,7 +327,7 @@
                   {p.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
                   ))}
-                  <td style={TD}>{(p.targetTomorrow/1000).toFixed(0)}k</td>
+                  <td style={TD}>{(p.targetTomorrow/1000).toFixed(0)}km</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={p.risk} /></td>
                 </tr>
               ))}
@@ -403,7 +403,7 @@
                   {g.gdData.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
                   ))}
-                  <td style={TD}>{(g.targetTomorrow/1000).toFixed(0)}k</td>
+                  <td style={TD}>{(g.targetTomorrow/1000).toFixed(0)}km</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={g.risk} /></td>
                 </tr>
               ))}
@@ -475,6 +475,118 @@
                   <input
                     type="radio"
                     name="workloadMode"
+                    value={v}
+                    checked={workloadMode === v}
+                    onChange={() => setWorkloadMode(v)}
+                    style={{ accentColor: TAB_BLUE, width:16, height:16, cursor:'pointer', flexShrink:0 }}
+                  />
+                  <span style={{ fontSize:14, color:'#37474f' }}>{l}</span>
+                </label>
+              ))}
+            </div>
+
+            <div style={{ fontSize:14, fontWeight:500, color:'#212121', marginTop:16, marginBottom:10 }}>
+              Select training days
+            </div>
+            <div style={{ display:'flex', gap:8, marginBottom:4 }}>
+              {DAYS_OF_WEEK.map(d => (
+                <div key={d} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flex:1 }}>
+                  <span style={{ fontSize:12, color:'#546e7a', fontWeight:400 }}>{d}</span>
+                  <Checkbox
+                    checked={!!checked[d]}
+                    onChange={() => setChecked(prev => ({ ...prev, [d]:!prev[d] }))}
+                    size="small"
+                    sx={{
+                      p:0,
+                      color: checked[d] ? TAB_BLUE : '#cfd8dc',
+                      '&.Mui-checked':{ color:TAB_BLUE },
+                      '& .MuiSvgIcon-root':{ fontSize:20 },
+                    }}
+                  />
+                  {workloadMode === 'manual' && (
+                    <input
+                      type="number"
+                      value={checked[d] ? manual[d] : ''}
+                      disabled={!checked[d]}
+                      onChange={e => setManual(prev => ({ ...prev, [d]:e.target.value }))}
+                      style={{
+                        width:'100%', fontSize:12, textAlign:'center',
+                        padding:'4px 2px', borderRadius:3,
+                        border:`1px solid ${checked[d] ? TAB_BLUE : '#e0e3e7'}`,
+                        background: checked[d] ? '#fff' : '#f5f5f5',
+                        color: checked[d] ? '#37474f' : '#bdbdbd',
+                        outline:'none', boxSizing:'border-box',
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+          </DialogContent>
+          <DialogActions sx={{ px:3, pb:3, pt:2, justifyContent:'flex-end', gap:.5 }}>
+            <Button onClick={onClose} variant="text"
+              sx={{ textTransform:'none', fontSize:13, color:'#546e7a', px:2, py:.75, minWidth:0 }}>
+              Cancel
+            </Button>
+            <Button onClick={onClose} variant="contained"
+              sx={{ textTransform:'none', fontSize:13, bgcolor:TAB_BLUE, px:2.5, py:.75,
+                borderRadius:'4px', boxShadow:'none',
+                '&:hover':{ bgcolor:'#2d3a4e', boxShadow:'none' } }}>
+              Done
+            </Button>
+          </DialogActions>
+        </Dialog>
+      );
+    }
+
+    // ── REHAB TARGET MODAL ────────────────────────────────────────────────────────
+    function RehabModal({ open, onClose }) {
+      const [workloadMode, setWorkloadMode] = useState('equal');
+      const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
+      const [manual, setManual] = useState({Mon:'4000',Tue:'4000',Wed:'4000',Thu:'4000',Fri:'4000',Sat:'4000',Sun:'4000'});
+      const [sliderKm, setSliderKm] = useState([4, 8]);
+
+      return (
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
+          PaperProps={{ elevation:4, sx:{ borderRadius:'4px', m:2 } }}>
+          <DialogTitle sx={{ fontSize:20, fontWeight:700, pb:1, pt:3, px:3, color:'#212121' }}>
+            Set rehab target
+          </DialogTitle>
+          <DialogContent sx={{ px:3, pt:1, pb:0 }}>
+
+            <div style={{ marginBottom:24 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
+                <span style={{ fontSize:13, color:'#78909c' }}>Total distance</span>
+                <span style={{ fontSize:16, fontWeight:600, color:'#212121' }}>{sliderKm[0]}–{sliderKm[1]} km</span>
+              </div>
+              <Slider
+                value={sliderKm}
+                min={0} max={30} step={2} marks
+                onChange={(_, v) => setSliderKm(v)}
+                sx={{
+                  color: TAB_BLUE,
+                  height:4,
+                  '& .MuiSlider-thumb':{ width:16, height:16 },
+                  '& .MuiSlider-rail':{ opacity:.3 },
+                }}
+              />
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:-4 }}>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>0 km</span>
+                <span style={{ fontSize:11, color:'#90a4ae' }}>30 km</span>
+              </div>
+            </div>
+
+            <div style={{ fontSize:14, fontWeight:500, color:'#212121', marginBottom:10 }}>Workload</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {[
+                { v:'equal',  l:'Apply equal to all training days' },
+                { v:'manual', l:'Set each manually' },
+              ].map(({ v, l }) => (
+                <label key={v} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+                  <input
+                    type="radio"
+                    name="rehabWorkloadMode"
                     value={v}
                     checked={workloadMode === v}
                     onChange={() => setWorkloadMode(v)}
@@ -631,6 +743,8 @@
       const [metric, setMetric] = useState('distance');
       const [filterStatus, setFilterStatus] = useState(null);
       const [modalOpen, setModalOpen] = useState(false);
+      const [rehabModalOpen, setRehabModalOpen] = useState(false);
+      const [gameweek, setGameweek] = useState('IS7-Wolves');
 
       const counts = useMemo(() => ({
         over:   PLAYERS.filter(p => p.status === 'over').length,
@@ -700,9 +814,23 @@
 
             {/* Controls row */}
             <div style={{ display:'flex', alignItems:'center', gap:16, padding:'10px 24px 8px', flexShrink:0 }}>
-              <CtrlInput label="Gameweek" value="IS7-Wolves" icon="calendar_today" />
-              <CtrlInput label="Regular target" value="20–22k" onClick={() => setModalOpen(true)} />
-              <CtrlInput label="Rehab target" value="10-12k" />
+              <div style={{ position:'relative', minWidth:180 }}>
+                <div style={{ fontSize:10, color:BODY_TEXT, lineHeight:1, marginBottom:2, paddingLeft:10, paddingTop:5 }}>Gameweek</div>
+                <div style={{ display:'flex', alignItems:'center', background:'#f5f5f5', borderRadius:'2px 2px 0 0', borderBottom:`1px solid ${BODY_TEXT}`, padding:'0 10px 6px' }}>
+                  <select
+                    value={gameweek}
+                    onChange={e => setGameweek(e.target.value)}
+                    style={{ appearance:'none', WebkitAppearance:'none', background:'transparent', border:'none', fontSize:13, color:BODY_TEXT, cursor:'pointer', outline:'none', flex:1 }}>
+                    <option>IS7-Wolves</option>
+                    <option>IS8-Chelsea</option>
+                    <option>IS9-ManUtd</option>
+                    <option>IS10-Arsenal</option>
+                  </select>
+                  <span className="material-icons" style={{ fontSize:18, color:BODY_TEXT, pointerEvents:'none' }}>calendar_today</span>
+                </div>
+              </div>
+              <CtrlInput label="Regular target" value="20–22km" onClick={() => setModalOpen(true)} />
+              <CtrlInput label="Rehab target" value="10-12km" onClick={() => setRehabModalOpen(true)} />
               <button style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center' }}>
                 <span className="material-icons-outlined" style={{ fontSize:22, color:TH_COLOR }}>add</span>
               </button>
@@ -759,6 +887,7 @@
           </div>
 
           <TargetModal open={modalOpen} onClose={() => setModalOpen(false)} />
+          <RehabModal open={rehabModalOpen} onClose={() => setRehabModalOpen(false)} />
         </div>
       );
     }
