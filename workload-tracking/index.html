@@ -413,7 +413,7 @@
     }
 
     // ── INDIVIDUALS TABLE ─────────────────────────────────────────────────────────
-    function IndividualsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default }) {
+    function IndividualsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default, scrolled = false }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -434,7 +434,7 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff' };
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
       function thSort(col, label, style = {}) {
         return (
           <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
@@ -515,7 +515,7 @@
     }
 
     // ── GROUPS TABLE ──────────────────────────────────────────────────────────────
-    function GroupsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default }) {
+    function GroupsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default, scrolled = false }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -544,7 +544,7 @@
         );
       }
 
-      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff' };
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff', boxShadow: scrolled ? '0 3px 8px rgba(0,0,0,0.14)' : 'none' };
       const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
       const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
       const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
@@ -989,6 +989,7 @@
     // ── APP ───────────────────────────────────────────────────────────────────────
     function App() {
       const [tab, setTab] = useState(0);
+      const [scrolled, setScrolled] = useState(false);
       const [metric, setMetric] = useState('distance');
       const [filterStatus, setFilterStatus] = useState(null);
       const [modalOpen, setModalOpen] = useState(false);
@@ -1150,19 +1151,19 @@
             <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
 
               {tab === 0 && (
-                <div style={{ flex:1, overflow:'auto' }}>
+                <div style={{ flex:1, overflow:'auto' }} onScroll={e => setScrolled(e.currentTarget.scrollTop > 10)}>
                   <div style={{ display:'flex', gap:16, padding:'24px 24px 16px' }}>
                     <SummaryCard count={counts.over}   label="Overtraining"  color={RED_NUM}    active={filterStatus==='over'}   onClick={() => setFilterStatus(f => f==='over'   ? null : 'over')} />
                     <SummaryCard count={counts.target} label="On target"     color={TEAL_NUM}   active={filterStatus==='target'} onClick={() => setFilterStatus(f => f==='target' ? null : 'target')} />
                     <SummaryCard count={counts.under}  label="Undertraining" color={PURPLE_NUM} active={filterStatus==='under'}  onClick={() => setFilterStatus(f => f==='under'  ? null : 'under')} />
                   </div>
-                  <IndividualsTable rows={filtered} metric={metric} targetKm={regularTarget} gdDays={gdDays} />
+                  <IndividualsTable rows={filtered} metric={metric} targetKm={regularTarget} gdDays={gdDays} scrolled={scrolled} />
                 </div>
               )}
 
               {tab === 1 && (
-                <div style={{ flex:1, overflow:'auto' }}>
-                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} targetKm={regularTarget} gdDays={gdDays} /></div>
+                <div style={{ flex:1, overflow:'auto' }} onScroll={e => setScrolled(e.currentTarget.scrollTop > 10)}>
+                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} targetKm={regularTarget} gdDays={gdDays} scrolled={scrolled} /></div>
                   <div style={{ margin:'24px 24px', border:`1px solid ${BORDER}`, borderRadius:4, padding:'20px 24px 16px' }}>
                     <div style={{ fontSize:16, fontWeight:400, color:BODY_TEXT, marginBottom:16 }}>Group comparison — {METRIC_CONFIG[metric]?.label || 'Total distance'}</div>
                     <ResponsiveContainer width="100%" height={260}>
