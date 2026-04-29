@@ -110,18 +110,37 @@
     };
 
     // ── DATA ──────────────────────────────────────────────────────────────────────
-    const GD_DAYS = ['GD-5','GD-4','GD-2','GD-1','GD'];
+    // Per-gameweek day labels — last entry is always 'GD' (game day, future)
+    const GW_DAYS = {
+      default:            ['GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS1-Brentford':    ['GD-4','GD-3','GD-2','GD-1','GD'],
+      'IS2-Leicester':    ['GD-5','GD-4','GD-3','GD-2','GD-1','GD'],
+      'IS3-Brighton':     ['GD-4','GD-2','GD-1','GD'],
+      'IS4-Everton':      ['GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS5-Fulham':       ['GD-6','GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS6-Newcastle':    ['GD-4','GD-3','GD-1','GD'],
+      'IS7-Wolves':       ['GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS8-Chelsea':      ['GD-4','GD-3','GD-2','GD-1','GD'],
+      'IS9-ManUtd':       ['GD-6','GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS10-Arsenal':     ['GD-3','GD-2','GD-1','GD'],
+      'IS11-Liverpool':   ['GD-5','GD-4','GD-2','GD-1','GD'],
+      'IS12-Spurs':       ['GD-4','GD-3','GD-2','GD-1','GD'],
+      'IS13-West Ham':    ['GD-6','GD-5','GD-4','GD-3','GD-1','GD'],
+      'IS14-Aston Villa': ['GD-5','GD-4','GD-2','GD-1','GD'],
+    };
+    // All other gameweeks cycle through the default 5-day pattern
+    function getGdDays(gw) { return GW_DAYS[gw] || GW_DAYS.default; }
 
-    // f=stripe fraction, a=actual metres, tgt=target metres. GD-3 removed.
+    // 6-entry max patterns (last entry always future/GD). Sliced to gdDays.length per gameweek.
     const GD_PATTERNS = [
-      [{t:'under',d:'20 UNDER',f:.07,a:9800, tgt:10000},{t:'over', d:'30 OVER', f:.14,a:10300,tgt:10000},{t:'over', d:'30 OVER', f:.14,a:10300,tgt:10000},{t:'under',d:'20 UNDER',f:.07,a:9800, tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
-      [{t:'under',d:'15 UNDER',f:.05,a:9850, tgt:10000},{t:'under',d:'10 UNDER',f:.04,a:9900, tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'over', d:'20 OVER', f:.10,a:10200,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
-      [{t:'over', d:'30 OVER', f:.14,a:10300,tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'under',d:'15 UNDER',f:.05,a:9850, tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
-      [{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'over', d:'40 OVER', f:.19,a:10400,tgt:10000},{t:'under',d:'10 UNDER',f:.04,a:9900, tgt:10000},{t:'over', d:'25 OVER', f:.10,a:10250,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
-      [{t:'under',d:'50 UNDER',f:.24,a:9500, tgt:10000},{t:'under',d:'30 UNDER',f:.14,a:9700, tgt:10000},{t:'over', d:'20 OVER', f:.10,a:10200,tgt:10000},{t:'under',d:'15 UNDER',f:.05,a:9850, tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
+      [{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'under',d:'20 UNDER',f:.07,a:9800,tgt:10000},{t:'over',d:'30 OVER',f:.14,a:10300,tgt:10000},{t:'over',d:'30 OVER',f:.14,a:10300,tgt:10000},{t:'under',d:'20 UNDER',f:.07,a:9800,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
+      [{t:'over',d:'25 OVER',f:.12,a:10250,tgt:10000},{t:'under',d:'15 UNDER',f:.05,a:9850,tgt:10000},{t:'under',d:'10 UNDER',f:.04,a:9900,tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'over',d:'20 OVER',f:.10,a:10200,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
+      [{t:'under',d:'12 UNDER',f:.05,a:9880,tgt:10000},{t:'over',d:'30 OVER',f:.14,a:10300,tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'under',d:'15 UNDER',f:.05,a:9850,tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
+      [{t:'over',d:'18 OVER',f:.08,a:10180,tgt:10000},{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'over',d:'40 OVER',f:.19,a:10400,tgt:10000},{t:'under',d:'10 UNDER',f:.04,a:9900,tgt:10000},{t:'over',d:'25 OVER',f:.10,a:10250,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
+      [{t:'target',d:'ON TARGET',f:0,a:10000,tgt:10000},{t:'under',d:'50 UNDER',f:.24,a:9500,tgt:10000},{t:'under',d:'30 UNDER',f:.14,a:9700,tgt:10000},{t:'over',d:'20 OVER',f:.10,a:10200,tgt:10000},{t:'under',d:'15 UNDER',f:.05,a:9850,tgt:10000},{t:'future',d:'',f:0,a:null,tgt:10000}],
     ];
 
-    const GROUPS = ['Starter','Non starter','Rehab','Academy','On loan'];
+    const GROUPS = ['Starter','Non starter','Rehab','Academy','On loan','Goalkeeper'];
 
     const RAW_PLAYERS = [
       {id:1,  name:'Dan Jones',      pos:'LB',  group:'Starter',     acwr:1.8, risk:'High',   todayM:4200, weekToDate:11000, weekOver:1800, weekUnder:0,   rolling7:12500, targetTomorrow:10000},
@@ -149,6 +168,8 @@
       {id:23, name:'Ben Carter',     pos:'ST',  group:'On loan',     acwr:1.4, risk:'Medium', todayM:3200, weekToDate:8500,  weekOver:500,  weekUnder:0,   rolling7:9500,  targetTomorrow:8000},
       {id:24, name:'Hugo Diaz',      pos:'RW',  group:'On loan',     acwr:1.0, risk:'Low',    todayM:3000, weekToDate:7900,  weekOver:0,    weekUnder:0,   rolling7:9000,  targetTomorrow:7500},
       {id:25, name:'Marc Lefort',    pos:'CB',  group:'On loan',     acwr:1.6, risk:'High',   todayM:3800, weekToDate:9800,  weekOver:800,  weekUnder:0,   rolling7:11000, targetTomorrow:9000},
+      {id:26, name:'Sam Keane',      pos:'GK',  group:'Goalkeeper',  acwr:1.1, risk:'Low',    todayM:3200, weekToDate:8800,  weekOver:0,    weekUnder:200, rolling7:10000, targetTomorrow:8500},
+      {id:27, name:'Owen Peters',    pos:'GK',  group:'Goalkeeper',  acwr:0.9, risk:'Medium', todayM:2900, weekToDate:7600,  weekOver:0,    weekUnder:400, rolling7:9200,  targetTomorrow:7800},
     ];
 
     const PLAYERS = RAW_PLAYERS.map((p, i) => ({
@@ -159,17 +180,17 @@
 
     const GROUP_ROWS = GROUPS.map((g, i) => ({
       group: g,
-      todayM: [4000, 3000, 1800, 3000, 3400][i],
-      weekToDate: [10000, 8000, 4000, 8000, 9000][i],
-      weekOver:  [1600, 500,  0,   0, 800][i],
-      weekUnder: [0,    0,   600, 300, 0  ][i],
-      rolling7: [12000, 9000, 4500, 9000, 10000][i],
-      acwr: [1.8, 1.4, 0.7, 1.2, 1.5][i],
-      risk: ['High','Medium','High','Low','Medium'][i],
-      targetTomorrow: [10000, 7500, 4000, 7500, 8500][i],
-      gdData: GD_PATTERNS[i % GD_PATTERNS.length],
-      thisWeek: [62400, 48200, 21500, 57800, 53600][i],
-      avg3wk:   [65100, 51800, 24300, 60200, 57400][i],
+      todayM:        [4000, 3000, 1800, 3000, 3400, 3100][i],
+      weekToDate:    [10000, 8000, 4000, 8000, 9000, 8600][i],
+      weekOver:      [1600, 500,  0,   0, 800, 0  ][i],
+      weekUnder:     [0,    0,   600, 300, 0,  400][i],
+      rolling7:      [12000, 9000, 4500, 9000, 10000, 9800][i],
+      acwr:          [1.8, 1.4, 0.7, 1.2, 1.5, 1.0][i],
+      risk:          ['High','Medium','High','Low','Medium','Low'][i],
+      targetTomorrow:[10000, 7500, 4000, 7500, 8500, 8000][i],
+      gdData:        GD_PATTERNS[i % GD_PATTERNS.length],
+      thisWeek:      [62400, 48200, 21500, 57800, 53600, 51200][i],
+      avg3wk:        [65100, 51800, 24300, 60200, 57400, 54000][i],
     }));
 
     const CHART_DATA = GROUP_ROWS.map(g => ({
@@ -179,14 +200,16 @@
     }));
 
     // ── LOAD MODAL (shared by player rows and group rows) ─────────────────────────
-    function LoadModal({ subject, onClose, targetKm = [10, 20] }) {
+    function LoadModal({ subject, onClose, targetKm = [10, 20], gdDays = GW_DAYS.default }) {
       if (!subject) return null;
 
       const [hidden, setHidden] = useState({});
 
+      const days = gdDays;
+      const visibleGdData = subject.gdData.slice(-days.length);
       let cumul = 0;
-      const chartData = GD_DAYS.map((day, i) => {
-        const gd = subject.gdData[i];
+      const chartData = days.map((day, i) => {
+        const gd = visibleGdData[i];
         const isFuture = gd.t === 'future' || gd.a == null;
         if (!isFuture) cumul += gd.a;
         return {
@@ -324,7 +347,7 @@
     }
 
     function RiskBadge({ risk }) {
-      const bg = risk === 'High' ? RISK_RED : risk === 'Medium' ? '#e65100' : '#2e7d32';
+      const bg = risk === 'High' ? RISK_RED : risk === 'Medium' ? '#e65100' : TEAL_NUM;
       return (
         <span style={{
           background:bg, color:'#fff',
@@ -390,7 +413,7 @@
     }
 
     // ── INDIVIDUALS TABLE ─────────────────────────────────────────────────────────
-    function IndividualsTable({ rows, metric, targetKm = [10, 20] }) {
+    function IndividualsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -411,17 +434,22 @@
 
       const sorted = useSortedRows(rows, sortCol, sortDir, getVal);
 
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff' };
       function thSort(col, label, style = {}) {
         return (
-          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...style }}>
+          <th className="sortable" onClick={() => handleSort(col)} style={{ ...TH, ...stickyTH, ...style }}>
             {label}<SortArrow col={col} sortCol={sortCol} sortDir={sortDir} />
           </th>
         );
       }
 
-      const gdThStyle    = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
-      const todayThStyle = { ...TH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
-      const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' }; // GD-1 — no TODAY marker
+      const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
+      const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
+      const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
+
+      const trainingDays = Math.max(1, gdDays.filter(d => d !== 'GD').length);
+      const todayTargetMin = (targetKm[0] * 1000) / trainingDays;
+      const todayTargetMax = (targetKm[1] * 1000) / trainingDays;
 
       return (
         <>
@@ -429,23 +457,27 @@
           <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1060 }}>
             <thead>
               <tr>
-                {thSort('name',          'Athlete', { paddingLeft:24 })}
-                {thSort('group',         'Group')}
-                {thSort('todayM',        METRIC_CONFIG[metric]?.col || 'Today')}
-                {thSort('weekToDate',    'Week to date')}
-                {thSort('rolling7',      '7 day rolling avg.')}
-                {thSort('acwr',         'ACWR')}
-                <th style={gdThStyle}>GD-5</th>
-                <th style={gdThStyle}>GD-4</th>
-                <th style={gdThStyle}>GD-2</th>
-                <th style={gdRegStyle}>GD-1</th>
-                <th style={todayThStyle}>GD</th>
+                {thSort('name',       'Athlete', { paddingLeft:24 })}
+                {thSort('group',      'Group')}
+                {thSort('todayM',     METRIC_CONFIG[metric]?.col || 'Today')}
+                {thSort('weekToDate', 'Week to date')}
+                {thSort('rolling7',   '7 day rolling avg.')}
+                {thSort('acwr',       'ACWR')}
+                {gdDays.map((day, di) => {
+                  const isGD = day === 'GD';
+                  const isPrev = di === gdDays.length - 2;
+                  return <th key={day} style={isGD ? todayThStyle : isPrev ? gdRegStyle : gdThStyle}>{day}</th>;
+                })}
                 {thSort('targetTomorrow','Target tomorrow')}
                 {thSort('risk',          'Injury risk', { paddingRight:24 })}
               </tr>
             </thead>
             <tbody>
-              {sorted.map((p) => (
+              {sorted.map((p) => {
+                const visibleGd = p.gdData.slice(-gdDays.length);
+                const todayOver  = metric === 'distance' ? Math.max(0, p.todayM - todayTargetMax) : 0;
+                const todayUnder = metric === 'distance' ? Math.max(0, todayTargetMin - p.todayM)  : 0;
+                return (
                 <tr key={p.id} className="data-row" onClick={() => setSelectedSubject(p)} style={{ cursor:'pointer' }}>
                   <td style={{ ...TD, paddingLeft:24 }}>
                     <div style={{ padding:'12px 0 10px' }}>
@@ -454,7 +486,12 @@
                     </div>
                   </td>
                   <td style={TD}><GroupChip label={p.group} /></td>
-                  <td style={TD}>{metricFmt(metricVal(p.todayM, metric), metric)}</td>
+                  <td style={TD}>
+                    <div>{metricFmt(metricVal(p.todayM, metric), metric)}</div>
+                    {metric === 'distance' && todayOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({todayOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && todayUnder > 0 && <div style={{ fontSize:11, color:GD_PURPLE }}>({todayUnder.toLocaleString()} under)</div>}
+                    {metric === 'distance' && todayOver === 0 && todayUnder === 0 && <div style={{ fontSize:11, color:TEAL_NUM }}>(On target)</div>}
+                  </td>
                   <td style={TD}>
                     <div>{metricFmt(metricVal(p.weekToDate, metric), metric)}</div>
                     {metric === 'distance' && p.weekOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({p.weekOver.toLocaleString()} over)</div>}
@@ -463,23 +500,24 @@
                   </td>
                   <td style={TD}>{metricFmt(metricVal(p.rolling7, metric), metric)}</td>
                   <td style={TD}>{p.acwr}</td>
-                  {p.gdData.map((gd, di) => (
+                  {visibleGd.map((gd, di) => (
                     <td key={di} style={TD_GD}><GdBar gd={gd} metric={metric} /></td>
                   ))}
                   <td style={TD}>{metricFmt(metricVal(p.targetTomorrow, metric), metric)}</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={p.risk} /></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
-        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} />
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} gdDays={gdDays} />
         </>
       );
     }
 
     // ── GROUPS TABLE ──────────────────────────────────────────────────────────────
-    function GroupsTable({ rows, metric, targetKm = [10, 20] }) {
+    function GroupsTable({ rows, metric, targetKm = [10, 20], gdDays = GW_DAYS.default }) {
       const [sortCol, setSortCol] = useState(null);
       const [sortDir, setSortDir] = useState('asc');
       const [selectedSubject, setSelectedSubject] = useState(null);
@@ -508,9 +546,10 @@
         );
       }
 
-      const gdThStyle    = { ...TH, width:52, textAlign:'center', padding:'10px 4px' };
-      const todayThStyle = { ...TH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
-      const gdRegStyle   = { ...TH, width:52, textAlign:'center', padding:'10px 4px' }; // GD-1 — no TODAY marker
+      const stickyTH = { position:'sticky', top:0, zIndex:2, background:'#fff' };
+      const gdThStyle    = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
+      const todayThStyle = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px', fontWeight:600, color:BODY_TEXT, borderTop:`2px solid ${BODY_TEXT}` };
+      const gdRegStyle   = { ...TH, ...stickyTH, width:52, textAlign:'center', padding:'10px 4px' };
 
       return (
         <>
@@ -518,25 +557,37 @@
           <table style={{ borderCollapse:'collapse', width:'100%', minWidth:1000 }}>
             <thead>
               <tr>
-                {thSort('group',         'Group', { paddingLeft:24 })}
-                {thSort('todayM',        METRIC_CONFIG[metric]?.col || 'Today')}
-                {thSort('weekToDate',    'Week to date')}
-                {thSort('rolling7',      '7 day rolling avg.')}
-                {thSort('acwr',         'ACWR')}
-                <th style={gdThStyle}>GD-5</th>
-                <th style={gdThStyle}>GD-4</th>
-                <th style={gdThStyle}>GD-2</th>
-                <th style={gdRegStyle}>GD-1</th>
-                <th style={todayThStyle}>GD</th>
+                {thSort('group',      'Group', { paddingLeft:24 })}
+                {thSort('todayM',     METRIC_CONFIG[metric]?.col || 'Today')}
+                {thSort('weekToDate', 'Week to date')}
+                {thSort('rolling7',   '7 day rolling avg.')}
+                {thSort('acwr',       'ACWR')}
+                {gdDays.map((day, di) => {
+                  const isGD = day === 'GD';
+                  const isPrev = di === gdDays.length - 2;
+                  return <th key={day} style={isGD ? todayThStyle : isPrev ? gdRegStyle : gdThStyle}>{day}</th>;
+                })}
                 {thSort('targetTomorrow','Target tomorrow')}
                 {thSort('risk',          'Injury risk', { paddingRight:24 })}
               </tr>
             </thead>
             <tbody>
-              {sorted.map((g) => (
+              {sorted.map((g) => {
+                const visibleGd = g.gdData.slice(-gdDays.length);
+                const gTrainingDays = Math.max(1, gdDays.filter(d => d !== 'GD').length);
+                const gDayMax = (targetKm[1]*1000) / gTrainingDays;
+                const gDayMin = (targetKm[0]*1000) / gTrainingDays;
+                const todayOver  = metric === 'distance' ? Math.max(0, g.todayM - gDayMax) : 0;
+                const todayUnder = metric === 'distance' ? Math.max(0, gDayMin - g.todayM)  : 0;
+                return (
                 <tr key={g.group} className="data-row" onClick={() => setSelectedSubject(g)} style={{ cursor:'pointer' }}>
                   <td style={{ ...TD, paddingLeft:24 }}><GroupChip label={g.group} /></td>
-                  <td style={TD}>{metricFmt(metricVal(g.todayM, metric), metric)}</td>
+                  <td style={TD}>
+                    <div>{metricFmt(metricVal(g.todayM, metric), metric)}</div>
+                    {metric === 'distance' && todayOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({todayOver.toLocaleString()} over)</div>}
+                    {metric === 'distance' && todayUnder > 0 && <div style={{ fontSize:11, color:GD_PURPLE }}>({todayUnder.toLocaleString()} under)</div>}
+                    {metric === 'distance' && todayOver === 0 && todayUnder === 0 && <div style={{ fontSize:11, color:TEAL_NUM }}>(On target)</div>}
+                  </td>
                   <td style={TD}>
                     <div>{metricFmt(metricVal(g.weekToDate, metric), metric)}</div>
                     {metric === 'distance' && g.weekOver  > 0 && <div style={{ fontSize:11, color:GD_RED    }}>({g.weekOver.toLocaleString()} over)</div>}
@@ -545,17 +596,18 @@
                   </td>
                   <td style={TD}>{metricFmt(metricVal(g.rolling7, metric), metric)}</td>
                   <td style={TD}>{g.acwr}</td>
-                  {g.gdData.map((gd, di) => (
-                    <td key={di} style={TD_GD}><GdBar gd={gd} /></td>
+                  {visibleGd.map((gd, di) => (
+                    <td key={di} style={TD_GD}><GdBar gd={gd} metric={metric} /></td>
                   ))}
                   <td style={TD}>{metricFmt(metricVal(g.targetTomorrow, metric), metric)}</td>
                   <td style={{ ...TD, paddingRight:24 }}><RiskBadge risk={g.risk} /></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
-        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} />
+        <LoadModal subject={selectedSubject} onClose={() => setSelectedSubject(null)} targetKm={targetKm} gdDays={gdDays} />
         </>
       );
     }
@@ -693,7 +745,7 @@
     }
 
     // ── REHAB TARGET MODAL ────────────────────────────────────────────────────────
-    function RehabModal({ open, onClose, metric = 'distance' }) {
+    function RehabModal({ open, onClose, metric = 'distance', onSaveName }) {
       const [workloadMode, setWorkloadMode] = useState('equal');
       const [checked, setChecked] = useState({Mon:true,Tue:false,Wed:true,Thu:true,Fri:true,Sat:false,Sun:false});
       const [manual, setManual] = useState({Mon:'4000',Tue:'4000',Wed:'4000',Thu:'4000',Fri:'4000',Sat:'4000',Sun:'4000'});
@@ -701,10 +753,23 @@
       const rehabMax = Math.round(baseCfg.max / 2);
       const rehabDflt = [baseCfg.dflt[0] / 2, baseCfg.dflt[1] / 2];
       const [sliderVal, setSliderVal] = useState(rehabDflt);
+      const [targetName, setTargetName] = useState('Rehab target');
+      const [selectedGroups, setSelectedGroups] = useState(['Rehab']);
       const metricLabel = METRIC_CONFIG[metric]?.label || 'Total distance';
       const valLabel = baseCfg.unit
         ? `${sliderVal[0]}–${sliderVal[1]} ${baseCfg.unit}`
         : `${sliderVal[0]}–${sliderVal[1]}`;
+
+      function toggleGroup(g) {
+        setSelectedGroups(prev =>
+          prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]
+        );
+      }
+
+      function handleDone() {
+        if (onSaveName) onSaveName(targetName);
+        onClose();
+      }
 
       return (
         <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth
@@ -713,6 +778,41 @@
             Set rehab target
           </DialogTitle>
           <DialogContent sx={{ px:3, pt:1, pb:0 }}>
+
+            {/* Target name */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ fontSize:13, color:'#78909c', marginBottom:4 }}>Target name</div>
+              <input
+                type="text"
+                value={targetName}
+                onChange={e => setTargetName(e.target.value)}
+                style={{
+                  width:'100%', fontSize:14, padding:'8px 10px', borderRadius:4,
+                  border:`1px solid #cfd8dc`, outline:'none', color:'#212121',
+                  boxSizing:'border-box',
+                }}
+              />
+            </div>
+
+            {/* Group selector */}
+            <div style={{ marginBottom:20 }}>
+              <div style={{ fontSize:13, color:'#78909c', marginBottom:8 }}>Applies to groups</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {GROUPS.map(g => {
+                  const active = selectedGroups.includes(g);
+                  return (
+                    <button key={g} onClick={() => toggleGroup(g)} style={{
+                      fontSize:12, padding:'5px 12px', borderRadius:20, cursor:'pointer',
+                      border:`1px solid ${active ? TAB_BLUE : '#cfd8dc'}`,
+                      background: active ? TAB_BLUE : '#fff',
+                      color: active ? '#fff' : '#546e7a',
+                      fontWeight: active ? 600 : 400,
+                      transition:'all 0.15s',
+                    }}>{g}</button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div style={{ marginBottom:24 }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:4 }}>
@@ -800,7 +900,7 @@
               sx={{ textTransform:'none', fontSize:13, color:'#546e7a', px:2, py:.75, minWidth:0 }}>
               Cancel
             </Button>
-            <Button onClick={onClose} variant="contained"
+            <Button onClick={handleDone} variant="contained"
               sx={{ textTransform:'none', fontSize:13, bgcolor:TAB_BLUE, px:2.5, py:.75,
                 borderRadius:'4px', boxShadow:'none',
                 '&:hover':{ bgcolor:'#2d3a4e', boxShadow:'none' } }}>
@@ -813,64 +913,58 @@
 
     // ── NAV ───────────────────────────────────────────────────────────────────────
     const NAV_ICONS = [
-      { icon:'apps',          label:'Dashboard' },
-      { icon:'fitness_center',label:'Training' },
       { icon:'bar_chart',     label:'Analytics' },
-      { icon:'groups',        label:'Squad' },
+      { icon:'description',   label:'Reports' },
+      { icon:'person_outline',label:'Profile' },
       { icon:'calendar_today',label:'Planning', active:true },
-      { icon:'assignment',    label:'Reports' },
     ];
+    const NAV_ACTIVE_ACCENT = '#fdb632';
+
+    function NavItem({ icon, label, active }) {
+      return (
+        <Tooltip title={label} placement="right">
+          <div style={{
+            width:60, height:32,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            cursor:'pointer', position:'relative',
+            background: active ? 'rgba(0,0,0,0.6)' : 'transparent',
+            color: active ? '#fff' : 'rgba(255,255,255,0.6)',
+            transition:'background 0.15s, color 0.15s',
+          }}>
+            {active && <div style={{ position:'absolute', left:0, top:0, bottom:0, width:6, background:NAV_ACTIVE_ACCENT, borderRadius:'0 1px 1px 0' }} />}
+            <span className="material-icons" style={{ fontSize:20 }}>{icon}</span>
+          </div>
+        </Tooltip>
+      );
+    }
 
     function SideNav() {
       return (
         <div style={{
-          width:60, flexShrink:0, background:NAV_BG,
+          width:60, flexShrink:0, background:'#071952',
           display:'flex', flexDirection:'column',
-          alignItems:'center', paddingTop:8, paddingBottom:12,
+          alignItems:'center', paddingTop:10, paddingBottom:12,
+          boxShadow:'0 4.8px 14.4px rgba(0,0,0,0.18), 0 25.6px 57.6px rgba(0,0,0,0.22)',
+          position:'relative', zIndex:10,
         }}>
+          {/* Logo */}
           <div style={{
-            width:36, height:36, borderRadius:8, background:'#0f1f2e',
-            display:'flex', alignItems:'center', justifyContent:'center', marginBottom:20,
+            width:43, height:43, borderRadius:'50%', background:'#fff',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            marginBottom:20, marginTop:2, flexShrink:0, overflow:'hidden',
           }}>
-            <span style={{ fontSize:16, fontWeight:800, color:'#fff', fontFamily:'Georgia,serif' }}>K</span>
+            <img src="../Chelsea_FC.svg.png" alt="Chelsea FC" style={{ width:43, height:43, objectFit:'cover', borderRadius:'50%' }} />
           </div>
-          <div style={{
-            width:32, height:32, borderRadius:6, background:'rgba(255,255,255,.08)',
-            display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', marginBottom:12,
-          }}>
-            <span className="material-icons-outlined" style={{ fontSize:18, color:'rgba(255,255,255,.6)' }}>add</span>
+          {/* Main nav */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, flex:1 }}>
+            {NAV_ICONS.map((item, i) => (
+              <NavItem key={i} icon={item.icon} label={item.label} active={!!item.active} />
+            ))}
           </div>
-          {NAV_ICONS.map((item, i) => (
-            <Tooltip key={i} title={item.label} placement="right">
-              <div style={{
-                width:40, height:36, borderRadius:6,
-                display:'flex', alignItems:'center', justifyContent:'center',
-                cursor:'pointer', marginBottom:2, position:'relative',
-                background: item.active ? 'rgba(255,255,255,.1)' : 'transparent',
-              }}>
-                {item.active && (
-                  <div style={{ position:'absolute', left:0, top:6, bottom:6, width:3, background:NAV_ACCENT, borderRadius:'0 2px 2px 0' }} />
-                )}
-                <span className="material-icons-outlined" style={{ fontSize:20, color: item.active ? '#fff' : 'rgba(255,255,255,.4)' }}>{item.icon}</span>
-              </div>
-            </Tooltip>
-          ))}
-          <div style={{ flex:1 }} />
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-            <Tooltip title="Settings" placement="right">
-              <div style={{ width:40, height:36, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-                <span className="material-icons-outlined" style={{ fontSize:20, color:'rgba(255,255,255,.4)' }}>settings</span>
-              </div>
-            </Tooltip>
-            <Tooltip title="Help" placement="right">
-              <div style={{ width:40, height:36, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
-                <span className="material-icons-outlined" style={{ fontSize:20, color:'rgba(255,255,255,.4)' }}>help_outline</span>
-              </div>
-            </Tooltip>
-            <div style={{ width:30, height:30, borderRadius:15, background:'rgba(255,255,255,.1)',
-              display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', marginTop:4 }}>
-              <span className="material-icons-outlined" style={{ fontSize:16, color:'rgba(255,255,255,.5)' }}>person</span>
-            </div>
+          {/* Bottom */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+            <NavItem icon="help_outline" label="Help" />
+            <NavItem icon="chevron_right" label="Collapse" />
           </div>
         </div>
       );
@@ -903,8 +997,10 @@
       const [filterStatus, setFilterStatus] = useState(null);
       const [modalOpen, setModalOpen] = useState(false);
       const [rehabModalOpen, setRehabModalOpen] = useState(false);
+      const [rehabName, setRehabName] = useState('Rehab target');
       const [gameweek, setGameweek] = useState('IS7-Wolves');
       const [regularTarget, setRegularTarget] = useState([10, 20]);
+      const gdDays = getGdDays(gameweek);
 
       function handleMetricChange(newMetric) {
         setMetric(newMetric);
@@ -1033,10 +1129,12 @@
                 </div>
               </div>
               <CtrlInput label="Regular target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; return c.unit ? `${regularTarget[0]}–${regularTarget[1]} ${c.unit}` : `${regularTarget[0]}–${regularTarget[1]}`; })()} onClick={() => setModalOpen(true)} />
-              <CtrlInput label="Rehab target" value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; const half = regularTarget.map(v => Math.round(v/2*10)/10); return c.unit ? `${half[0]}–${half[1]} ${c.unit}` : `${half[0]}–${half[1]}`; })()} onClick={() => setRehabModalOpen(true)} />
-              <button style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center' }}>
-                <span className="material-icons-outlined" style={{ fontSize:22, color:TH_COLOR }}>add</span>
-              </button>
+              <CtrlInput label={rehabName} value={(() => { const c = METRIC_SLIDER_CONFIG[metric] || METRIC_SLIDER_CONFIG.distance; const half = regularTarget.map(v => Math.round(v/2*10)/10); return c.unit ? `${half[0]}–${half[1]} ${c.unit}` : `${half[0]}–${half[1]}`; })()} onClick={() => setRehabModalOpen(true)} />
+              <Tooltip title="Add target" placement="bottom">
+                <button style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center' }}>
+                  <span className="material-icons-outlined" style={{ fontSize:22, color:TH_COLOR }}>add</span>
+                </button>
+              </Tooltip>
             </div>
 
             {/* Tabs */}
@@ -1059,16 +1157,16 @@
                 <>
                   <div style={{ display:'flex', gap:16, padding:'24px 24px 16px' }}>
                     <SummaryCard count={counts.over}   label="Overtraining"  color={RED_NUM}    active={filterStatus==='over'}   onClick={() => setFilterStatus(f => f==='over'   ? null : 'over')} />
-                    <SummaryCard count={counts.target} label="On track"      color={TEAL_NUM}   active={filterStatus==='target'} onClick={() => setFilterStatus(f => f==='target' ? null : 'target')} />
+                    <SummaryCard count={counts.target} label="On target"     color={TEAL_NUM}   active={filterStatus==='target'} onClick={() => setFilterStatus(f => f==='target' ? null : 'target')} />
                     <SummaryCard count={counts.under}  label="Undertraining" color={PURPLE_NUM} active={filterStatus==='under'}  onClick={() => setFilterStatus(f => f==='under'  ? null : 'under')} />
                   </div>
-                  <IndividualsTable rows={filtered} metric={metric} targetKm={regularTarget} />
+                  <IndividualsTable rows={filtered} metric={metric} targetKm={regularTarget} gdDays={gdDays} />
                 </>
               )}
 
               {tab === 1 && (
                 <>
-                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} targetKm={regularTarget} /></div>
+                  <div style={{ paddingTop:24 }}><GroupsTable rows={GROUP_ROWS} metric={metric} targetKm={regularTarget} gdDays={gdDays} /></div>
                   <div style={{ margin:'24px 24px', border:`1px solid ${BORDER}`, borderRadius:4, padding:'20px 24px 16px' }}>
                     <div style={{ fontSize:16, fontWeight:400, color:BODY_TEXT, marginBottom:16 }}>Group comparison — {METRIC_CONFIG[metric]?.label || 'Total distance'}</div>
                     <ResponsiveContainer width="100%" height={260}>
@@ -1096,7 +1194,7 @@
           </div>
 
           <TargetModal open={modalOpen} onClose={() => setModalOpen(false)} targetKm={regularTarget} onTargetChange={setRegularTarget} metric={metric} />
-          <RehabModal open={rehabModalOpen} onClose={() => setRehabModalOpen(false)} metric={metric} />
+          <RehabModal open={rehabModalOpen} onClose={() => setRehabModalOpen(false)} metric={metric} onSaveName={setRehabName} />
         </div>
       );
     }
