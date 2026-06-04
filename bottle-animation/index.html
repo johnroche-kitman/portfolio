@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bottle Animation Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: #f4f5f7;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 48px;
+      padding: 40px 24px;
+    }
+
+    .stage {
+      display: flex;
+      gap: 80px;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+    }
+
+    .bottle-slot {
+      position: relative;
+      width: 76px;
+      height: 234px;
+    }
+
+    .bottle-slot img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 600ms ease;
+      pointer-events: none;
+    }
+
+    .bottle-slot img.is-visible {
+      opacity: 1;
+    }
+
+    .bottle-slot.no-transition img {
+      transition: none;
+    }
+
+    .confirm-btn {
+      appearance: none;
+      border: none;
+      background: #00a699;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 12px 36px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .confirm-btn:hover { background: #009086; }
+    .confirm-btn:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="bottle-slot" id="slot-left">
+      <img src="g-bottle.svg"   alt="" data-state="base">
+      <img src="g-bottle-1.svg" alt="" data-state="left">
+    </div>
+    <div class="bottle-slot" id="slot-right">
+      <img src="g-bottle.svg"   alt="" data-state="base">
+      <img src="g-bottle-2.svg" alt="" data-state="right">
+    </div>
+  </div>
+
+  <button class="confirm-btn" id="confirm">Confirm</button>
+
+  <script>
+    const slotLeft  = document.getElementById('slot-left');
+    const slotRight = document.getElementById('slot-right');
+    const button    = document.getElementById('confirm');
+
+    const show = (slot, state) => {
+      slot.querySelectorAll('img').forEach(img => {
+        img.classList.toggle('is-visible', img.dataset.state === state);
+      });
+    };
+
+    const reset = ({ instant = false } = {}) => {
+      if (instant) {
+        slotLeft.classList.add('no-transition');
+        slotRight.classList.add('no-transition');
+      }
+      show(slotLeft, 'base');
+      show(slotRight, 'base');
+      if (instant) {
+        // Force reflow, then re-enable transitions.
+        void slotLeft.offsetWidth;
+        slotLeft.classList.remove('no-transition');
+        slotRight.classList.remove('no-transition');
+      }
+    };
+
+    let timer = null;
+    const runAnimation = () => {
+      if (timer) clearTimeout(timer);
+      reset({ instant: true });
+
+      timer = setTimeout(() => {
+        show(slotLeft, 'left');
+        show(slotRight, 'right');
+      }, 1000);
+    };
+
+    button.addEventListener('click', runAnimation);
+    reset();
+  </script>
+</body>
+</html>
