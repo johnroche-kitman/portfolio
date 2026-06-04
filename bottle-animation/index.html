@@ -102,9 +102,23 @@
     .stage {
       display: flex;
       gap: 80px;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      min-height: 260px;
+      min-height: 280px;
+    }
+
+    .bottle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bottle-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2d44;
+      letter-spacing: 0.2px;
     }
 
     .bottle-slot {
@@ -140,13 +154,19 @@
       <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
       <h2 class="modal-title" id="modal-title">1 oz lost</h2>
       <div class="stage">
-        <div class="bottle-slot" id="slot-left">
-          <img src="g-bottle.svg"   alt="" data-state="base">
-          <img src="g-bottle-1.svg" alt="" data-state="left">
+        <div class="bottle">
+          <div class="bottle-slot" id="slot-left">
+            <img src="g-bottle.svg"   alt="" data-state="base">
+            <img src="g-bottle-1.svg" alt="" data-state="left">
+          </div>
+          <div class="bottle-label">8 oz Gatorade</div>
         </div>
-        <div class="bottle-slot" id="slot-right">
-          <img src="g-bottle.svg"   alt="" data-state="base">
-          <img src="g-bottle-2.svg" alt="" data-state="right">
+        <div class="bottle">
+          <div class="bottle-slot" id="slot-right">
+            <img src="g-bottle.svg"   alt="" data-state="base">
+            <img src="g-bottle-2.svg" alt="" data-state="right">
+          </div>
+          <div class="bottle-label">16 oz water</div>
         </div>
       </div>
     </div>
