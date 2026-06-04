@@ -15,9 +15,88 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 48px;
       padding: 40px 24px;
+    }
+
+    .confirm-btn {
+      appearance: none;
+      border: none;
+      background: #00a699;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 12px 36px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .confirm-btn:hover { background: #009086; }
+    .confirm-btn:active { transform: translateY(1px); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(31, 45, 68, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+      z-index: 10;
+    }
+
+    .modal-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 480px;
+      padding: 32px 32px 28px;
+      position: relative;
+      transform: translateY(8px);
+      transition: transform 200ms ease;
+    }
+
+    .modal-backdrop.is-open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2d44;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      font-size: 22px;
+      line-height: 1;
+      color: rgba(31, 45, 68, 0.55);
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .modal-close:hover {
+      background: rgba(31, 45, 68, 0.06);
+      color: #1f2d44;
     }
 
     .stage {
@@ -51,45 +130,34 @@
     .bottle-slot.no-transition img {
       transition: none;
     }
-
-    .confirm-btn {
-      appearance: none;
-      border: none;
-      background: #00a699;
-      color: #fff;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      padding: 12px 36px;
-      border-radius: 6px;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-      transition: background 0.15s, transform 0.05s;
-    }
-
-    .confirm-btn:hover { background: #009086; }
-    .confirm-btn:active { transform: translateY(1px); }
   </style>
 </head>
 <body>
-  <div class="stage">
-    <div class="bottle-slot" id="slot-left">
-      <img src="g-bottle.svg"   alt="" data-state="base">
-      <img src="g-bottle-1.svg" alt="" data-state="left">
-    </div>
-    <div class="bottle-slot" id="slot-right">
-      <img src="g-bottle.svg"   alt="" data-state="base">
-      <img src="g-bottle-2.svg" alt="" data-state="right">
+  <button class="confirm-btn" id="confirm">Calculate 1 oz lost</button>
+
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      <h2 class="modal-title" id="modal-title">1 oz lost</h2>
+      <div class="stage">
+        <div class="bottle-slot" id="slot-left">
+          <img src="g-bottle.svg"   alt="" data-state="base">
+          <img src="g-bottle-1.svg" alt="" data-state="left">
+        </div>
+        <div class="bottle-slot" id="slot-right">
+          <img src="g-bottle.svg"   alt="" data-state="base">
+          <img src="g-bottle-2.svg" alt="" data-state="right">
+        </div>
+      </div>
     </div>
   </div>
 
-  <button class="confirm-btn" id="confirm">Confirm</button>
-
   <script>
-    const slotLeft  = document.getElementById('slot-left');
-    const slotRight = document.getElementById('slot-right');
-    const button    = document.getElementById('confirm');
+    const slotLeft   = document.getElementById('slot-left');
+    const slotRight  = document.getElementById('slot-right');
+    const button     = document.getElementById('confirm');
+    const modal      = document.getElementById('modal');
+    const modalClose = document.getElementById('modal-close');
 
     const show = (slot, state) => {
       slot.querySelectorAll('img').forEach(img => {
@@ -97,7 +165,7 @@
       });
     };
 
-    const reset = ({ instant = false } = {}) => {
+    const resetBottles = ({ instant = false } = {}) => {
       if (instant) {
         slotLeft.classList.add('no-transition');
         slotRight.classList.add('no-transition');
@@ -105,26 +173,49 @@
       show(slotLeft, 'base');
       show(slotRight, 'base');
       if (instant) {
-        // Force reflow, then re-enable transitions.
         void slotLeft.offsetWidth;
         slotLeft.classList.remove('no-transition');
         slotRight.classList.remove('no-transition');
       }
     };
 
-    let timer = null;
+    let fadeTimer = null;
     const runAnimation = () => {
-      if (timer) clearTimeout(timer);
-      reset({ instant: true });
-
-      timer = setTimeout(() => {
+      if (fadeTimer) clearTimeout(fadeTimer);
+      resetBottles({ instant: true });
+      fadeTimer = setTimeout(() => {
         show(slotLeft, 'left');
         show(slotRight, 'right');
       }, 1000);
     };
 
-    button.addEventListener('click', runAnimation);
-    reset();
+    const openModal = () => {
+      modal.hidden = false;
+      // Force reflow so the opacity transition runs from 0.
+      void modal.offsetWidth;
+      modal.classList.add('is-open');
+      runAnimation();
+    };
+
+    const closeModal = () => {
+      if (fadeTimer) clearTimeout(fadeTimer);
+      modal.classList.remove('is-open');
+      setTimeout(() => {
+        modal.hidden = true;
+        resetBottles({ instant: true });
+      }, 200);
+    };
+
+    button.addEventListener('click', openModal);
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+
+    resetBottles({ instant: true });
   </script>
 </body>
 </html>
