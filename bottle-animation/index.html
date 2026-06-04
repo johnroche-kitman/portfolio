@@ -18,6 +18,13 @@
       padding: 40px 24px;
     }
 
+    .button-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
     .confirm-btn {
       appearance: none;
       border: none;
@@ -32,6 +39,7 @@
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.12);
       transition: background 0.15s, transform 0.05s;
+      min-width: 220px;
     }
 
     .confirm-btn:hover { background: #009086; }
@@ -61,7 +69,7 @@
       border-radius: 12px;
       box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       padding: 32px 32px 28px;
       position: relative;
       transform: translateY(8px);
@@ -119,6 +127,7 @@
       font-weight: 600;
       color: #1f2d44;
       letter-spacing: 0.2px;
+      text-align: center;
     }
 
     .bottle-slot {
@@ -147,24 +156,27 @@
   </style>
 </head>
 <body>
-  <button class="confirm-btn" id="confirm">Calculate 1 oz lost</button>
+  <div class="button-stack">
+    <button class="confirm-btn" data-modal="modal-1lb">Calculate 1 lb lost</button>
+    <button class="confirm-btn" data-modal="modal-2lb">Calculate 2 lb lost</button>
+  </div>
 
-  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
+  <div class="modal-backdrop" id="modal-1lb" role="dialog" aria-modal="true" hidden>
     <div class="modal">
-      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
-      <h2 class="modal-title" id="modal-title">1 oz lost</h2>
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <h2 class="modal-title">1 lb lost</h2>
       <div class="stage">
         <div class="bottle">
-          <div class="bottle-slot" id="slot-left">
+          <div class="bottle-slot">
             <img src="g-bottle.svg"   alt="" data-state="base">
-            <img src="g-bottle-1.svg" alt="" data-state="left">
+            <img src="g-bottle-1.svg" alt="" data-state="end">
           </div>
           <div class="bottle-label">8 oz Gatorade</div>
         </div>
         <div class="bottle">
-          <div class="bottle-slot" id="slot-right">
+          <div class="bottle-slot">
             <img src="g-bottle.svg"   alt="" data-state="base">
-            <img src="g-bottle-2.svg" alt="" data-state="right">
+            <img src="g-bottle-2.svg" alt="" data-state="end">
           </div>
           <div class="bottle-label">16 oz water</div>
         </div>
@@ -172,70 +184,95 @@
     </div>
   </div>
 
-  <script>
-    const slotLeft   = document.getElementById('slot-left');
-    const slotRight  = document.getElementById('slot-right');
-    const button     = document.getElementById('confirm');
-    const modal      = document.getElementById('modal');
-    const modalClose = document.getElementById('modal-close');
+  <div class="modal-backdrop" id="modal-2lb" role="dialog" aria-modal="true" hidden>
+    <div class="modal">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <h2 class="modal-title">2 lb lost</h2>
+      <div class="stage">
+        <div class="bottle">
+          <div class="bottle-slot">
+            <img src="g-bottle.svg"   alt="" data-state="base">
+            <img src="g-bottle-3.svg" alt="" data-state="end">
+          </div>
+          <div class="bottle-label">8 oz Gatorade + 16 oz water</div>
+        </div>
+        <div class="bottle">
+          <div class="bottle-slot">
+            <img src="g-bottle.svg"   alt="" data-state="base">
+            <img src="g-bottle-4.svg" alt="" data-state="end">
+          </div>
+          <div class="bottle-label">24 oz water</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    const show = (slot, state) => {
+  <script>
+    const showState = (slot, state) => {
       slot.querySelectorAll('img').forEach(img => {
         img.classList.toggle('is-visible', img.dataset.state === state);
       });
     };
 
-    const resetBottles = ({ instant = false } = {}) => {
+    const resetBottles = (modal, { instant = false } = {}) => {
+      const slots = modal.querySelectorAll('.bottle-slot');
+      if (instant) slots.forEach(s => s.classList.add('no-transition'));
+      slots.forEach(s => showState(s, 'base'));
       if (instant) {
-        slotLeft.classList.add('no-transition');
-        slotRight.classList.add('no-transition');
-      }
-      show(slotLeft, 'base');
-      show(slotRight, 'base');
-      if (instant) {
-        void slotLeft.offsetWidth;
-        slotLeft.classList.remove('no-transition');
-        slotRight.classList.remove('no-transition');
+        void modal.offsetWidth;
+        slots.forEach(s => s.classList.remove('no-transition'));
       }
     };
 
-    let fadeTimer = null;
-    const runAnimation = () => {
-      if (fadeTimer) clearTimeout(fadeTimer);
-      resetBottles({ instant: true });
-      fadeTimer = setTimeout(() => {
-        show(slotLeft, 'left');
-        show(slotRight, 'right');
+    const timers = new WeakMap();
+
+    const runAnimation = (modal) => {
+      const existing = timers.get(modal);
+      if (existing) clearTimeout(existing);
+      resetBottles(modal, { instant: true });
+      const t = setTimeout(() => {
+        modal.querySelectorAll('.bottle-slot').forEach(s => showState(s, 'end'));
       }, 1000);
+      timers.set(modal, t);
     };
 
-    const openModal = () => {
+    const openModal = (modal) => {
       modal.hidden = false;
-      // Force reflow so the opacity transition runs from 0.
       void modal.offsetWidth;
       modal.classList.add('is-open');
-      runAnimation();
+      runAnimation(modal);
     };
 
-    const closeModal = () => {
-      if (fadeTimer) clearTimeout(fadeTimer);
+    const closeModal = (modal) => {
+      const existing = timers.get(modal);
+      if (existing) clearTimeout(existing);
       modal.classList.remove('is-open');
       setTimeout(() => {
         modal.hidden = true;
-        resetBottles({ instant: true });
+        resetBottles(modal, { instant: true });
       }, 200);
     };
 
-    button.addEventListener('click', openModal);
-    modalClose.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    document.querySelectorAll('[data-modal]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = document.getElementById(btn.dataset.modal);
+        openModal(modal);
+      });
     });
 
-    resetBottles({ instant: true });
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.querySelector('.modal-close').addEventListener('click', () => closeModal(modal));
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal);
+      });
+      resetBottles(modal, { instant: true });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const open = document.querySelector('.modal-backdrop.is-open');
+      if (open) closeModal(open);
+    });
   </script>
 </body>
 </html>
