@@ -36,7 +36,14 @@ export default function MainNavigation({ active = 'medical' }) {
           component="img"
           src={`${import.meta.env.BASE_URL}nfl-logo.png`}
           alt="NFL"
-          sx={{ width: 34, height: 34, display: 'block', objectFit: 'contain' }}
+          sx={{
+            width: 34,
+            height: 34,
+            display: 'block',
+            objectFit: 'contain',
+            filter:
+              'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)',
+          }}
         />
       </Box>
 
