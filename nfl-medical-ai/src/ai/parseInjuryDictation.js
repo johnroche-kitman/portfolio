@@ -96,6 +96,16 @@ function findRemovedFromParticipation(text) {
   return /removed from (the )?(practice|game|session|field)/i.test(text)
 }
 
+// Phrases what was already captured from a dictation, so a follow-up
+// question ("who is this for?") confirms progress instead of dead-ending.
+export function describeParsedInjury(parsed) {
+  const bits = []
+  if (parsed.pathology) bits.push(`a possible ${parsed.pathology}`)
+  else if (parsed.bodyPart) bits.push(`an injury to the ${parsed.side ? `${parsed.side.toLowerCase()} ` : ''}${parsed.bodyPart}`)
+  if (bits.length && parsed.injuryDate) bits.push(`dated ${parsed.injuryDate}`)
+  return bits.join(', ')
+}
+
 export function parseInjuryDictation(text, { athletes } = { athletes: [] }) {
   const trimmed = (text || '').trim()
   const athleteName = extractAthleteNameMention(trimmed)

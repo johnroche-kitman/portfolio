@@ -22,29 +22,36 @@ function scoreInjuryMatch(injury, noteStems) {
   return score
 }
 
-export function parseNoteDictation(text, { athletes, injuries } = { athletes: [], injuries: [] }) {
-  const trimmed = (text || '').trim()
-  const athleteName = extractAthleteNameMention(trimmed)
-  const athlete = findAthleteByName(athleteName, athletes)
+// Exported so the AI panel can re-run injury matching once an athlete is
+// resolved conversationally (e.g. after asking "who is this note for?").
+export function matchInjuryForAthlete(text, athleteId, injuries) {
+  const athleteInjuries = injuries.filter((inj) => inj.athleteId === athleteId && inj.status !== 'pending_review')
+  const noteStems = new Set(tokenize(text).map(stem))
 
-  const titleMatch = trimmed.match(TITLE_PATTERN)
-  const dictatedTitle = titleMatch ? titleMatch[1].trim() : null
-
-  const athleteInjuries = athlete
-    ? injuries.filter((inj) => inj.athleteId === athlete.id && inj.status !== 'pending_review')
-    : []
-  const noteStems = new Set(tokenize(trimmed).map(stem))
-
-  let matchedInjury = null
+  let matched = null
   let bestScore = 0
   athleteInjuries.forEach((inj) => {
     const score = scoreInjuryMatch(inj, noteStems)
     if (score > bestScore) {
       bestScore = score
-      matchedInjury = inj
+      matched = inj
     }
   })
+  return matched
+}
 
+export function extractDictatedTitle(text) {
+  const titleMatch = (text || '').match(TITLE_PATTERN)
+  return titleMatch ? titleMatch[1].trim() : null
+}
+
+export function parseNoteDictation(text, { athletes, injuries } = { athletes: [], injuries: [] }) {
+  const trimmed = (text || '').trim()
+  const athleteName = extractAthleteNameMention(trimmed)
+  const athlete = findAthleteByName(athleteName, athletes)
+
+  const dictatedTitle = extractDictatedTitle(trimmed)
+  const matchedInjury = athlete ? matchInjuryForAthlete(trimmed, athlete.id, injuries) : null
   const injuryLabel = matchedInjury ? matchedInjury.pathology || matchedInjury.label : null
   const noteBody = stripCommandPrefix(trimmed)
   const today = todayLabel()
