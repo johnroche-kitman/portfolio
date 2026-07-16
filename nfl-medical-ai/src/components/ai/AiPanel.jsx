@@ -3,6 +3,7 @@ import Drawer from '@mui/material/Drawer'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
+import Divider from '@mui/material/Divider'
 import { useNavigate } from 'react-router-dom'
 import Icon from '../Icon'
 import AiSuggestedActions from './AiSuggestedActions'
@@ -284,7 +285,8 @@ export default function AiPanel({ open, onClose }) {
           gap={2}
           sx={{ p: 2.5, overflowY: 'auto', backgroundColor: 'var(--background)' }}
         >
-          {messages.length === 0 && <AiSuggestedActions onSelect={handleSelectSuggestion} />}
+          <AiSuggestedActions onSelect={handleSelectSuggestion} />
+          {messages.length > 0 && <Divider sx={{ borderColor: 'var(--divider)' }} />}
           {messages.map((message) => (
             <AiChatMessage key={message.id} message={message} />
           ))}
