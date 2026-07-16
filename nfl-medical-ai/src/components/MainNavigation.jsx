@@ -1,10 +1,11 @@
 import Box from '@mui/material/Box'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 
 const NAV_ITEMS = [
-  { key: 'medical', name: 'medical', label: 'Medical' },
+  { key: 'medical', name: 'medical', label: 'Medical', to: '/medical/roster' },
   { key: 'chart', name: 'chart', label: 'Performance' },
   { key: 'clipboard', name: 'clipboard', label: 'Reports' },
   { key: 'groups', name: 'groups', label: 'Roster' },
@@ -12,6 +13,8 @@ const NAV_ITEMS = [
 ]
 
 export default function MainNavigation({ active = 'medical' }) {
+  const navigate = useNavigate()
+
   return (
     <Box
       sx={{
@@ -39,6 +42,8 @@ export default function MainNavigation({ active = 'medical' }) {
         {NAV_ITEMS.map((item) => (
           <Tooltip key={item.key} title={item.label} placement="right">
             <IconButton
+              onClick={() => item.to && navigate(item.to)}
+              disabled={!item.to}
               sx={{
                 width: 40,
                 height: 40,
@@ -48,6 +53,9 @@ export default function MainNavigation({ active = 'medical' }) {
                 backgroundColor: item.key === active ? '#ffffff' : 'transparent',
                 '&:hover': {
                   backgroundColor: item.key === active ? '#ffffff' : '#ffffff1a',
+                },
+                '&.Mui-disabled': {
+                  color: item.key === active ? 'var(--color-primary-dark)' : '#ffffff4d',
                 },
               }}
             >
