@@ -4,7 +4,8 @@ import Divider from '@mui/material/Divider'
 import Icon from '../Icon'
 import Button from '../Button'
 
-export default function AiConfirmationSummary({ result, onAddMoreDetail, onLogAnother, onGoToQueue }) {
+export default function AiConfirmationSummary({ result, resultType, onAddMoreDetail, onLogAnother, onGoToQueue }) {
+  const isNote = resultType === 'note'
   if (!result.ok) {
     return (
       <Box display="flex" flexDirection="column" gap={2}>
@@ -48,10 +49,10 @@ export default function AiConfirmationSummary({ result, onAddMoreDetail, onLogAn
           What would you like to do next?
         </Typography>
         <Button tone="secondary" onClick={onAddMoreDetail} fullWidth sx={{ justifyContent: 'flex-start' }}>
-          Add more information to this injury
+          Add more information to this {isNote ? 'note' : 'injury'}
         </Button>
         <Button tone="secondary" onClick={onLogAnother} fullWidth sx={{ justifyContent: 'flex-start' }}>
-          Log another injury for someone else
+          {isNote ? 'Add another note for someone else' : 'Log another injury for someone else'}
         </Button>
         <Button onClick={onGoToQueue} fullWidth sx={{ justifyContent: 'flex-start' }}>
           Go to my review queue

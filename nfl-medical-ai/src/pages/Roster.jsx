@@ -6,6 +6,8 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Menu from '@mui/material/Menu'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
 import { useNavigate } from 'react-router-dom'
 import PageTabs from '../components/PageTabs'
 import DataTable from '../components/DataTable'
@@ -183,9 +185,21 @@ export default function Roster() {
 
   return (
     <Box>
-      <Typography variant="h1" sx={{ mb: 3 }}>
-        Medical
-      </Typography>
+      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Typography variant="h1">Medical</Typography>
+        <Tooltip title="Go to review queue">
+          <IconButton
+            onClick={() => navigate('/medical/review-queue')}
+            sx={{
+              backgroundColor: 'var(--neutral-200)',
+              color: 'var(--color-primary)',
+              '&:hover': { backgroundColor: 'var(--neutral-300)' },
+            }}
+          >
+            <Icon name="checklist" fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <PageTabs tabs={MEDICAL_TABS} value="roster" onChange={() => {}} />
 

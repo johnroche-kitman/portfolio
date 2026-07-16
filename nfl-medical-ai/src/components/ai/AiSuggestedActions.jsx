@@ -10,19 +10,21 @@ const SUGGESTIONS = [
     description: 'Dictate the details and I will fill out the injury record for you.',
     icon: 'noteAdd',
     enabled: true,
+    template: 'Create a new injury for ',
+  },
+  {
+    key: 'add-note',
+    label: 'Add a note',
+    description: 'Update an existing injury with a dictated progress note.',
+    icon: 'factCheck',
+    enabled: true,
+    template: 'Update note for ',
   },
   {
     key: 'update-status',
     label: 'Update availability status',
     description: 'Coming soon: change a player\'s status from a sentence.',
     icon: 'update',
-    enabled: false,
-  },
-  {
-    key: 'add-note',
-    label: 'Add a note',
-    description: 'Coming soon: attach a quick note to an existing injury.',
-    icon: 'factCheck',
     enabled: false,
   },
 ]

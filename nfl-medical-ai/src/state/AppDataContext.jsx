@@ -8,7 +8,10 @@ const STORAGE_KEY = 'nfl-medical-ai-state-v1'
 function loadInitialState() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return { pendingNotes: [], ...parsed }
+    }
   } catch {
     // fall through to seed state
   }
@@ -17,6 +20,7 @@ function loadInitialState() {
     injuries: seedInjuries,
     athleteNotes: seedNotes,
     notesByInjury: {},
+    pendingNotes: [],
   }
 }
 
@@ -149,6 +153,78 @@ export function AppDataProvider({ children }) {
     [state, persist]
   )
 
+  const createNoteFromParsed = useCallback(
+    (parsed) => {
+      const id = `note-ai-${state.pendingNotes.length + 1}-${Math.random().toString(36).slice(2, 7)}`
+      const note = {
+        id,
+        injuryId: parsed.injuryId,
+        athleteId: parsed.athleteId,
+        title: parsed.title || parsed.placeholderTitle,
+        text: parsed.noteText,
+        rawDictation: parsed.rawText,
+        addedBy: 'AI assistant',
+        addedOn: parsed.addedOn || todayLabel(),
+        status: 'pending_review',
+      }
+
+      persist({
+        ...state,
+        pendingNotes: [note, ...state.pendingNotes],
+      })
+
+      return note
+    },
+    [state, persist]
+  )
+
+  const acceptNote = useCallback(
+    (noteId) => {
+      const note = state.pendingNotes.find((n) => n.id === noteId)
+      if (!note) return
+
+      const injuryNote = {
+        id: `note-${noteId}`,
+        author: note.addedBy,
+        date: note.addedOn,
+        title: note.title,
+        text: note.text,
+      }
+
+      persist({
+        ...state,
+        pendingNotes: state.pendingNotes.map((n) => (n.id === noteId ? { ...n, status: 'accepted' } : n)),
+        notesByInjury: {
+          ...state.notesByInjury,
+          [note.injuryId]: [...(state.notesByInjury[note.injuryId] || []), injuryNote],
+        },
+      })
+    },
+    [state, persist]
+  )
+
+  const rejectNote = useCallback(
+    (noteId) => {
+      persist({
+        ...state,
+        pendingNotes: state.pendingNotes.filter((n) => n.id !== noteId),
+      })
+    },
+    [state, persist]
+  )
+
+  const appendToPendingNote = useCallback(
+    (noteId, extraText) => {
+      persist({
+        ...state,
+        pendingNotes: state.pendingNotes.map((n) =>
+          n.id === noteId ? { ...n, text: `${n.text}\n\n${extraText}` } : n
+        ),
+      })
+    },
+    [state, persist]
+  )
+
   const value = useMemo(
     () => ({
       athletes: state.athletes,
@@ -156,6 +232,7 @@ export function AppDataProvider({ children }) {
       athleteNotes: state.athleteNotes,
       notesByInjury: state.notesByInjury,
       pendingInjuries: state.injuries.filter((inj) => inj.status === 'pending_review'),
+      pendingNotes: state.pendingNotes.filter((n) => n.status === 'pending_review'),
       getAthleteById: (id) => state.athletes.find((a) => a.id === id),
       getInjuriesByAthlete: (athleteId) => state.injuries.filter((inj) => inj.athleteId === athleteId),
       getInjuryById: (id) => state.injuries.find((inj) => inj.id === id),
@@ -164,8 +241,22 @@ export function AppDataProvider({ children }) {
       acceptInjury,
       rejectInjury,
       addNoteToInjury,
+      createNoteFromParsed,
+      acceptNote,
+      rejectNote,
+      appendToPendingNote,
     }),
-    [state, createInjuryFromParsed, acceptInjury, rejectInjury, addNoteToInjury]
+    [
+      state,
+      createInjuryFromParsed,
+      acceptInjury,
+      rejectInjury,
+      addNoteToInjury,
+      createNoteFromParsed,
+      acceptNote,
+      rejectNote,
+      appendToPendingNote,
+    ]
   )
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

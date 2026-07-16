@@ -129,14 +129,32 @@ export default function InjuryOverview() {
                 <Field label="Added by" value={injury.addedBy} />
                 {injury.examinationDate && <Field label="Examination date" value={injury.examinationDate} />}
               </Box>
-              {notes.length > 0 && (
-                <>
-                  <Divider sx={{ my: 2, borderColor: 'var(--divider)' }} />
-                  <Typography variant="body2" sx={{ color: 'var(--grey-100)', mb: 0.5 }}>
-                    Initial note
-                  </Typography>
-                  <Typography variant="body1">{notes[0].text}</Typography>
-                </>
+            </Card>
+
+            <Card title="Notes">
+              {notes.length ? (
+                <Box display="flex" flexDirection="column" gap={2}>
+                  {notes.map((note, idx) => (
+                    <Box key={note.id}>
+                      <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} sx={{ mb: 0.5 }}>
+                        <Typography variant="body1" fontWeight={600}>
+                          {note.title || 'Initial note'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                          {note.author}, {note.date}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                        {note.text}
+                      </Typography>
+                      {idx < notes.length - 1 && <Divider sx={{ mt: 2, borderColor: 'var(--divider)' }} />}
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                  No notes recorded yet.
+                </Typography>
               )}
             </Card>
 

@@ -11,6 +11,9 @@ import AiDictationInput from './AiDictationInput'
 import AiConfirmationSummary from './AiConfirmationSummary'
 import { parseInjuryDictation } from '../../ai/parseInjuryDictation'
 import { applyParsedInjury } from '../../ai/applyParsedInjury'
+import { parseNoteDictation } from '../../ai/parseNoteDictation'
+import { applyParsedNote } from '../../ai/applyParsedNote'
+import { detectDictationIntent } from '../../ai/detectDictationIntent'
 import { useAppData } from '../../state/AppDataContext'
 
 const PANEL_WIDTH = 420
@@ -19,12 +22,15 @@ export default function AiPanel({ open, onClose }) {
   const [text, setText] = useState('')
   const [mode, setMode] = useState('compose') // 'compose' | 'confirm' | 'addDetail'
   const [result, setResult] = useState(null)
-  const { athletes, createInjuryFromParsed, addNoteToInjury } = useAppData()
+  const [resultType, setResultType] = useState(null) // 'injury' | 'note'
+  const { athletes, injuries, createInjuryFromParsed, addNoteToInjury, createNoteFromParsed, appendToPendingNote } =
+    useAppData()
   const navigate = useNavigate()
 
   const resetToCompose = () => {
     setText('')
     setResult(null)
+    setResultType(null)
     setMode('compose')
   }
 
@@ -37,19 +43,36 @@ export default function AiPanel({ open, onClose }) {
     if (!text.trim()) return
 
     if (mode === 'addDetail' && result?.ok) {
-      addNoteToInjury(result.injury.id, text.trim())
-      setResult({
-        ...result,
-        summaryLines: [...result.summaryLines, `Added an additional note: "${text.trim()}"`],
-      })
+      if (resultType === 'note') {
+        appendToPendingNote(result.note.id, text.trim())
+        setResult({
+          ...result,
+          summaryLines: [...result.summaryLines, `Added more detail to the note: "${text.trim()}"`],
+        })
+      } else {
+        addNoteToInjury(result.injury.id, text.trim())
+        setResult({
+          ...result,
+          summaryLines: [...result.summaryLines, `Added an additional note: "${text.trim()}"`],
+        })
+      }
       setText('')
       setMode('confirm')
       return
     }
 
-    const parsed = parseInjuryDictation(text, { athletes })
-    const outcome = applyParsedInjury(parsed, { createInjuryFromParsed })
-    setResult(outcome)
+    const intent = detectDictationIntent(text)
+    if (intent === 'note') {
+      const parsed = parseNoteDictation(text, { athletes, injuries })
+      const outcome = applyParsedNote(parsed, { createNoteFromParsed })
+      setResult(outcome)
+      setResultType('note')
+    } else {
+      const parsed = parseInjuryDictation(text, { athletes })
+      const outcome = applyParsedInjury(parsed, { createInjuryFromParsed })
+      setResult(outcome)
+      setResultType('injury')
+    }
     setText('')
     setMode('confirm')
   }
@@ -65,6 +88,10 @@ export default function AiPanel({ open, onClose }) {
   const handleGoToQueue = () => {
     handleClose()
     navigate('/medical/review-queue')
+  }
+
+  const handleSelectSuggestion = (suggestion) => {
+    if (suggestion.template) setText(suggestion.template)
   }
 
   return (
@@ -93,7 +120,7 @@ export default function AiPanel({ open, onClose }) {
         <Box flexGrow={1} sx={{ p: 2.5, overflowY: 'auto' }}>
           {mode === 'compose' && (
             <Box display="flex" flexDirection="column" gap={3}>
-              <AiSuggestedActions onSelect={() => {}} />
+              <AiSuggestedActions onSelect={handleSelectSuggestion} />
               <Divider sx={{ borderColor: 'var(--divider)' }} />
               <Box>
                 <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 1 }}>
@@ -103,7 +130,7 @@ export default function AiPanel({ open, onClose }) {
                   value={text}
                   onChange={setText}
                   onSubmit={handleSubmit}
-                  placeholder="e.g. Create a new injury for..."
+                  placeholder="e.g. Create a new injury for... or Update note for..."
                 />
               </Box>
             </Box>
@@ -112,7 +139,7 @@ export default function AiPanel({ open, onClose }) {
           {mode === 'addDetail' && (
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="body1" sx={{ color: 'var(--grey-100)' }}>
-                Add more information for this injury.
+                Add more information for this {resultType === 'note' ? 'note' : 'injury'}.
               </Typography>
               <AiDictationInput
                 value={text}
@@ -127,6 +154,7 @@ export default function AiPanel({ open, onClose }) {
           {mode === 'confirm' && result && (
             <AiConfirmationSummary
               result={result}
+              resultType={resultType}
               onAddMoreDetail={handleAddMoreDetail}
               onLogAnother={handleLogAnother}
               onGoToQueue={handleGoToQueue}

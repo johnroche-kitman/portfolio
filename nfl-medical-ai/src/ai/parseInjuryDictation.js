@@ -1,4 +1,5 @@
 import { findAthleteByName } from '../data/athletes'
+import { extractAthleteNameMention, todayLabel } from './textHelpers'
 
 const BODY_PARTS = {
   ankle: { area: 'Ankle/foot', landmarks: ['atfl', 'cfl', 'deltoid ligament', 'syndesmosis'] },
@@ -91,23 +92,13 @@ function findSymptoms(text) {
   return SYMPTOMS.filter((s) => s.pattern.test(text)).map((s) => s.label)
 }
 
-function findAthleteName(text) {
-  const match = text.match(/for ([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/)
-  return match ? match[1] : null
-}
-
 function findRemovedFromParticipation(text) {
   return /removed from (the )?(practice|game|session|field)/i.test(text)
 }
 
-function todayLabel() {
-  const now = new Date()
-  return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 export function parseInjuryDictation(text, { athletes } = { athletes: [] }) {
   const trimmed = (text || '').trim()
-  const athleteName = findAthleteName(trimmed)
+  const athleteName = extractAthleteNameMention(trimmed)
   const athlete = findAthleteByName(athleteName, athletes)
 
   const bodyPart = findBodyPart(trimmed)

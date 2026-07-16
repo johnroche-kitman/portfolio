@@ -11,10 +11,11 @@ import Icon from '../components/Icon'
 import { useAppData } from '../state/AppDataContext'
 
 export default function ReviewQueue() {
-  const { pendingInjuries, getAthleteById, acceptInjury, rejectInjury } = useAppData()
+  const { pendingInjuries, pendingNotes, getAthleteById, getInjuryById, acceptInjury, rejectInjury, acceptNote, rejectNote } =
+    useAppData()
   const navigate = useNavigate()
 
-  const columns = [
+  const injuryColumns = [
     {
       key: 'player',
       label: 'Player',
@@ -76,7 +77,7 @@ export default function ReviewQueue() {
       key: 'status',
       label: 'Status',
       width: '12%',
-      render: (injury) => <Lozenge label="Pending review" tone="warning" />,
+      render: () => <Lozenge label="Pending review" tone="warning" />,
     },
     {
       key: 'actions',
@@ -106,6 +107,101 @@ export default function ReviewQueue() {
     },
   ]
 
+  const noteColumns = [
+    {
+      key: 'player',
+      label: 'Player',
+      width: '14%',
+      render: (note) => {
+        const athlete = getAthleteById(note.athleteId)
+        return (
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <PlayerAvatar athlete={athlete} size={36} />
+            <Box>
+              <Typography variant="body1" fontWeight={600}>
+                {athlete?.name || 'Unknown athlete'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                {athlete?.position}
+              </Typography>
+            </Box>
+          </Box>
+        )
+      },
+    },
+    {
+      key: 'injury',
+      label: 'Injury',
+      width: '16%',
+      render: (note) => {
+        const injury = getInjuryById(note.injuryId)
+        return (
+          <Typography variant="body1" fontWeight={600}>
+            {injury ? injury.pathology || injury.label : 'Unknown injury'}
+          </Typography>
+        )
+      },
+    },
+    {
+      key: 'source',
+      label: 'Created by',
+      width: '12%',
+      render: (note) => (
+        <Box display="flex" alignItems="center" gap={0.75}>
+          <Icon name="ai" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
+          <Typography variant="body2">{note.addedBy}</Typography>
+        </Box>
+      ),
+    },
+    {
+      key: 'summary',
+      label: 'Note',
+      width: '20%',
+      render: (note) => (
+        <Box>
+          <Typography variant="body1" fontWeight={600}>
+            {note.title}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+            {note.text}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '12%',
+      render: () => <Lozenge label="Pending review" tone="warning" />,
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: '26%',
+      render: (note) => (
+        <Box display="flex" gap={1}>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation()
+              acceptNote(note.id)
+            }}
+          >
+            Accept
+          </Button>
+          <Button
+            tone="danger"
+            onClick={(e) => {
+              e.stopPropagation()
+              rejectNote(note.id)
+            }}
+          >
+            Reject
+          </Button>
+        </Box>
+      ),
+    },
+  ]
+
   return (
     <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -123,16 +219,32 @@ export default function ReviewQueue() {
         </Tooltip>
       </Box>
       <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 3 }}>
-        Injuries staged by the AI assistant. Review each one and accept to add it to the medical record.
+        Injuries and notes staged by the AI assistant. Review each one and accept to add it to the medical record.
       </Typography>
 
-      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
+      <Typography variant="h2" sx={{ mb: 1.5 }}>
+        Injuries pending review
+      </Typography>
+      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)', mb: 4 }}>
         <DataTable
-          columns={columns}
+          columns={injuryColumns}
           rows={pendingInjuries}
           getRowKey={(row) => row.id}
           onRowClick={(row) => navigate(`/medical/injury/${row.id}`)}
-          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury."
+          emptyMessage="No injuries waiting for review. Use the AI assistant to log a new injury."
+        />
+      </Box>
+
+      <Typography variant="h2" sx={{ mb: 1.5 }}>
+        Notes pending review
+      </Typography>
+      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
+        <DataTable
+          columns={noteColumns}
+          rows={pendingNotes}
+          getRowKey={(row) => row.id}
+          onRowClick={(row) => navigate(`/medical/injury/${row.injuryId}`)}
+          emptyMessage="No notes waiting for review. Use the AI assistant to dictate a note update."
         />
       </Box>
     </Box>
