@@ -15,105 +15,18 @@ export default function ReviewQueue() {
     useAppData()
   const navigate = useNavigate()
 
-  const injuryColumns = [
-    {
-      key: 'player',
-      label: 'Player',
-      width: '14%',
-      render: (injury) => {
-        const athlete = getAthleteById(injury.athleteId)
-        return (
-          <Box display="flex" alignItems="center" gap={1.5}>
-            <PlayerAvatar athlete={athlete} size={36} />
-            <Box>
-              <Typography variant="body1" fontWeight={600}>
-                {athlete?.name || 'Unknown athlete'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-                {athlete?.position}
-              </Typography>
-            </Box>
-          </Box>
-        )
-      },
-    },
-    {
-      key: 'injury',
-      label: 'Injury',
-      width: '16%',
-      render: (injury) => (
-        <Box>
-          <Typography variant="body1" fontWeight={600}>
-            {injury.pathology || injury.label}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-            {injury.date}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      key: 'source',
-      label: 'Created by',
-      width: '12%',
-      render: (injury) => (
-        <Box display="flex" alignItems="center" gap={0.75}>
-          <Icon name="ai" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="body2">{injury.addedBy}</Typography>
-        </Box>
-      ),
-    },
-    {
-      key: 'summary',
-      label: 'AI summary',
-      width: '20%',
-      render: (injury) => (
-        <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-          {injury.rawDictation}
-        </Typography>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      width: '12%',
-      render: () => <Lozenge label="Pending review" tone="warning" />,
-    },
-    {
-      key: 'actions',
-      label: '',
-      width: '26%',
-      render: (injury) => (
-        <Box display="flex" gap={1}>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation()
-              acceptInjury(injury.id)
-            }}
-          >
-            Accept
-          </Button>
-          <Button
-            tone="danger"
-            onClick={(e) => {
-              e.stopPropagation()
-              rejectInjury(injury.id)
-            }}
-          >
-            Reject
-          </Button>
-        </Box>
-      ),
-    },
+  const rows = [
+    ...pendingInjuries.map((injury) => ({ ...injury, type: 'injury' })),
+    ...pendingNotes.map((note) => ({ ...note, type: 'note' })),
   ]
 
-  const noteColumns = [
+  const columns = [
     {
       key: 'player',
       label: 'Player',
-      width: '14%',
-      render: (note) => {
-        const athlete = getAthleteById(note.athleteId)
+      width: '13%',
+      render: (row) => {
+        const athlete = getAthleteById(row.athleteId)
         return (
           <Box display="flex" alignItems="center" gap={1.5}>
             <PlayerAvatar athlete={athlete} size={36} />
@@ -130,60 +43,89 @@ export default function ReviewQueue() {
       },
     },
     {
+      key: 'action',
+      label: 'Action',
+      width: '9%',
+      render: (row) => (
+        <Box display="flex" alignItems="center" gap={0.75}>
+          <Icon name={row.type === 'note' ? 'factCheck' : 'noteAdd'} fontSize="small" sx={{ color: 'var(--color-primary)' }} />
+          <Typography variant="body2">{row.type === 'note' ? 'Note' : 'Injury'}</Typography>
+        </Box>
+      ),
+    },
+    {
       key: 'injury',
       label: 'Injury',
-      width: '16%',
-      render: (note) => {
-        const injury = getInjuryById(note.injuryId)
+      width: '14%',
+      render: (row) => {
+        if (row.type === 'note') {
+          const injury = getInjuryById(row.injuryId)
+          return (
+            <Typography variant="body1" fontWeight={600}>
+              {injury ? injury.pathology || injury.label : 'Unknown injury'}
+            </Typography>
+          )
+        }
         return (
-          <Typography variant="body1" fontWeight={600}>
-            {injury ? injury.pathology || injury.label : 'Unknown injury'}
-          </Typography>
+          <Box>
+            <Typography variant="body1" fontWeight={600}>
+              {row.pathology || row.label}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+              {row.date}
+            </Typography>
+          </Box>
         )
       },
     },
     {
       key: 'source',
       label: 'Created by',
-      width: '12%',
-      render: (note) => (
+      width: '10%',
+      render: (row) => (
         <Box display="flex" alignItems="center" gap={0.75}>
           <Icon name="ai" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="body2">{note.addedBy}</Typography>
+          <Typography variant="body2">{row.addedBy}</Typography>
         </Box>
       ),
     },
     {
       key: 'summary',
-      label: 'Note',
-      width: '20%',
-      render: (note) => (
-        <Box>
-          <Typography variant="body1" fontWeight={600}>
-            {note.title}
-          </Typography>
+      label: 'Summary',
+      width: '19%',
+      render: (row) =>
+        row.type === 'note' ? (
+          <Box>
+            <Typography variant="body1" fontWeight={600}>
+              {row.title}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+              {row.text}
+            </Typography>
+          </Box>
+        ) : (
           <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-            {note.text}
+            {row.rawDictation}
           </Typography>
-        </Box>
-      ),
+        ),
     },
     {
       key: 'status',
       label: 'Status',
-      width: '12%',
+      width: '13%',
       render: () => <Lozenge label="Pending review" tone="warning" />,
     },
     {
       key: 'actions',
       label: '',
-      width: '26%',
-      render: (note) => (
+      width: '22%',
+      render: (row) => (
         <Box display="flex" gap={1}>
           <Button
             onClick={(e) => {
               e.stopPropagation()
-              acceptNote(note.id)
+              if (row.type === 'note') acceptNote(row.id)
+              else acceptInjury(row.id)
             }}
           >
             Accept
@@ -192,7 +134,8 @@ export default function ReviewQueue() {
             tone="danger"
             onClick={(e) => {
               e.stopPropagation()
-              rejectNote(note.id)
+              if (row.type === 'note') rejectNote(row.id)
+              else rejectInjury(row.id)
             }}
           >
             Reject
@@ -233,29 +176,13 @@ export default function ReviewQueue() {
         Injuries and notes staged by the AI assistant. Review each one and accept to add it to the medical record.
       </Typography>
 
-      <Typography variant="h2" sx={{ mb: 1.5 }}>
-        Injuries pending review
-      </Typography>
-      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)', mb: 4 }}>
-        <DataTable
-          columns={injuryColumns}
-          rows={pendingInjuries}
-          getRowKey={(row) => row.id}
-          onRowClick={(row) => navigate(`/medical/injury/${row.id}`)}
-          emptyMessage="No injuries waiting for review. Use the AI assistant to log a new injury."
-        />
-      </Box>
-
-      <Typography variant="h2" sx={{ mb: 1.5 }}>
-        Notes pending review
-      </Typography>
       <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
         <DataTable
-          columns={noteColumns}
-          rows={pendingNotes}
-          getRowKey={(row) => row.id}
-          onRowClick={(row) => navigate(`/medical/injury/${row.injuryId}`)}
-          emptyMessage="No notes waiting for review. Use the AI assistant to dictate a note update."
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => `${row.type}-${row.id}`}
+          onRowClick={(row) => navigate(`/medical/injury/${row.type === 'note' ? row.injuryId : row.id}`)}
+          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury or note."
         />
       </Box>
     </Box>
