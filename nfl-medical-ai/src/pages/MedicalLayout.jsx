@@ -10,7 +10,7 @@ export default function MedicalLayout() {
   const [aiOpen, setAiOpen] = useState(false)
 
   return (
-    <Box display="flex" sx={{ backgroundColor: 'var(--background)', minHeight: '100vh' }}>
+    <Box display="flex" sx={{ backgroundColor: 'var(--white)', minHeight: '100vh' }}>
       <MainNavigation active="medical" />
       <Box flexGrow={1} display="flex" flexDirection="column" minWidth={0}>
         <TopStrip breadcrumb="Medical" />

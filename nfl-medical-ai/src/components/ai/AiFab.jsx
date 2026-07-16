@@ -12,11 +12,11 @@ export default function AiFab({ onClick }) {
         right: 32,
         width: 60,
         height: 60,
-        backgroundColor: 'var(--color-primary)',
+        backgroundColor: '#3028FF',
         color: '#ffffff',
-        boxShadow: '0 12px 24px rgba(23, 43, 77, 0.35)',
+        boxShadow: '0 12px 24px rgba(48, 40, 255, 0.4)',
         zIndex: 1300,
-        '&:hover': { backgroundColor: 'var(--color-primary-dark)' },
+        '&:hover': { backgroundColor: '#2620d1' },
       }}
     >
       <Icon name="ai" />

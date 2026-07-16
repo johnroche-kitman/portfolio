@@ -16,6 +16,12 @@ export default function PageTabs({ tabs, value, onChange }) {
           fontSize: 14,
           fontWeight: 600,
           color: 'var(--grey-100)',
+          opacity: 1,
+        },
+        '& .MuiTab-root.Mui-disabled': {
+          color: 'var(--grey-100)',
+          opacity: 1,
+          cursor: 'default',
         },
         '& .Mui-selected': {
           color: 'var(--color-primary) !important',

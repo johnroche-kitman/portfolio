@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { key: 'clipboard', name: 'clipboard', label: 'Reports' },
   { key: 'groups', name: 'groups', label: 'Roster' },
   { key: 'calendar', name: 'calendar', label: 'Schedule' },
+  { key: 'settings', name: 'settings', label: 'Settings' },
 ]
 
 export default function MainNavigation({ active = 'medical' }) {
@@ -34,7 +35,7 @@ export default function MainNavigation({ active = 'medical' }) {
           component="img"
           src={`${import.meta.env.BASE_URL}nfl-shield.svg`}
           alt="NFL"
-          sx={{ width: 30, height: 30, display: 'block' }}
+          sx={{ width: 30, height: 40, display: 'block' }}
         />
       </Box>
 
@@ -49,13 +50,13 @@ export default function MainNavigation({ active = 'medical' }) {
                 height: 40,
                 mx: '10px',
                 borderRadius: '8px',
-                color: item.key === active ? 'var(--color-primary-dark)' : '#ffffffb3',
+                color: item.key === active ? 'var(--color-primary-dark)' : '#ffffffcc',
                 backgroundColor: item.key === active ? '#ffffff' : 'transparent',
                 '&:hover': {
                   backgroundColor: item.key === active ? '#ffffff' : '#ffffff1a',
                 },
                 '&.Mui-disabled': {
-                  color: item.key === active ? 'var(--color-primary-dark)' : '#ffffff4d',
+                  color: item.key === active ? 'var(--color-primary-dark)' : '#ffffffcc',
                 },
               }}
             >

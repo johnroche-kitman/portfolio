@@ -15,6 +15,13 @@ import Button from '../components/Button'
 import Icon from '../components/Icon'
 import { useAppData } from '../state/AppDataContext'
 
+const FILTER_CONTROL_SX = {
+  backgroundColor: 'var(--neutral-200)',
+  borderRadius: '6px',
+  '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+  '& .MuiOutlinedInput-root': { backgroundColor: 'var(--neutral-200)', borderRadius: '6px' },
+}
+
 const MEDICAL_TABS = [
   { value: 'roster', label: 'Roster' },
   { value: 'notes', label: 'Notes', disabled: true },
@@ -206,7 +213,7 @@ export default function Roster() {
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 240, backgroundColor: 'var(--white)' }}
+          sx={{ width: 240, ...FILTER_CONTROL_SX }}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -215,11 +222,7 @@ export default function Roster() {
             ),
           }}
         />
-        <Select
-          size="small"
-          value="active"
-          sx={{ width: 160, backgroundColor: 'var(--white)' }}
-        >
+        <Select size="small" value="active" sx={{ width: 160, ...FILTER_CONTROL_SX }}>
           <MenuItem value="active">Active roster</MenuItem>
           <MenuItem value="practice-squad">Practice squad</MenuItem>
         </Select>
@@ -227,7 +230,7 @@ export default function Roster() {
           size="small"
           value={positionFilter}
           onChange={(e) => setPositionFilter(e.target.value)}
-          sx={{ width: 180, backgroundColor: 'var(--white)' }}
+          sx={{ width: 180, ...FILTER_CONTROL_SX }}
         >
           {positions.map((pos) => (
             <MenuItem key={pos} value={pos}>
@@ -239,7 +242,7 @@ export default function Roster() {
           size="small"
           value={injuredFilter}
           onChange={(e) => setInjuredFilter(e.target.value)}
-          sx={{ width: 160, backgroundColor: 'var(--white)' }}
+          sx={{ width: 160, ...FILTER_CONTROL_SX }}
         >
           <MenuItem value="all">Injured</MenuItem>
           <MenuItem value="Out">Out</MenuItem>

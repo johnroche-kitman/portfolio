@@ -122,6 +122,18 @@ export function AppDataProvider({ children }) {
     [state, persist]
   )
 
+  const rejectInjury = useCallback(
+    (injuryId) => {
+      const { [injuryId]: _removed, ...restNotes } = state.notesByInjury
+      persist({
+        ...state,
+        injuries: state.injuries.filter((inj) => inj.id !== injuryId),
+        notesByInjury: restNotes,
+      })
+    },
+    [state, persist]
+  )
+
   const addNoteToInjury = useCallback(
     (injuryId, text) => {
       const noteId = `note-${injuryId}-${Date.now()}`
@@ -150,9 +162,10 @@ export function AppDataProvider({ children }) {
       outstandingBackgroundFields,
       createInjuryFromParsed,
       acceptInjury,
+      rejectInjury,
       addNoteToInjury,
     }),
-    [state, createInjuryFromParsed, acceptInjury, addNoteToInjury]
+    [state, createInjuryFromParsed, acceptInjury, rejectInjury, addNoteToInjury]
   )
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

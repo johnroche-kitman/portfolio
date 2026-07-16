@@ -39,7 +39,8 @@ function Field({ label, value, emphasizeMissing }) {
 export default function InjuryOverview() {
   const { injuryId } = useParams()
   const navigate = useNavigate()
-  const { getInjuryById, getAthleteById, notesByInjury, acceptInjury, outstandingBackgroundFields } = useAppData()
+  const { getInjuryById, getAthleteById, notesByInjury, acceptInjury, rejectInjury, outstandingBackgroundFields } =
+    useAppData()
 
   const injury = getInjuryById(injuryId)
 
@@ -104,7 +105,18 @@ export default function InjuryOverview() {
               Created by the AI assistant from a dictated note. Review the details below before accepting.
             </Typography>
           </Box>
-          <Button onClick={() => acceptInjury(injury.id)}>Accept injury</Button>
+          <Box display="flex" gap={1}>
+            <Button onClick={() => acceptInjury(injury.id)}>Accept injury</Button>
+            <Button
+              tone="danger"
+              onClick={() => {
+                rejectInjury(injury.id)
+                navigate('/medical/review-queue')
+              }}
+            >
+              Reject
+            </Button>
+          </Box>
         </Box>
       )}
 
