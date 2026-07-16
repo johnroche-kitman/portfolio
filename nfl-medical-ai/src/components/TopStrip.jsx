@@ -14,6 +14,10 @@ export default function TopStrip({ breadcrumb = 'Medical' }) {
         justifyContent: 'space-between',
         borderBottom: '1px solid var(--divider)',
         backgroundColor: 'var(--white)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 20,
+        flexShrink: 0,
       }}
     >
       <Typography variant="body1" sx={{ color: 'var(--grey-100)' }}>

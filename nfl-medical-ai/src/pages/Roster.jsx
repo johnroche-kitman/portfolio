@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
@@ -24,6 +24,8 @@ const FILTER_CONTROL_SX = {
   '& .MuiOutlinedInput-root': { backgroundColor: 'var(--neutral-200)', borderRadius: '6px' },
 }
 
+const TOP_STRIP_HEIGHT = 54
+
 const MEDICAL_TABS = [
   { value: 'roster', label: 'Roster' },
   { value: 'notes', label: 'Notes', disabled: true },
@@ -42,6 +44,18 @@ export default function Roster() {
   const [positionFilter, setPositionFilter] = useState('all')
   const [injuredFilter, setInjuredFilter] = useState('all')
   const [downloadAnchor, setDownloadAnchor] = useState(null)
+  const headerRef = useRef(null)
+  const [headerHeight, setHeaderHeight] = useState(0)
+
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return undefined
+    const observer = new ResizeObserver((entries) => {
+      setHeaderHeight(entries[0].target.getBoundingClientRect().height)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const positions = useMemo(() => ['all', ...new Set(athletes.map((a) => a.position))], [athletes])
 
@@ -185,84 +199,95 @@ export default function Roster() {
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Typography variant="h1">Medical</Typography>
-        <Tooltip title="Go to review queue">
-          <IconButton
-            onClick={() => navigate('/medical/review-queue')}
-            sx={{
-              backgroundColor: 'var(--neutral-200)',
-              color: 'var(--color-primary)',
-              '&:hover': { backgroundColor: 'var(--neutral-300)' },
-            }}
-          >
-            <Icon name="checklist" fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      <PageTabs tabs={MEDICAL_TABS} value="roster" onChange={() => {}} />
-
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 3, mb: 2 }}>
-        <Typography variant="h2">Roster</Typography>
-        <Box display="flex" gap={1.5}>
-          <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
-          <Button
-            tone="secondary"
-            endIcon={<Icon name="expandMore" fontSize="small" />}
-            onClick={(e) => setDownloadAnchor(e.currentTarget)}
-          >
-            Download
-          </Button>
-          <Menu anchorEl={downloadAnchor} open={!!downloadAnchor} onClose={() => setDownloadAnchor(null)}>
-            <MenuItem onClick={() => setDownloadAnchor(null)}>Export as CSV</MenuItem>
-            <MenuItem onClick={() => setDownloadAnchor(null)}>Export as PDF</MenuItem>
-          </Menu>
+      <Box
+        ref={headerRef}
+        sx={{
+          position: 'sticky',
+          top: TOP_STRIP_HEIGHT,
+          zIndex: 15,
+          backgroundColor: 'var(--white)',
+          pb: 1,
+        }}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Typography variant="h1">Medical</Typography>
+          <Tooltip title="Go to review queue">
+            <IconButton
+              onClick={() => navigate('/medical/review-queue')}
+              sx={{
+                backgroundColor: 'var(--neutral-200)',
+                color: 'var(--color-primary)',
+                '&:hover': { backgroundColor: 'var(--neutral-300)' },
+              }}
+            >
+              <Icon name="checklist" fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
-      </Box>
 
-      <Box display="flex" gap={1.5} sx={{ mb: 3 }}>
-        <TextField
-          size="small"
-          placeholder="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ width: 240, ...FILTER_CONTROL_SX }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <Icon name="search" fontSize="small" sx={{ color: 'var(--grey-100)' }} />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Select size="small" value="active" sx={{ width: 160, ...FILTER_CONTROL_SX }}>
-          <MenuItem value="active">Active roster</MenuItem>
-          <MenuItem value="practice-squad">Practice squad</MenuItem>
-        </Select>
-        <Select
-          size="small"
-          value={positionFilter}
-          onChange={(e) => setPositionFilter(e.target.value)}
-          sx={{ width: 180, ...FILTER_CONTROL_SX }}
-        >
-          {positions.map((pos) => (
-            <MenuItem key={pos} value={pos}>
-              {pos === 'all' ? 'Roster position' : pos}
-            </MenuItem>
-          ))}
-        </Select>
-        <Select
-          size="small"
-          value={injuredFilter}
-          onChange={(e) => setInjuredFilter(e.target.value)}
-          sx={{ width: 160, ...FILTER_CONTROL_SX }}
-        >
-          <MenuItem value="all">Injured</MenuItem>
-          <MenuItem value="Out">Out</MenuItem>
-          <MenuItem value="Limited">Limited</MenuItem>
-          <MenuItem value="Available">Available</MenuItem>
-        </Select>
+        <PageTabs tabs={MEDICAL_TABS} value="roster" onChange={() => {}} />
+
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 3, mb: 2 }}>
+          <Typography variant="h2">Roster</Typography>
+          <Box display="flex" gap={1.5}>
+            <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
+            <Button
+              tone="secondary"
+              endIcon={<Icon name="expandMore" fontSize="small" />}
+              onClick={(e) => setDownloadAnchor(e.currentTarget)}
+            >
+              Download
+            </Button>
+            <Menu anchorEl={downloadAnchor} open={!!downloadAnchor} onClose={() => setDownloadAnchor(null)}>
+              <MenuItem onClick={() => setDownloadAnchor(null)}>Export as CSV</MenuItem>
+              <MenuItem onClick={() => setDownloadAnchor(null)}>Export as PDF</MenuItem>
+            </Menu>
+          </Box>
+        </Box>
+
+        <Box display="flex" gap={1.5}>
+          <TextField
+            size="small"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ width: 240, ...FILTER_CONTROL_SX }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Icon name="search" fontSize="small" sx={{ color: 'var(--grey-100)' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Select size="small" value="active" sx={{ width: 160, ...FILTER_CONTROL_SX }}>
+            <MenuItem value="active">Active roster</MenuItem>
+            <MenuItem value="practice-squad">Practice squad</MenuItem>
+          </Select>
+          <Select
+            size="small"
+            value={positionFilter}
+            onChange={(e) => setPositionFilter(e.target.value)}
+            sx={{ width: 180, ...FILTER_CONTROL_SX }}
+          >
+            {positions.map((pos) => (
+              <MenuItem key={pos} value={pos}>
+                {pos === 'all' ? 'Roster position' : pos}
+              </MenuItem>
+            ))}
+          </Select>
+          <Select
+            size="small"
+            value={injuredFilter}
+            onChange={(e) => setInjuredFilter(e.target.value)}
+            sx={{ width: 160, ...FILTER_CONTROL_SX }}
+          >
+            <MenuItem value="all">Injured</MenuItem>
+            <MenuItem value="Out">Out</MenuItem>
+            <MenuItem value="Limited">Limited</MenuItem>
+            <MenuItem value="Available">Available</MenuItem>
+          </Select>
+        </Box>
       </Box>
 
       <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
@@ -271,6 +296,7 @@ export default function Roster() {
           rows={rows}
           getRowKey={(row) => row.id}
           emptyMessage="No athletes match these filters"
+          stickyTop={TOP_STRIP_HEIGHT + headerHeight}
         />
       </Box>
     </Box>

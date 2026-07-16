@@ -8,7 +8,7 @@ import Box from '@mui/material/Box'
 
 // Generic table shell shared by Roster and Review Queue: columns describe headers
 // + a render function, rows are plain data objects.
-export default function DataTable({ columns, rows, getRowKey, onRowClick, emptyMessage }) {
+export default function DataTable({ columns, rows, getRowKey, onRowClick, emptyMessage, stickyTop }) {
   if (!rows.length) {
     return (
       <Box sx={{ py: 6, textAlign: 'center' }}>
@@ -32,6 +32,12 @@ export default function DataTable({ columns, rows, getRowKey, onRowClick, emptyM
                 fontWeight: 600,
                 fontSize: 14,
                 width: col.width,
+                ...(stickyTop !== undefined && {
+                  position: 'sticky',
+                  top: stickyTop,
+                  zIndex: 10,
+                  backgroundColor: 'var(--white)',
+                }),
               }}
             >
               {col.label}
