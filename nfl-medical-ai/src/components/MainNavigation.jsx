@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box'
 import Tooltip from '@mui/material/Tooltip'
+import ButtonBase from '@mui/material/ButtonBase'
 import IconButton from '@mui/material/IconButton'
 import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
@@ -33,37 +34,54 @@ export default function MainNavigation({ active = 'medical' }) {
       <Box sx={{ py: 2 }}>
         <Box
           component="img"
-          src={`${import.meta.env.BASE_URL}nfl-shield.svg`}
+          src={`${import.meta.env.BASE_URL}nfl-logo.png`}
           alt="NFL"
-          sx={{ width: 30, height: 40, display: 'block' }}
+          sx={{ width: 34, height: 34, display: 'block', objectFit: 'contain' }}
         />
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={1} mt={2} flexGrow={1}>
-        {NAV_ITEMS.map((item) => (
-          <Tooltip key={item.key} title={item.label} placement="right">
-            <IconButton
-              onClick={() => item.to && navigate(item.to)}
-              disabled={!item.to}
-              sx={{
-                width: 40,
-                height: 40,
-                mx: '10px',
-                borderRadius: '8px',
-                color: item.key === active ? 'var(--color-primary-dark)' : '#ffffffcc',
-                backgroundColor: item.key === active ? '#ffffff' : 'transparent',
-                '&:hover': {
-                  backgroundColor: item.key === active ? '#ffffff' : '#ffffff1a',
-                },
-                '&.Mui-disabled': {
-                  color: item.key === active ? 'var(--color-primary-dark)' : '#ffffffcc',
-                },
-              }}
-            >
-              <Icon name={item.name} fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        ))}
+      <Box display="flex" flexDirection="column" gap={1} mt={2} flexGrow={1} width="100%">
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.key === active
+          return (
+            <Tooltip key={item.key} title={item.label} placement="right">
+              <span>
+                <ButtonBase
+                  onClick={() => item.to && navigate(item.to)}
+                  disabled={!item.to}
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    height: 32,
+                    justifyContent: 'center',
+                    color: isActive ? '#ffffff' : '#ffffffcc',
+                    backgroundColor: isActive ? 'var(--color-error)' : 'transparent',
+                    '&:hover': {
+                      backgroundColor: isActive ? 'var(--color-error)' : '#ffffff1a',
+                    },
+                    '&.Mui-disabled': {
+                      color: isActive ? '#ffffff' : '#ffffffcc',
+                    },
+                  }}
+                >
+                  {isActive && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 6,
+                        backgroundColor: '#ffffff',
+                      }}
+                    />
+                  )}
+                  <Icon name={item.name} fontSize="small" />
+                </ButtonBase>
+              </span>
+            </Tooltip>
+          )
+        })}
       </Box>
 
       <Box display="flex" flexDirection="column" gap={1} mb={2}>

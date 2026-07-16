@@ -1,5 +1,5 @@
 import SportsFootballOutlinedIcon from '@mui/icons-material/SportsFootballOutlined'
-import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined'
+import LocalHospitalOutlinedIcon from '@mui/icons-material/LocalHospitalOutlined'
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
@@ -31,7 +31,7 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
   football: SportsFootballOutlinedIcon,
-  medical: MedicalServicesOutlinedIcon,
+  medical: LocalHospitalOutlinedIcon,
   chart: BarChartOutlinedIcon,
   clipboard: AssignmentOutlinedIcon,
   groups: GroupsOutlinedIcon,
