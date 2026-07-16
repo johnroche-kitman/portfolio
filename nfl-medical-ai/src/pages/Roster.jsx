@@ -8,6 +8,7 @@ import MenuItem from '@mui/material/MenuItem'
 import Menu from '@mui/material/Menu'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
+import Badge from '@mui/material/Badge'
 import { useNavigate } from 'react-router-dom'
 import PageTabs from '../components/PageTabs'
 import DataTable from '../components/DataTable'
@@ -38,7 +39,7 @@ const MEDICAL_TABS = [
 ]
 
 export default function Roster() {
-  const { athletes, getInjuriesByAthlete, athleteNotes } = useAppData()
+  const { athletes, getInjuriesByAthlete, athleteNotes, pendingInjuries, pendingNotes } = useAppData()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [positionFilter, setPositionFilter] = useState('all')
@@ -46,6 +47,7 @@ export default function Roster() {
   const [downloadAnchor, setDownloadAnchor] = useState(null)
   const headerRef = useRef(null)
   const [headerHeight, setHeaderHeight] = useState(0)
+  const pendingReviewCount = pendingInjuries.length + pendingNotes.length
 
   useLayoutEffect(() => {
     const el = headerRef.current
@@ -212,16 +214,27 @@ export default function Roster() {
         <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
           <Typography variant="h1">Medical</Typography>
           <Tooltip title="Go to review queue">
-            <IconButton
-              onClick={() => navigate('/medical/review-queue')}
+            <Badge
+              badgeContent={pendingReviewCount}
               sx={{
-                backgroundColor: 'var(--neutral-200)',
-                color: 'var(--color-primary)',
-                '&:hover': { backgroundColor: 'var(--neutral-300)' },
+                '& .MuiBadge-badge': {
+                  backgroundColor: 'var(--color-error)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                },
               }}
             >
-              <Icon name="checklist" fontSize="small" />
-            </IconButton>
+              <IconButton
+                onClick={() => navigate('/medical/review-queue')}
+                sx={{
+                  backgroundColor: 'var(--neutral-200)',
+                  color: 'var(--color-primary)',
+                  '&:hover': { backgroundColor: 'var(--neutral-300)' },
+                }}
+              >
+                <Icon name="checklist" fontSize="small" />
+              </IconButton>
+            </Badge>
           </Tooltip>
         </Box>
 
