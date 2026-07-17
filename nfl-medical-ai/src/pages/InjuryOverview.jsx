@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
 import Divider from '@mui/material/Divider'
+import Tooltip from '@mui/material/Tooltip'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageTabs from '../components/PageTabs'
 import Card from '../components/Card'
@@ -80,11 +81,20 @@ export default function InjuryOverview() {
         <Box display="flex" alignItems="center" gap={2}>
           <PlayerAvatar athlete={athlete} size={64} />
           <Typography variant="h1">
-            {athlete?.name || 'Unknown athlete'}
-            {injury.code ? ` - ${injury.code}` : ''} {injury.ciCode || injury.pathology}
+            {athlete?.name || 'Unknown athlete'} &ndash; {injury.code ? `${injury.code} ` : ''}
+            {injury.ciCode || injury.pathology}
           </Typography>
         </Box>
-        <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
+        <Box display="flex" gap={1.5}>
+          <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
+          <Tooltip title="Not available in this prototype">
+            <span>
+              <Button tone="secondary" disabled>
+                Export
+              </Button>
+            </span>
+          </Tooltip>
+        </Box>
       </Box>
 
       <PageTabs tabs={DETAIL_TABS} value={activeTab} onChange={setActiveTab} />
