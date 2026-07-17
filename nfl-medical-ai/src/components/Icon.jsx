@@ -28,6 +28,9 @@ import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import ChecklistRtlOutlinedIcon from '@mui/icons-material/ChecklistRtlOutlined'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -61,6 +64,9 @@ export const ICONS = {
   factCheck: FactCheckOutlinedIcon,
   refresh: RefreshOutlinedIcon,
   checklist: ChecklistRtlOutlinedIcon,
+  lock: LockOutlinedIcon,
+  archive: ArchiveOutlinedIcon,
+  delete: DeleteOutlineOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {

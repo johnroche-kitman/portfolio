@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
@@ -9,12 +10,13 @@ import PlayerAvatar from '../components/PlayerAvatar'
 import Lozenge from '../components/Lozenge'
 import Button from '../components/Button'
 import Icon from '../components/Icon'
+import NotesTab from '../components/injury/NotesTab'
 import { useAppData } from '../state/AppDataContext'
 import { backgroundScreenQuestions } from '../data/backgroundScreenQuestions'
 
 const DETAIL_TABS = [
   { value: 'overview', label: 'Injury overview' },
-  { value: 'notes', label: 'Notes', disabled: true },
+  { value: 'notes', label: 'Notes' },
   { value: 'diagnostics', label: 'Diagnostics', disabled: true },
 ]
 
@@ -39,8 +41,8 @@ function Field({ label, value, emphasizeMissing }) {
 export default function InjuryOverview() {
   const { injuryId } = useParams()
   const navigate = useNavigate()
-  const { getInjuryById, getAthleteById, notesByInjury, acceptInjury, rejectInjury, outstandingBackgroundFields } =
-    useAppData()
+  const [activeTab, setActiveTab] = useState('overview')
+  const { getInjuryById, getAthleteById, acceptInjury, rejectInjury, outstandingBackgroundFields } = useAppData()
 
   const injury = getInjuryById(injuryId)
 
@@ -56,7 +58,6 @@ export default function InjuryOverview() {
   }
 
   const athlete = getAthleteById(injury.athleteId)
-  const notes = notesByInjury[injury.id] || []
   const outstanding = outstandingBackgroundFields(injury)
   const isPending = injury.status === 'pending_review'
 
@@ -84,7 +85,7 @@ export default function InjuryOverview() {
         <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
       </Box>
 
-      <PageTabs tabs={DETAIL_TABS} value="overview" onChange={() => {}} />
+      <PageTabs tabs={DETAIL_TABS} value={activeTab} onChange={setActiveTab} />
 
       {isPending && (
         <Box
@@ -120,6 +121,9 @@ export default function InjuryOverview() {
         </Box>
       )}
 
+      {activeTab === 'notes' && <NotesTab injury={injury} athlete={athlete} />}
+
+      {activeTab === 'overview' && (
       <Grid container spacing={3} sx={{ mt: 0.5 }}>
         <Grid item xs={12} md={8}>
           <Box display="flex" flexDirection="column" gap={3}>
@@ -129,33 +133,6 @@ export default function InjuryOverview() {
                 <Field label="Added by" value={injury.addedBy} />
                 {injury.examinationDate && <Field label="Examination date" value={injury.examinationDate} />}
               </Box>
-            </Card>
-
-            <Card title="Notes">
-              {notes.length ? (
-                <Box display="flex" flexDirection="column" gap={2}>
-                  {notes.map((note, idx) => (
-                    <Box key={note.id}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} sx={{ mb: 0.5 }}>
-                        <Typography variant="body1" fontWeight={600}>
-                          {note.title || 'Initial note'}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-                          {note.author}, {note.date}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-                        {note.text}
-                      </Typography>
-                      {idx < notes.length - 1 && <Divider sx={{ mt: 2, borderColor: 'var(--divider)' }} />}
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-                  No notes recorded yet.
-                </Typography>
-              )}
             </Card>
 
             <Card title="Primary CI code" action={<Button tone="secondary">Edit</Button>}>
@@ -329,6 +306,7 @@ export default function InjuryOverview() {
           </Box>
         </Grid>
       </Grid>
+      )}
     </Box>
   )
 }

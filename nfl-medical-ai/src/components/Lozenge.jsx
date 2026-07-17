@@ -5,6 +5,8 @@ const TONE_COLORS = {
   warning: { backgroundColor: '#fff4dc', color: '#7a5300' },
   success: { backgroundColor: '#e5f4ea', color: 'var(--color-success)' },
   neutral: { backgroundColor: 'var(--neutral-200)', color: 'var(--color-primary)' },
+  info: { backgroundColor: '#e3edfb', color: '#1c5cab' },
+  dark: { backgroundColor: 'var(--color-primary-dark)', color: '#ffffff' },
 }
 
 const STATUS_TONE = {

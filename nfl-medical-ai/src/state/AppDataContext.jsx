@@ -98,6 +98,9 @@ export function AppDataProvider({ children }) {
         id: noteId,
         author: 'AI assistant',
         date: today,
+        title: 'Initial note',
+        noteType: 'Initial note',
+        isPrivate: false,
         text: parsed.noteText,
       }
 
@@ -141,7 +144,15 @@ export function AppDataProvider({ children }) {
   const addNoteToInjury = useCallback(
     (injuryId, text) => {
       const noteId = `note-${injuryId}-${Date.now()}`
-      const note = { id: noteId, author: 'AI assistant', date: todayLabel(), text }
+      const note = {
+        id: noteId,
+        author: 'AI assistant',
+        date: todayLabel(),
+        title: 'Additional note',
+        noteType: 'Additional note',
+        isPrivate: false,
+        text,
+      }
       persist({
         ...state,
         notesByInjury: {
@@ -188,6 +199,8 @@ export function AppDataProvider({ children }) {
         author: note.addedBy,
         date: note.addedOn,
         title: note.title,
+        noteType: 'Progress note',
+        isPrivate: false,
         text: note.text,
       }
 
@@ -225,6 +238,42 @@ export function AppDataProvider({ children }) {
     [state, persist]
   )
 
+  const addManualNote = useCallback(
+    (injuryId, { title, noteType, text, isPrivate }) => {
+      const noteId = `note-${injuryId}-${Date.now()}`
+      const note = {
+        id: noteId,
+        author: 'You',
+        date: todayLabel(),
+        title: title || 'Note',
+        noteType: noteType || 'General note',
+        isPrivate: !!isPrivate,
+        text,
+      }
+      persist({
+        ...state,
+        notesByInjury: {
+          ...state.notesByInjury,
+          [injuryId]: [...(state.notesByInjury[injuryId] || []), note],
+        },
+      })
+    },
+    [state, persist]
+  )
+
+  const deleteNoteFromInjury = useCallback(
+    (injuryId, noteId) => {
+      persist({
+        ...state,
+        notesByInjury: {
+          ...state.notesByInjury,
+          [injuryId]: (state.notesByInjury[injuryId] || []).filter((n) => n.id !== noteId),
+        },
+      })
+    },
+    [state, persist]
+  )
+
   const value = useMemo(
     () => ({
       athletes: state.athletes,
@@ -245,6 +294,8 @@ export function AppDataProvider({ children }) {
       acceptNote,
       rejectNote,
       appendToPendingNote,
+      addManualNote,
+      deleteNoteFromInjury,
     }),
     [
       state,
@@ -256,6 +307,8 @@ export function AppDataProvider({ children }) {
       acceptNote,
       rejectNote,
       appendToPendingNote,
+      addManualNote,
+      deleteNoteFromInjury,
     ]
   )
 
