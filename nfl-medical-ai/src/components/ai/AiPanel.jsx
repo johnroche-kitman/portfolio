@@ -30,6 +30,28 @@ const ANOTHER_LABEL_BY_TYPE = {
   rehab: 'Add another rehab for someone else',
 }
 
+// Clicking a popular-action suggestion asks a conversational follow-up
+// instead of prefilling the dictation box — the reply is parsed the same
+// way a fresh dictation of that type would be.
+const SUGGESTION_FOLLOWUPS = {
+  'log-injury': {
+    kind: 'awaiting-details-for-injury',
+    question: 'Sure — who is the injury for, and what type of injury is it?',
+  },
+  'add-note': {
+    kind: 'awaiting-details-for-note',
+    question: 'Sure — who is the note for, and which injury does it relate to?',
+  },
+  'create-rehab': {
+    kind: 'awaiting-details-for-rehab',
+    question: 'Sure — who is this rehab program for, which injury does it relate to, and what exercises would you like to include?',
+  },
+  'injury-summary': {
+    kind: 'awaiting-details-for-summary',
+    question: 'Sure — who would you like an injury summary for?',
+  },
+}
+
 function injuryOption(inj) {
   return `${inj.date} — ${inj.pathology || inj.label}`
 }
@@ -151,6 +173,18 @@ export default function AiPanel({ open, onClose }) {
     })
   }
 
+  function proceedInjury(parsed) {
+    if (!parsed.athleteId) {
+      setPendingAction({ kind: 'awaiting-athlete-for-injury', parsed })
+      const known = describeParsedInjury(parsed)
+      pushMessage('assistant', {
+        text: `I can log ${known ? `${known}, ` : 'a new injury, '}but I need to know which athlete it's for. Who is this for?`,
+      })
+      return
+    }
+    finalizeInjury(parsed)
+  }
+
   function proceedNote(parsed) {
     if (!parsed.athleteId) {
       setPendingAction({ kind: 'awaiting-athlete-for-note', parsed })
@@ -221,6 +255,26 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function processInput(text) {
+    if (pendingAction?.kind === 'awaiting-details-for-injury') {
+      proceedInjury(parseInjuryDictation(text, { athletes }))
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-details-for-note') {
+      proceedNote(parseNoteDictation(text, { athletes, injuries }))
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-details-for-rehab') {
+      proceedRehab(parseRehabDictation(text, { athletes, injuries }))
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-details-for-summary') {
+      proceedSummary(parseSummaryRequest(text, { athletes }))
+      return
+    }
+
     if (pendingAction?.kind === 'awaiting-athlete-for-injury') {
       const athlete = findAthleteByName(text, athletes)
       if (!athlete) {
@@ -348,16 +402,7 @@ export default function AiPanel({ open, onClose }) {
       return
     }
 
-    const parsed = parseInjuryDictation(text, { athletes })
-    if (!parsed.athleteId) {
-      setPendingAction({ kind: 'awaiting-athlete-for-injury', parsed })
-      const known = describeParsedInjury(parsed)
-      pushMessage('assistant', {
-        text: `I can log ${known ? `${known}, ` : 'a new injury, '}but I need to know which athlete it's for. Who is this for?`,
-      })
-      return
-    }
-    finalizeInjury(parsed)
+    proceedInjury(parseInjuryDictation(text, { athletes }))
   }
 
   function handleSend() {
@@ -369,7 +414,11 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function handleSelectSuggestion(suggestion) {
-    if (suggestion.template) setInputValue(suggestion.template)
+    const followUp = SUGGESTION_FOLLOWUPS[suggestion.key]
+    if (!followUp) return
+    pushMessage('user', { text: suggestion.label })
+    setPendingAction({ kind: followUp.kind })
+    pushMessage('assistant', { text: followUp.question })
   }
 
   function handleClose() {
@@ -385,12 +434,19 @@ export default function AiPanel({ open, onClose }) {
       case 'awaiting-athlete-for-note':
       case 'awaiting-athlete-for-rehab':
       case 'awaiting-athlete-for-summary':
+      case 'awaiting-details-for-summary':
         return 'e.g. Tyler Held'
       case 'awaiting-injury-for-note':
       case 'awaiting-injury-for-rehab':
         return 'e.g. ankle sprain'
       case 'awaiting-exercises-for-rehab':
         return 'e.g. squats for 3 sets of 10'
+      case 'awaiting-details-for-injury':
+        return 'e.g. Tyler Held, ankle sprain'
+      case 'awaiting-details-for-note':
+        return 'e.g. Tyler Held, ankle sprain, doing well today'
+      case 'awaiting-details-for-rehab':
+        return 'e.g. Tyler Held, ankle sprain, squats for 3 sets of 10'
       case 'awaiting-more-detail':
         return 'Add more detail...'
       default:

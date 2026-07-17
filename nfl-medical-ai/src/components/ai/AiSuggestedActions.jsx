@@ -10,7 +10,6 @@ const SUGGESTIONS = [
     description: 'Dictate the details and I will fill out the injury record for you.',
     icon: 'noteAdd',
     enabled: true,
-    template: 'Create a new injury for ',
   },
   {
     key: 'add-note',
@@ -18,7 +17,6 @@ const SUGGESTIONS = [
     description: 'Update an existing injury with a dictated progress note.',
     icon: 'factCheck',
     enabled: true,
-    template: 'Update note for ',
   },
   {
     key: 'create-rehab',
@@ -26,7 +24,6 @@ const SUGGESTIONS = [
     description: 'Dictate the exercises and I will schedule them.',
     icon: 'rehab',
     enabled: true,
-    template: 'Create a new rehab program for today for ',
   },
   {
     key: 'injury-summary',
@@ -34,7 +31,6 @@ const SUGGESTIONS = [
     description: 'Generate a printable injury summary for a player.',
     icon: 'summary',
     enabled: true,
-    template: 'Generate a summary of all of ',
   },
 ]
 
