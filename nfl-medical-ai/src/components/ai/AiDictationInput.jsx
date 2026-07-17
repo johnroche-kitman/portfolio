@@ -22,11 +22,37 @@ const ERROR_MESSAGES = {
   aborted: null,
 }
 
+// Dictation relies on the browser sending audio to a cloud speech service —
+// if that connection silently hangs (blocked by a firewall, VPN, or privacy
+// extension), some browsers never fire `onerror` at all: the mic button just
+// stays on "Listening…" forever with nothing arriving. Treat a long stretch
+// with zero results (interim or final) as a stall and surface it.
+const STALL_TIMEOUT_MS = 7000
+
 export default function AiDictationInput({ value, onChange, onSubmit, autoFocus, placeholder }) {
   const [listening, setListening] = useState(false)
   const [error, setError] = useState(null)
   const recognitionRef = useRef(null)
   const baseTextRef = useRef('')
+  const stallTimeoutRef = useRef(null)
+
+  const clearStallTimer = () => {
+    if (stallTimeoutRef.current) {
+      clearTimeout(stallTimeoutRef.current)
+      stallTimeoutRef.current = null
+    }
+  }
+
+  const armStallTimer = () => {
+    clearStallTimer()
+    stallTimeoutRef.current = setTimeout(() => {
+      recognitionRef.current?.stop()
+      setListening(false)
+      setError(
+        "No speech is being picked up. This can happen if the microphone isn't capturing audio, or a network/firewall issue is blocking dictation — try again, or type your message instead."
+      )
+    }, STALL_TIMEOUT_MS)
+  }
 
   useEffect(() => {
     if (!SpeechRecognitionApi) return undefined
@@ -36,6 +62,7 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
     recognition.lang = 'en-US'
 
     recognition.onresult = (event) => {
+      armStallTimer()
       let interim = ''
       let final = ''
       for (let i = event.resultIndex; i < event.results.length; i += 1) {
@@ -47,19 +74,27 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
       onChange(`${baseTextRef.current}${interim}`.trim())
     }
 
-    recognition.onend = () => setListening(false)
+    recognition.onend = () => {
+      clearStallTimer()
+      setListening(false)
+    }
     recognition.onerror = (event) => {
+      clearStallTimer()
       setListening(false)
       setError(ERROR_MESSAGES[event.error] ?? `Dictation stopped (${event.error}). Try again.`)
     }
     recognitionRef.current = recognition
-    return () => recognition.stop()
+    return () => {
+      clearStallTimer()
+      recognition.stop()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleListening = () => {
     if (!recognitionRef.current) return
     if (listening) {
+      clearStallTimer()
       recognitionRef.current.stop()
       setListening(false)
       return
@@ -69,6 +104,7 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
     try {
       recognitionRef.current.start()
       setListening(true)
+      armStallTimer()
     } catch {
       // start() throws synchronously if recognition is already running
       // (e.g. a rapid double-click) — reset and let the user retry.
