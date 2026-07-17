@@ -28,13 +28,6 @@ const SUGGESTIONS = [
     enabled: true,
     template: 'Create a new rehab program for today for ',
   },
-  {
-    key: 'update-status',
-    label: 'Update availability status',
-    description: 'Coming soon: change a player\'s status from a sentence.',
-    icon: 'update',
-    enabled: false,
-  },
 ]
 
 export default function AiSuggestedActions({ onSelect }) {
