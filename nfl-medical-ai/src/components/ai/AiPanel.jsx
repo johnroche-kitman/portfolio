@@ -17,7 +17,7 @@ import { parseRehabDictation, extractExercises } from '../../ai/parseRehabDictat
 import { applyParsedRehab } from '../../ai/applyParsedRehab'
 import { parseSummaryRequest } from '../../ai/parseSummaryRequest'
 import { detectDictationIntent } from '../../ai/detectDictationIntent'
-import { findAthleteByName } from '../../data/athletes'
+import { resolveAthleteMatch } from '../../data/athletes'
 import { useAppData } from '../../state/AppDataContext'
 import InjurySummaryModal from '../injury/InjurySummaryModal'
 
@@ -173,7 +173,33 @@ export default function AiPanel({ open, onClose }) {
     })
   }
 
+  // A bare first/last name can match more than one roster athlete (e.g. two
+  // "Tyler"s) — offer a picker instead of guessing, then resume whichever
+  // flow asked for the athlete in the first place.
+  function askWhichAthlete(parsed, candidates, kind) {
+    setPendingAction({ kind, parsed, candidates })
+    pushMessage('assistant', {
+      text: `A few athletes match that — who do you mean?`,
+      options: candidates.map((athlete) => ({
+        label: athlete.name,
+        onSelect: () => selectFollowUp(athlete.name, () => resolveAthleteChoice(kind, parsed, athlete)),
+      })),
+    })
+  }
+
+  function resolveAthleteChoice(kind, parsed, athlete) {
+    const merged = { ...parsed, athleteId: athlete.id, athleteName: athlete.name, athleteCandidates: null }
+    if (kind === 'awaiting-athlete-choice-for-injury') proceedInjury(merged)
+    else if (kind === 'awaiting-athlete-choice-for-note') proceedNote(merged)
+    else if (kind === 'awaiting-athlete-choice-for-rehab') proceedRehab(merged)
+    else if (kind === 'awaiting-athlete-choice-for-summary') proceedSummary(merged)
+  }
+
   function proceedInjury(parsed) {
+    if (parsed.athleteCandidates?.length) {
+      askWhichAthlete(parsed, parsed.athleteCandidates, 'awaiting-athlete-choice-for-injury')
+      return
+    }
     if (!parsed.athleteId) {
       setPendingAction({ kind: 'awaiting-athlete-for-injury', parsed })
       const known = describeParsedInjury(parsed)
@@ -186,6 +212,10 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function proceedNote(parsed) {
+    if (parsed.athleteCandidates?.length) {
+      askWhichAthlete(parsed, parsed.athleteCandidates, 'awaiting-athlete-choice-for-note')
+      return
+    }
     if (!parsed.athleteId) {
       setPendingAction({ kind: 'awaiting-athlete-for-note', parsed })
       pushMessage('assistant', { text: "I can add a note, but I need to know which athlete it's for. Who is this for?" })
@@ -200,6 +230,10 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function proceedRehab(parsed) {
+    if (parsed.athleteCandidates?.length) {
+      askWhichAthlete(parsed, parsed.athleteCandidates, 'awaiting-athlete-choice-for-rehab')
+      return
+    }
     if (!parsed.athleteId) {
       setPendingAction({ kind: 'awaiting-athlete-for-rehab', parsed })
       pushMessage('assistant', {
@@ -223,6 +257,10 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function proceedSummary(parsed) {
+    if (parsed.athleteCandidates?.length) {
+      askWhichAthlete(parsed, parsed.athleteCandidates, 'awaiting-athlete-choice-for-summary')
+      return
+    }
     if (!parsed.athleteId) {
       setPendingAction({ kind: 'awaiting-athlete-for-summary', parsed })
       pushMessage('assistant', { text: "I can generate an injury summary, but who is this for?" })
@@ -276,23 +314,31 @@ export default function AiPanel({ open, onClose }) {
     }
 
     if (pendingAction?.kind === 'awaiting-athlete-for-injury') {
-      const athlete = findAthleteByName(text, athletes)
-      if (!athlete) {
+      const match = resolveAthleteMatch(text, athletes)
+      if (!match) {
         pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this injury for?` })
         return
       }
-      finalizeInjury({ ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name })
+      if (match.candidates) {
+        askWhichAthlete(pendingAction.parsed, match.candidates, 'awaiting-athlete-choice-for-injury')
+        return
+      }
+      finalizeInjury({ ...pendingAction.parsed, athleteId: match.athlete.id, athleteName: match.athlete.name })
       return
     }
 
     if (pendingAction?.kind === 'awaiting-athlete-for-note') {
-      const athlete = findAthleteByName(text, athletes)
-      if (!athlete) {
+      const match = resolveAthleteMatch(text, athletes)
+      if (!match) {
         pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this note for?` })
         return
       }
-      const merged = { ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name }
-      const matchedInjury = matchInjuryForAthlete(merged.rawText, athlete.id, injuries)
+      if (match.candidates) {
+        askWhichAthlete(pendingAction.parsed, match.candidates, 'awaiting-athlete-choice-for-note')
+        return
+      }
+      const merged = { ...pendingAction.parsed, athleteId: match.athlete.id, athleteName: match.athlete.name }
+      const matchedInjury = matchInjuryForAthlete(merged.rawText, match.athlete.id, injuries)
       if (matchedInjury) {
         merged.injuryId = matchedInjury.id
         merged.injuryLabel = matchedInjury.pathology || matchedInjury.label
@@ -302,15 +348,19 @@ export default function AiPanel({ open, onClose }) {
     }
 
     if (pendingAction?.kind === 'awaiting-athlete-for-rehab') {
-      const athlete = findAthleteByName(text, athletes)
-      if (!athlete) {
+      const match = resolveAthleteMatch(text, athletes)
+      if (!match) {
         pushMessage('assistant', {
           text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this rehab program for?`,
         })
         return
       }
-      const merged = { ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name }
-      const matchedInjury = matchInjuryForAthlete(merged.rawText, athlete.id, injuries)
+      if (match.candidates) {
+        askWhichAthlete(pendingAction.parsed, match.candidates, 'awaiting-athlete-choice-for-rehab')
+        return
+      }
+      const merged = { ...pendingAction.parsed, athleteId: match.athlete.id, athleteName: match.athlete.name }
+      const matchedInjury = matchInjuryForAthlete(merged.rawText, match.athlete.id, injuries)
       if (matchedInjury) {
         merged.injuryId = matchedInjury.id
         merged.injuryLabel = matchedInjury.pathology || matchedInjury.label
@@ -320,14 +370,35 @@ export default function AiPanel({ open, onClose }) {
     }
 
     if (pendingAction?.kind === 'awaiting-athlete-for-summary') {
-      const athlete = findAthleteByName(text, athletes)
-      if (!athlete) {
+      const match = resolveAthleteMatch(text, athletes)
+      if (!match) {
         pushMessage('assistant', {
           text: `I still couldn't find an athlete matching "${text}" on the roster. Who would you like a summary for?`,
         })
         return
       }
-      proceedSummary({ ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name })
+      if (match.candidates) {
+        askWhichAthlete(pendingAction.parsed, match.candidates, 'awaiting-athlete-choice-for-summary')
+        return
+      }
+      proceedSummary({ ...pendingAction.parsed, athleteId: match.athlete.id, athleteName: match.athlete.name })
+      return
+    }
+
+    if (pendingAction?.kind?.startsWith('awaiting-athlete-choice-for-')) {
+      const match = resolveAthleteMatch(text, pendingAction.candidates)
+      if (!match?.athlete) {
+        pushMessage('assistant', {
+          text: `I still couldn't tell which athlete you meant. Please pick one below.`,
+          options: pendingAction.candidates.map((athlete) => ({
+            label: athlete.name,
+            onSelect: () =>
+              selectFollowUp(athlete.name, () => resolveAthleteChoice(pendingAction.kind, pendingAction.parsed, athlete)),
+          })),
+        })
+        return
+      }
+      resolveAthleteChoice(pendingAction.kind, pendingAction.parsed, match.athlete)
       return
     }
 
@@ -435,6 +506,10 @@ export default function AiPanel({ open, onClose }) {
       case 'awaiting-athlete-for-rehab':
       case 'awaiting-athlete-for-summary':
       case 'awaiting-details-for-summary':
+      case 'awaiting-athlete-choice-for-injury':
+      case 'awaiting-athlete-choice-for-note':
+      case 'awaiting-athlete-choice-for-rehab':
+      case 'awaiting-athlete-choice-for-summary':
         return 'e.g. Tyler Held'
       case 'awaiting-injury-for-note':
       case 'awaiting-injury-for-rehab':

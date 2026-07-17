@@ -1,4 +1,4 @@
-import { findAthleteMention } from '../data/athletes'
+import { resolveAthleteMatch } from '../data/athletes'
 import { extractAthleteNameMention, tokenize, stem, todayLabel } from './textHelpers'
 
 // Strips the routing command ("Update note for X ankle sprain.") off the
@@ -53,7 +53,9 @@ export function extractDictatedTitle(text) {
 
 export function parseNoteDictation(text, { athletes, injuries } = { athletes: [], injuries: [] }) {
   const trimmed = (text || '').trim()
-  const athlete = findAthleteMention(trimmed, athletes)
+  const athleteMatch = resolveAthleteMatch(trimmed, athletes)
+  const athlete = athleteMatch?.athlete || null
+  const athleteCandidates = athleteMatch?.candidates || null
   const athleteName = athlete?.name || extractAthleteNameMention(trimmed)
 
   const dictatedTitle = extractDictatedTitle(trimmed)
@@ -66,6 +68,7 @@ export function parseNoteDictation(text, { athletes, injuries } = { athletes: []
     rawText: trimmed,
     athleteId: athlete?.id || null,
     athleteName: athlete?.name || athleteName,
+    athleteCandidates,
     injuryId: matchedInjury?.id || null,
     injuryLabel,
     title: dictatedTitle,

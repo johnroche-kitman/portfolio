@@ -1,4 +1,4 @@
-import { findAthleteMention } from '../data/athletes'
+import { resolveAthleteMatch } from '../data/athletes'
 import { extractAthleteNameMention, todayLabel } from './textHelpers'
 
 const BODY_PARTS = {
@@ -108,7 +108,9 @@ export function describeParsedInjury(parsed) {
 
 export function parseInjuryDictation(text, { athletes } = { athletes: [] }) {
   const trimmed = (text || '').trim()
-  const athlete = findAthleteMention(trimmed, athletes)
+  const athleteMatch = resolveAthleteMatch(trimmed, athletes)
+  const athlete = athleteMatch?.athlete || null
+  const athleteCandidates = athleteMatch?.candidates || null
   const athleteName = athlete?.name || extractAthleteNameMention(trimmed)
 
   const bodyPart = findBodyPart(trimmed)
@@ -147,6 +149,7 @@ export function parseInjuryDictation(text, { athletes } = { athletes: [] }) {
     athleteId: athlete?.id || null,
     athleteName: athlete?.name || athleteName,
     athleteMatched: !!athlete,
+    athleteCandidates,
     bodyPart,
     bodyArea: bodyPart ? BODY_PARTS[bodyPart].area : null,
     side,

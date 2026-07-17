@@ -55,45 +55,49 @@ export const athletes = [
   },
 ]
 
-export function findAthleteByName(name, list = athletes) {
-  if (!name) return null
-  const normalized = name.trim().toLowerCase()
-  return (
-    list.find((athlete) => athlete.name.toLowerCase() === normalized) ||
-    list.find((athlete) => athlete.name.toLowerCase().includes(normalized)) ||
-    list.find((athlete) =>
-      normalized
-        .split(' ')
-        .filter(Boolean)
-        .every((part) => athlete.name.toLowerCase().includes(part))
-    ) ||
-    null
-  )
-}
-
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// Scans free-form dictation for a known athlete's name, rather than trying to
-// extract a name span first. This is far more robust for real voice input,
-// which is often all-lowercase and doesn't reliably use a fixed connector
-// word like "for" (e.g. "add note to tyler held ankle sprain...").
-export function findAthleteMention(text, list = athletes) {
-  const lower = (text || '').toLowerCase()
+// Allows an optional possessive suffix ("tyler held's" / "tyler helds", the
+// latter being a common dictation artifact that drops the apostrophe).
+function wordMatches(token, lower) {
+  return new RegExp(`\\b${escapeRegExp(token)}'?s?\\b`).test(lower)
+}
+
+// Scans free-form text (dictation or a typed chat reply) for a known
+// athlete, rather than trying to extract a name span first — far more
+// robust for real voice input, which is often all-lowercase and doesn't
+// reliably use a fixed connector word like "for".
+//
+// Falls back from a full-name match, to a "both name parts present"
+// match, down to a single name part alone ("Tyler" / "Held") so a bare
+// first or last name resolves without requiring the full name — but only
+// when it's unambiguous. Returns:
+//   { athlete }              exactly one match
+//   { candidates: [...] }    2+ roster athletes share that mention
+//   null                     no match at all
+export function resolveAthleteMatch(text, list = athletes) {
+  const lower = (text || '').trim().toLowerCase()
   if (!lower) return null
 
-  // Allows an optional possessive suffix ("tyler held's" / "tyler helds",
-  // the latter being a common dictation artifact that drops the apostrophe).
-  const byFullName = list.find((athlete) =>
-    new RegExp(`\\b${escapeRegExp(athlete.name.toLowerCase())}'?s?\\b`).test(lower)
-  )
-  if (byFullName) return byFullName
+  const byFullName = list.filter((athlete) => wordMatches(athlete.name.toLowerCase(), lower))
+  if (byFullName.length === 1) return { athlete: byFullName[0] }
+  if (byFullName.length > 1) return { candidates: byFullName }
 
-  return (
-    list.find((athlete) => {
-      const parts = athlete.name.toLowerCase().split(' ').filter(Boolean)
-      return parts.length > 1 && parts.every((part) => new RegExp(`\\b${escapeRegExp(part)}'?s?\\b`).test(lower))
-    }) || null
-  )
+  const byAllParts = list.filter((athlete) => {
+    const parts = athlete.name.toLowerCase().split(' ').filter(Boolean)
+    return parts.length > 1 && parts.every((part) => wordMatches(part, lower))
+  })
+  if (byAllParts.length === 1) return { athlete: byAllParts[0] }
+  if (byAllParts.length > 1) return { candidates: byAllParts }
+
+  const byAnyPart = list.filter((athlete) => {
+    const parts = athlete.name.toLowerCase().split(' ').filter(Boolean)
+    return parts.some((part) => wordMatches(part, lower))
+  })
+  if (byAnyPart.length === 1) return { athlete: byAnyPart[0] }
+  if (byAnyPart.length > 1) return { candidates: byAnyPart }
+
+  return null
 }

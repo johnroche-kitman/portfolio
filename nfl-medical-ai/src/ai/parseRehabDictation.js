@@ -1,4 +1,4 @@
-import { findAthleteMention } from '../data/athletes'
+import { resolveAthleteMatch } from '../data/athletes'
 import { matchInjuryForAthlete } from './parseNoteDictation'
 import { extractAthleteNameMention, todayKey } from './textHelpers'
 
@@ -49,7 +49,9 @@ export function extractExercises(text) {
 
 export function parseRehabDictation(text, { athletes, injuries } = { athletes: [], injuries: [] }) {
   const trimmed = (text || '').trim()
-  const athlete = findAthleteMention(trimmed, athletes)
+  const athleteMatch = resolveAthleteMatch(trimmed, athletes)
+  const athlete = athleteMatch?.athlete || null
+  const athleteCandidates = athleteMatch?.candidates || null
   const athleteName = athlete?.name || extractAthleteNameMention(trimmed)
   const matchedInjury = athlete ? matchInjuryForAthlete(trimmed, athlete.id, injuries) : null
   const injuryLabel = matchedInjury ? matchedInjury.pathology || matchedInjury.label : null
@@ -59,6 +61,7 @@ export function parseRehabDictation(text, { athletes, injuries } = { athletes: [
     rawText: trimmed,
     athleteId: athlete?.id || null,
     athleteName,
+    athleteCandidates,
     injuryId: matchedInjury?.id || null,
     injuryLabel,
     exercises,
