@@ -47,7 +47,8 @@ export default function AiChatMessage({ message }) {
                 size="small"
                 onClick={option.onSelect}
                 fullWidth
-                sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                endIcon={option.icon ? <Icon name={option.icon} fontSize="small" /> : undefined}
+                sx={{ justifyContent: 'flex-start', textAlign: 'left', '& .MuiButton-endIcon': { ml: 'auto' } }}
               >
                 {option.label}
               </Button>

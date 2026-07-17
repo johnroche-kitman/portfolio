@@ -212,6 +212,7 @@ export default function AiPanel({ open, onClose }) {
         {
           label: `Open ${athlete.name}'s injury summary`,
           tone: 'primary',
+          icon: 'openInNew',
           onSelect: () =>
             selectFollowUp(`Open ${athlete.name}'s injury summary`, () => setSummaryAthleteId(athlete.id)),
         },

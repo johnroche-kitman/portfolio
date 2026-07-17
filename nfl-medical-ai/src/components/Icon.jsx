@@ -36,6 +36,7 @@ import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined'
 import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined'
 import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined'
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined'
+import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -77,6 +78,7 @@ export const ICONS = {
   swapVert: SwapVertOutlinedIcon,
   summary: SummarizeOutlinedIcon,
   print: PrintOutlinedIcon,
+  openInNew: OpenInNewOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {
