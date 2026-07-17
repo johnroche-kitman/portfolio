@@ -21,6 +21,14 @@ const SUGGESTIONS = [
     template: 'Update note for ',
   },
   {
+    key: 'create-rehab',
+    label: 'Create a rehab program',
+    description: 'Dictate the exercises and I will schedule them for today.',
+    icon: 'rehab',
+    enabled: true,
+    template: 'Create a new rehab program for today for ',
+  },
+  {
     key: 'update-status',
     label: 'Update availability status',
     description: 'Coming soon: change a player\'s status from a sentence.',

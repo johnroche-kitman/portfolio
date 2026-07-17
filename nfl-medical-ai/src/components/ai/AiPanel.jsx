@@ -13,11 +13,20 @@ import { parseInjuryDictation, describeParsedInjury } from '../../ai/parseInjury
 import { applyParsedInjury } from '../../ai/applyParsedInjury'
 import { parseNoteDictation, matchInjuryForAthlete } from '../../ai/parseNoteDictation'
 import { applyParsedNote } from '../../ai/applyParsedNote'
+import { parseRehabDictation, extractExercises } from '../../ai/parseRehabDictation'
+import { applyParsedRehab } from '../../ai/applyParsedRehab'
 import { detectDictationIntent } from '../../ai/detectDictationIntent'
 import { findAthleteByName } from '../../data/athletes'
 import { useAppData } from '../../state/AppDataContext'
 
 const PANEL_WIDTH = 420
+
+const NOUN_BY_TYPE = { note: 'note', injury: 'injury', rehab: 'rehab program' }
+const ANOTHER_LABEL_BY_TYPE = {
+  note: 'Add another note for someone else',
+  injury: 'Log another injury for someone else',
+  rehab: 'Add another rehab for someone else',
+}
 
 function injuryOption(inj) {
   return `${inj.date} — ${inj.pathology || inj.label}`
@@ -40,6 +49,8 @@ export default function AiPanel({ open, onClose }) {
     createNoteFromParsed,
     addNoteToInjury,
     appendToPendingNote,
+    createRehabFromParsed,
+    appendToPendingRehab,
   } = useAppData()
 
   useEffect(() => {
@@ -67,19 +78,16 @@ export default function AiPanel({ open, onClose }) {
   }
 
   function followUpOptions(resultType, targetId) {
-    const noun = resultType === 'note' ? 'note' : 'injury'
+    const noun = NOUN_BY_TYPE[resultType] || resultType
     return [
       {
         label: `Add more information to this ${noun}`,
-        onSelect: () => selectFollowUp(`Add more information to this ${noun}`, () => startAddMoreDetail(resultType, targetId)),
+        onSelect: () =>
+          selectFollowUp(`Add more information to this ${noun}`, () => startAddMoreDetail(resultType, targetId)),
       },
       {
-        label: resultType === 'note' ? 'Add another note for someone else' : 'Log another injury for someone else',
-        onSelect: () =>
-          selectFollowUp(
-            resultType === 'note' ? 'Add another note for someone else' : 'Log another injury for someone else',
-            () => setPendingAction(null)
-          ),
+        label: ANOTHER_LABEL_BY_TYPE[resultType],
+        onSelect: () => selectFollowUp(ANOTHER_LABEL_BY_TYPE[resultType], () => setPendingAction(null)),
       },
       {
         label: 'Go to my review queue',
@@ -109,24 +117,33 @@ export default function AiPanel({ open, onClose }) {
     pushMessage('assistant', { lines: outcome.summaryLines, options: followUpOptions('note', outcome.note.id) })
   }
 
-  function askWhichInjury(parsed, athlete) {
+  function finalizeRehab(parsed) {
+    const outcome = applyParsedRehab(parsed, { createRehabFromParsed })
+    setPendingAction(null)
+    if (!outcome.ok) {
+      pushMessage('assistant', { text: outcome.error, tone: 'error' })
+      return
+    }
+    pushMessage('assistant', { lines: outcome.summaryLines, options: followUpOptions('rehab', outcome.rehab.id) })
+  }
+
+  function askWhichInjury(parsed, athlete, kind, finalize) {
     const candidates = getInjuriesByAthlete(athlete.id).filter((inj) => inj.status !== 'pending_review')
     if (!candidates.length) {
       setPendingAction(null)
       pushMessage('assistant', {
-        text: `${athlete.name} doesn't have any recorded injuries yet, so I can't attach a note to one. Want to log a new injury instead?`,
+        text: `${athlete.name} doesn't have any recorded injuries yet, so I can't attach that to one. Want to log a new injury instead?`,
       })
       return
     }
-    setPendingAction({ kind: 'awaiting-injury-for-note', parsed, athlete, candidates })
+    setPendingAction({ kind, parsed, athlete, candidates })
+    const verb = kind === 'awaiting-injury-for-rehab' ? 'create a rehab program for' : 'add a note for'
     pushMessage('assistant', {
-      text: `I can add a note for ${athlete.name}, but which injury does it relate to? Pick one below, or describe it (e.g. "ankle sprain").`,
+      text: `I can ${verb} ${athlete.name}, but which injury does it relate to? Pick one below, or describe it (e.g. "ankle sprain").`,
       options: candidates.map((inj) => ({
         label: injuryOption(inj),
         onSelect: () =>
-          selectFollowUp(injuryOption(inj), () =>
-            finalizeNote({ ...parsed, injuryId: inj.id, injuryLabel: inj.pathology || inj.label })
-          ),
+          selectFollowUp(injuryOption(inj), () => finalize({ ...parsed, injuryId: inj.id, injuryLabel: inj.pathology || inj.label })),
       })),
     })
   }
@@ -139,10 +156,33 @@ export default function AiPanel({ open, onClose }) {
     }
     const athlete = getAthleteById(parsed.athleteId)
     if (!parsed.injuryId) {
-      askWhichInjury(parsed, athlete)
+      askWhichInjury(parsed, athlete, 'awaiting-injury-for-note', finalizeNote)
       return
     }
     finalizeNote(parsed)
+  }
+
+  function proceedRehab(parsed) {
+    if (!parsed.athleteId) {
+      setPendingAction({ kind: 'awaiting-athlete-for-rehab', parsed })
+      pushMessage('assistant', {
+        text: "I can create a rehab program, but I need to know which athlete it's for. Who is this for?",
+      })
+      return
+    }
+    const athlete = getAthleteById(parsed.athleteId)
+    if (!parsed.injuryId) {
+      askWhichInjury(parsed, athlete, 'awaiting-injury-for-rehab', finalizeRehab)
+      return
+    }
+    if (!parsed.exercises?.length) {
+      setPendingAction({ kind: 'awaiting-exercises-for-rehab', parsed })
+      pushMessage('assistant', {
+        text: `I can create a rehab program for ${athlete.name}'s ${parsed.injuryLabel}, but I couldn't make out any exercises. Try phrasing like "squats for 3 sets of 10".`,
+      })
+      return
+    }
+    finalizeRehab(parsed)
   }
 
   function processInput(text) {
@@ -172,7 +212,26 @@ export default function AiPanel({ open, onClose }) {
       return
     }
 
-    if (pendingAction?.kind === 'awaiting-injury-for-note') {
+    if (pendingAction?.kind === 'awaiting-athlete-for-rehab') {
+      const athlete = findAthleteByName(text, athletes)
+      if (!athlete) {
+        pushMessage('assistant', {
+          text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this rehab program for?`,
+        })
+        return
+      }
+      const merged = { ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name }
+      const matchedInjury = matchInjuryForAthlete(merged.rawText, athlete.id, injuries)
+      if (matchedInjury) {
+        merged.injuryId = matchedInjury.id
+        merged.injuryLabel = matchedInjury.pathology || matchedInjury.label
+      }
+      proceedRehab(merged)
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-injury-for-note' || pendingAction?.kind === 'awaiting-injury-for-rehab') {
+      const isRehab = pendingAction.kind === 'awaiting-injury-for-rehab'
       const matched = matchInjuryForAthlete(text, pendingAction.athlete.id, injuries)
       if (!matched) {
         pushMessage('assistant', {
@@ -180,14 +239,30 @@ export default function AiPanel({ open, onClose }) {
           options: pendingAction.candidates.map((inj) => ({
             label: injuryOption(inj),
             onSelect: () =>
-              selectFollowUp(injuryOption(inj), () =>
-                finalizeNote({ ...pendingAction.parsed, injuryId: inj.id, injuryLabel: inj.pathology || inj.label })
-              ),
+              selectFollowUp(injuryOption(inj), () => {
+                const merged = { ...pendingAction.parsed, injuryId: inj.id, injuryLabel: inj.pathology || inj.label }
+                if (isRehab) finalizeRehab(merged)
+                else finalizeNote(merged)
+              }),
           })),
         })
         return
       }
-      finalizeNote({ ...pendingAction.parsed, injuryId: matched.id, injuryLabel: matched.pathology || matched.label })
+      const merged = { ...pendingAction.parsed, injuryId: matched.id, injuryLabel: matched.pathology || matched.label }
+      if (isRehab) finalizeRehab(merged)
+      else finalizeNote(merged)
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-exercises-for-rehab') {
+      const exercises = extractExercises(text)
+      if (!exercises.length) {
+        pushMessage('assistant', {
+          text: `I still couldn't make out any exercises from that. Try phrasing like "squats for 3 sets of 10".`,
+        })
+        return
+      }
+      finalizeRehab({ ...pendingAction.parsed, exercises })
       return
     }
 
@@ -195,6 +270,15 @@ export default function AiPanel({ open, onClose }) {
       const { resultType, targetId } = pendingAction
       if (resultType === 'note') {
         appendToPendingNote(targetId, text)
+      } else if (resultType === 'rehab') {
+        const extraExercises = extractExercises(text)
+        if (!extraExercises.length) {
+          pushMessage('assistant', {
+            text: `I couldn't identify any exercises in that. Try phrasing like "squats for 3 sets of 10".`,
+          })
+          return
+        }
+        appendToPendingRehab(targetId, extraExercises)
       } else {
         addNoteToInjury(targetId, text)
       }
@@ -206,6 +290,10 @@ export default function AiPanel({ open, onClose }) {
     const intent = detectDictationIntent(text)
     if (intent === 'note') {
       proceedNote(parseNoteDictation(text, { athletes, injuries }))
+      return
+    }
+    if (intent === 'rehab') {
+      proceedRehab(parseRehabDictation(text, { athletes, injuries }))
       return
     }
 
@@ -244,9 +332,13 @@ export default function AiPanel({ open, onClose }) {
     switch (pendingAction?.kind) {
       case 'awaiting-athlete-for-injury':
       case 'awaiting-athlete-for-note':
+      case 'awaiting-athlete-for-rehab':
         return 'e.g. Tyler Held'
       case 'awaiting-injury-for-note':
+      case 'awaiting-injury-for-rehab':
         return 'e.g. ankle sprain'
+      case 'awaiting-exercises-for-rehab':
+        return 'e.g. squats for 3 sets of 10'
       case 'awaiting-more-detail':
         return 'Add more detail...'
       default:

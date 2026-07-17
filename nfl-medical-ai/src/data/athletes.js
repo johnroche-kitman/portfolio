@@ -83,13 +83,17 @@ export function findAthleteMention(text, list = athletes) {
   const lower = (text || '').toLowerCase()
   if (!lower) return null
 
-  const byFullName = list.find((athlete) => new RegExp(`\\b${escapeRegExp(athlete.name.toLowerCase())}\\b`).test(lower))
+  // Allows an optional possessive suffix ("tyler held's" / "tyler helds",
+  // the latter being a common dictation artifact that drops the apostrophe).
+  const byFullName = list.find((athlete) =>
+    new RegExp(`\\b${escapeRegExp(athlete.name.toLowerCase())}'?s?\\b`).test(lower)
+  )
   if (byFullName) return byFullName
 
   return (
     list.find((athlete) => {
       const parts = athlete.name.toLowerCase().split(' ').filter(Boolean)
-      return parts.length > 1 && parts.every((part) => new RegExp(`\\b${escapeRegExp(part)}\\b`).test(lower))
+      return parts.length > 1 && parts.every((part) => new RegExp(`\\b${escapeRegExp(part)}'?s?\\b`).test(lower))
     }) || null
   )
 }

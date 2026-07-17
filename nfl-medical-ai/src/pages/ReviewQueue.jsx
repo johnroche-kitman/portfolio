@@ -10,15 +10,45 @@ import Button from '../components/Button'
 import Icon from '../components/Icon'
 import { useAppData } from '../state/AppDataContext'
 
+const ACTION_META = {
+  injury: { icon: 'noteAdd', label: 'Injury' },
+  note: { icon: 'factCheck', label: 'Note' },
+  rehab: { icon: 'rehab', label: 'Rehab' },
+}
+
 export default function ReviewQueue() {
-  const { pendingInjuries, pendingNotes, getAthleteById, getInjuryById, acceptInjury, rejectInjury, acceptNote, rejectNote } =
-    useAppData()
+  const {
+    pendingInjuries,
+    pendingNotes,
+    pendingRehabs,
+    getAthleteById,
+    getInjuryById,
+    acceptInjury,
+    rejectInjury,
+    acceptNote,
+    rejectNote,
+    acceptRehab,
+    rejectRehab,
+  } = useAppData()
   const navigate = useNavigate()
 
   const rows = [
     ...pendingInjuries.map((injury) => ({ ...injury, type: 'injury' })),
     ...pendingNotes.map((note) => ({ ...note, type: 'note' })),
+    ...pendingRehabs.map((rehab) => ({ ...rehab, type: 'rehab' })),
   ]
+
+  function acceptRow(row) {
+    if (row.type === 'note') acceptNote(row.id)
+    else if (row.type === 'rehab') acceptRehab(row.id)
+    else acceptInjury(row.id)
+  }
+
+  function rejectRow(row) {
+    if (row.type === 'note') rejectNote(row.id)
+    else if (row.type === 'rehab') rejectRehab(row.id)
+    else rejectInjury(row.id)
+  }
 
   const columns = [
     {
@@ -48,8 +78,8 @@ export default function ReviewQueue() {
       width: '9%',
       render: (row) => (
         <Box display="flex" alignItems="center" gap={0.75}>
-          <Icon name={row.type === 'note' ? 'factCheck' : 'noteAdd'} fontSize="small" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="body2">{row.type === 'note' ? 'Note' : 'Injury'}</Typography>
+          <Icon name={ACTION_META[row.type].icon} fontSize="small" sx={{ color: 'var(--color-primary)' }} />
+          <Typography variant="body2">{ACTION_META[row.type].label}</Typography>
         </Box>
       ),
     },
@@ -58,23 +88,23 @@ export default function ReviewQueue() {
       label: 'Injury',
       width: '14%',
       render: (row) => {
-        if (row.type === 'note') {
-          const injury = getInjuryById(row.injuryId)
+        if (row.type === 'injury') {
           return (
-            <Typography variant="body1" fontWeight={600}>
-              {injury ? injury.pathology || injury.label : 'Unknown injury'}
-            </Typography>
+            <Box>
+              <Typography variant="body1" fontWeight={600}>
+                {row.pathology || row.label}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                {row.date}
+              </Typography>
+            </Box>
           )
         }
+        const injury = getInjuryById(row.injuryId)
         return (
-          <Box>
-            <Typography variant="body1" fontWeight={600}>
-              {row.pathology || row.label}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-              {row.date}
-            </Typography>
-          </Box>
+          <Typography variant="body1" fontWeight={600}>
+            {injury ? injury.pathology || injury.label : 'Unknown injury'}
+          </Typography>
         )
       },
     },
@@ -93,21 +123,37 @@ export default function ReviewQueue() {
       key: 'summary',
       label: 'Summary',
       width: '19%',
-      render: (row) =>
-        row.type === 'note' ? (
-          <Box>
-            <Typography variant="body1" fontWeight={600}>
-              {row.title}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-              {row.text}
-            </Typography>
-          </Box>
-        ) : (
+      render: (row) => {
+        if (row.type === 'note') {
+          return (
+            <Box>
+              <Typography variant="body1" fontWeight={600}>
+                {row.title}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                {row.text}
+              </Typography>
+            </Box>
+          )
+        }
+        if (row.type === 'rehab') {
+          return (
+            <Box>
+              <Typography variant="body1" fontWeight={600}>
+                {row.exercises.length} exercise{row.exercises.length === 1 ? '' : 's'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                {row.exercises.map((e) => e.name).join(', ')}
+              </Typography>
+            </Box>
+          )
+        }
+        return (
           <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
             {row.rawDictation}
           </Typography>
-        ),
+        )
+      },
     },
     {
       key: 'status',
@@ -124,8 +170,7 @@ export default function ReviewQueue() {
           <Button
             onClick={(e) => {
               e.stopPropagation()
-              if (row.type === 'note') acceptNote(row.id)
-              else acceptInjury(row.id)
+              acceptRow(row)
             }}
           >
             Accept
@@ -134,8 +179,7 @@ export default function ReviewQueue() {
             tone="danger"
             onClick={(e) => {
               e.stopPropagation()
-              if (row.type === 'note') rejectNote(row.id)
-              else rejectInjury(row.id)
+              rejectRow(row)
             }}
           >
             Reject
@@ -173,7 +217,8 @@ export default function ReviewQueue() {
         </Tooltip>
       </Box>
       <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 3 }}>
-        Injuries and notes staged by the AI assistant. Review each one and accept to add it to the medical record.
+        Injuries, notes and rehab programs staged by the AI assistant. Review each one and accept to add it to the
+        medical record.
       </Typography>
 
       <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
@@ -181,8 +226,8 @@ export default function ReviewQueue() {
           columns={columns}
           rows={rows}
           getRowKey={(row) => `${row.type}-${row.id}`}
-          onRowClick={(row) => navigate(`/medical/injury/${row.type === 'note' ? row.injuryId : row.id}`)}
-          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury or note."
+          onRowClick={(row) => navigate(`/medical/injury/${row.type === 'injury' ? row.id : row.injuryId}`)}
+          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury, note, or rehab program."
         />
       </Box>
     </Box>

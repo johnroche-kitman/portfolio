@@ -11,11 +11,13 @@ import Lozenge from '../components/Lozenge'
 import Button from '../components/Button'
 import Icon from '../components/Icon'
 import NotesTab from '../components/injury/NotesTab'
+import RehabTab from '../components/injury/RehabTab'
 import { useAppData } from '../state/AppDataContext'
 import { backgroundScreenQuestions } from '../data/backgroundScreenQuestions'
 
 const DETAIL_TABS = [
   { value: 'overview', label: 'Injury overview' },
+  { value: 'rehab', label: 'Rehab' },
   { value: 'notes', label: 'Notes' },
   { value: 'diagnostics', label: 'Diagnostics', disabled: true },
 ]
@@ -120,6 +122,8 @@ export default function InjuryOverview() {
           </Box>
         </Box>
       )}
+
+      {activeTab === 'rehab' && <RehabTab injury={injury} athlete={athlete} />}
 
       {activeTab === 'notes' && <NotesTab injury={injury} athlete={athlete} />}
 

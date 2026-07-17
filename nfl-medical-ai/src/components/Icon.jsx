@@ -31,6 +31,9 @@ import ChecklistRtlOutlinedIcon from '@mui/icons-material/ChecklistRtlOutlined'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined'
+import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined'
+import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -67,6 +70,9 @@ export const ICONS = {
   lock: LockOutlinedIcon,
   archive: ArchiveOutlinedIcon,
   delete: DeleteOutlineOutlinedIcon,
+  rehab: FitnessCenterOutlinedIcon,
+  chevronLeft: ChevronLeftOutlinedIcon,
+  swapVert: SwapVertOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {

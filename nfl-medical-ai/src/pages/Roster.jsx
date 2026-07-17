@@ -39,7 +39,7 @@ const MEDICAL_TABS = [
 ]
 
 export default function Roster() {
-  const { athletes, getInjuriesByAthlete, athleteNotes, pendingInjuries, pendingNotes } = useAppData()
+  const { athletes, getInjuriesByAthlete, athleteNotes, pendingInjuries, pendingNotes, pendingRehabs } = useAppData()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [positionFilter, setPositionFilter] = useState('all')
@@ -47,7 +47,7 @@ export default function Roster() {
   const [downloadAnchor, setDownloadAnchor] = useState(null)
   const headerRef = useRef(null)
   const [headerHeight, setHeaderHeight] = useState(0)
-  const pendingReviewCount = pendingInjuries.length + pendingNotes.length
+  const pendingReviewCount = pendingInjuries.length + pendingNotes.length + pendingRehabs.length
 
   useLayoutEffect(() => {
     const el = headerRef.current

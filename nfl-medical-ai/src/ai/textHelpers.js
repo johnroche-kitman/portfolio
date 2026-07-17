@@ -23,3 +23,13 @@ export function todayLabel() {
   const now = new Date()
   return now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
+
+// ISO yyyy-mm-dd key for a given Date, used where real calendar-day equality
+// checks are needed (e.g. lining up a rehab program with its day column).
+export function dateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+export function todayKey() {
+  return dateKey(new Date())
+}
