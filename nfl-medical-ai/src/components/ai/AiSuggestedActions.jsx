@@ -28,6 +28,14 @@ const SUGGESTIONS = [
     enabled: true,
     template: 'Create a new rehab program for today for ',
   },
+  {
+    key: 'injury-summary',
+    label: 'Summarize injury history',
+    description: 'Generate a printable injury summary for a player.',
+    icon: 'summary',
+    enabled: true,
+    template: 'Generate a summary of all of ',
+  },
 ]
 
 export default function AiSuggestedActions({ onSelect }) {

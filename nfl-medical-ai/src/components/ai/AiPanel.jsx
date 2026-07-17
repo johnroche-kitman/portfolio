@@ -15,9 +15,11 @@ import { parseNoteDictation, matchInjuryForAthlete } from '../../ai/parseNoteDic
 import { applyParsedNote } from '../../ai/applyParsedNote'
 import { parseRehabDictation, extractExercises } from '../../ai/parseRehabDictation'
 import { applyParsedRehab } from '../../ai/applyParsedRehab'
+import { parseSummaryRequest } from '../../ai/parseSummaryRequest'
 import { detectDictationIntent } from '../../ai/detectDictationIntent'
 import { findAthleteByName } from '../../data/athletes'
 import { useAppData } from '../../state/AppDataContext'
+import InjurySummaryModal from '../injury/InjurySummaryModal'
 
 const PANEL_WIDTH = 420
 
@@ -36,6 +38,7 @@ export default function AiPanel({ open, onClose }) {
   const [messages, setMessages] = useState([])
   const [pendingAction, setPendingAction] = useState(null)
   const [inputValue, setInputValue] = useState('')
+  const [summaryAthleteId, setSummaryAthleteId] = useState(null)
   const scrollRef = useRef(null)
   const idCounter = useRef(0)
   const navigate = useNavigate()
@@ -185,6 +188,37 @@ export default function AiPanel({ open, onClose }) {
     finalizeRehab(parsed)
   }
 
+  function proceedSummary(parsed) {
+    if (!parsed.athleteId) {
+      setPendingAction({ kind: 'awaiting-athlete-for-summary', parsed })
+      pushMessage('assistant', { text: "I can generate an injury summary, but who is this for?" })
+      return
+    }
+    const athlete = getAthleteById(parsed.athleteId)
+    const athleteInjuries = getInjuriesByAthlete(athlete.id).filter((inj) => inj.status !== 'pending_review')
+    setPendingAction(null)
+    if (!athleteInjuries.length) {
+      pushMessage('assistant', {
+        text: `${athlete.name} doesn't have any recorded injuries yet, so there's nothing to summarize.`,
+      })
+      return
+    }
+    pushMessage('assistant', {
+      lines: [
+        `Generated an injury summary for ${athlete.name}.`,
+        `Covers ${athleteInjuries.length} injur${athleteInjuries.length === 1 ? 'y' : 'ies'} in reverse chronological order, with diagnostics, rehab session counts, and medications.`,
+      ],
+      options: [
+        {
+          label: `Open ${athlete.name}'s injury summary`,
+          tone: 'primary',
+          onSelect: () =>
+            selectFollowUp(`Open ${athlete.name}'s injury summary`, () => setSummaryAthleteId(athlete.id)),
+        },
+      ],
+    })
+  }
+
   function processInput(text) {
     if (pendingAction?.kind === 'awaiting-athlete-for-injury') {
       const athlete = findAthleteByName(text, athletes)
@@ -227,6 +261,18 @@ export default function AiPanel({ open, onClose }) {
         merged.injuryLabel = matchedInjury.pathology || matchedInjury.label
       }
       proceedRehab(merged)
+      return
+    }
+
+    if (pendingAction?.kind === 'awaiting-athlete-for-summary') {
+      const athlete = findAthleteByName(text, athletes)
+      if (!athlete) {
+        pushMessage('assistant', {
+          text: `I still couldn't find an athlete matching "${text}" on the roster. Who would you like a summary for?`,
+        })
+        return
+      }
+      proceedSummary({ ...pendingAction.parsed, athleteId: athlete.id, athleteName: athlete.name })
       return
     }
 
@@ -296,6 +342,10 @@ export default function AiPanel({ open, onClose }) {
       proceedRehab(parseRehabDictation(text, { athletes, injuries }))
       return
     }
+    if (intent === 'summary') {
+      proceedSummary(parseSummaryRequest(text, { athletes }))
+      return
+    }
 
     const parsed = parseInjuryDictation(text, { athletes })
     if (!parsed.athleteId) {
@@ -333,6 +383,7 @@ export default function AiPanel({ open, onClose }) {
       case 'awaiting-athlete-for-injury':
       case 'awaiting-athlete-for-note':
       case 'awaiting-athlete-for-rehab':
+      case 'awaiting-athlete-for-summary':
         return 'e.g. Tyler Held'
       case 'awaiting-injury-for-note':
       case 'awaiting-injury-for-rehab':
@@ -347,47 +398,51 @@ export default function AiPanel({ open, onClose }) {
   }
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={handleClose}
-      PaperProps={{ sx: { width: PANEL_WIDTH, display: 'flex', flexDirection: 'column' } }}
-    >
-      <Box display="flex" flexDirection="column" height="100%">
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ p: 2.5, borderBottom: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}
-        >
-          <Box display="flex" alignItems="center" gap={1}>
-            <Icon name="ai" sx={{ color: 'var(--color-primary)' }} />
-            <Typography variant="h2">Ask AI</Typography>
+    <>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={handleClose}
+        PaperProps={{ sx: { width: PANEL_WIDTH, display: 'flex', flexDirection: 'column' } }}
+      >
+        <Box display="flex" flexDirection="column" height="100%">
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ p: 2.5, borderBottom: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              <Icon name="ai" sx={{ color: 'var(--color-primary)' }} />
+              <Typography variant="h2">Ask AI</Typography>
+            </Box>
+            <IconButton onClick={handleClose} size="small">
+              <Icon name="close" fontSize="small" />
+            </IconButton>
           </Box>
-          <IconButton onClick={handleClose} size="small">
-            <Icon name="close" fontSize="small" />
-          </IconButton>
-        </Box>
 
-        <Box
-          ref={scrollRef}
-          flexGrow={1}
-          display="flex"
-          flexDirection="column"
-          gap={2}
-          sx={{ p: 2.5, overflowY: 'auto', backgroundColor: 'var(--background)' }}
-        >
-          <AiSuggestedActions onSelect={handleSelectSuggestion} />
-          {messages.length > 0 && <Divider sx={{ borderColor: 'var(--divider)' }} />}
-          {messages.map((message) => (
-            <AiChatMessage key={message.id} message={message} />
-          ))}
-        </Box>
+          <Box
+            ref={scrollRef}
+            flexGrow={1}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            sx={{ p: 2.5, overflowY: 'auto', backgroundColor: 'var(--background)' }}
+          >
+            <AiSuggestedActions onSelect={handleSelectSuggestion} />
+            {messages.length > 0 && <Divider sx={{ borderColor: 'var(--divider)' }} />}
+            {messages.map((message) => (
+              <AiChatMessage key={message.id} message={message} />
+            ))}
+          </Box>
 
-        <Box sx={{ p: 2.5, borderTop: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}>
-          <AiDictationInput value={inputValue} onChange={setInputValue} onSubmit={handleSend} placeholder={currentPlaceholder()} />
+          <Box sx={{ p: 2.5, borderTop: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}>
+            <AiDictationInput value={inputValue} onChange={setInputValue} onSubmit={handleSend} placeholder={currentPlaceholder()} />
+          </Box>
         </Box>
-      </Box>
-    </Drawer>
+      </Drawer>
+
+      <InjurySummaryModal open={!!summaryAthleteId} athleteId={summaryAthleteId} onClose={() => setSummaryAthleteId(null)} />
+    </>
   )
 }

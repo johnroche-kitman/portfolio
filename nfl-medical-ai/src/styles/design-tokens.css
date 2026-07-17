@@ -23,3 +23,32 @@
   --nav-width: 60px;
   --nav-width-expanded: 232px;
 }
+
+/* Print-one-element trick used by InjurySummaryModal: hide everything, then
+   reveal only the marked subtree (works regardless of where MUI's Dialog
+   portal mounts it, since descendant visibility:visible overrides an
+   ancestor's visibility:hidden). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-summary-root,
+  .print-summary-root * {
+    visibility: visible;
+  }
+  .print-summary-root {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .MuiDialog-container,
+  .MuiDialogContent-root,
+  .MuiPaper-root {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}

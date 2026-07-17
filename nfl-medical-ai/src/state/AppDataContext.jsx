@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { athletes as seedAthletes } from '../data/athletes'
-import { injuries as seedInjuries, seedNotes } from '../data/injuries'
+import { injuries as seedInjuries, seedNotes, seedRehabByInjury } from '../data/injuries'
 import { backgroundScreenQuestions } from '../data/backgroundScreenQuestions'
 
 const STORAGE_KEY = 'nfl-medical-ai-state-v1'
@@ -22,7 +22,7 @@ function loadInitialState() {
     notesByInjury: {},
     pendingNotes: [],
     pendingRehabs: [],
-    rehabByInjury: {},
+    rehabByInjury: seedRehabByInjury,
   }
 }
 
@@ -98,6 +98,12 @@ export function AppDataProvider({ children }) {
         totalUnavailability: null,
         rawDictation: parsed.rawText,
         symptoms: parsed.symptoms || [],
+        severity: null,
+        resolved: false,
+        resolvedDate: null,
+        diagnostics: [],
+        surgery: null,
+        medications: [],
       }
 
       const noteId = `note-${id}`
