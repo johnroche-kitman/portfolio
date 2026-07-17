@@ -1,7 +1,11 @@
 // Shared plain-text helpers for the rule-based dictation parsers.
 
+// Best-effort fallback for display purposes only (e.g. "couldn't find an
+// athlete matching ..."), used when no roster name was found in the text.
+// Case-insensitive and accepts "for"/"to" since real dictation is often all
+// lowercase and doesn't reliably use one fixed connector word.
 export function extractAthleteNameMention(text) {
-  const match = (text || '').match(/for ([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/)
+  const match = (text || '').match(/\b(?:for|to)\s+([A-Za-z]+(?:\s[A-Za-z]+){0,2})/i)
   return match ? match[1] : null
 }
 

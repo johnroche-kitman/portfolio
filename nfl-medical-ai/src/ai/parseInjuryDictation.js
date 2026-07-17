@@ -1,4 +1,4 @@
-import { findAthleteByName } from '../data/athletes'
+import { findAthleteMention } from '../data/athletes'
 import { extractAthleteNameMention, todayLabel } from './textHelpers'
 
 const BODY_PARTS = {
@@ -108,8 +108,8 @@ export function describeParsedInjury(parsed) {
 
 export function parseInjuryDictation(text, { athletes } = { athletes: [] }) {
   const trimmed = (text || '').trim()
-  const athleteName = extractAthleteNameMention(trimmed)
-  const athlete = findAthleteByName(athleteName, athletes)
+  const athlete = findAthleteMention(trimmed, athletes)
+  const athleteName = athlete?.name || extractAthleteNameMention(trimmed)
 
   const bodyPart = findBodyPart(trimmed)
   const landmark = bodyPart ? findLandmark(trimmed, bodyPart) : findLandmark(trimmed, null)

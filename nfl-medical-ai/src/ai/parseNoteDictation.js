@@ -1,12 +1,18 @@
-import { findAthleteByName } from '../data/athletes'
+import { findAthleteMention } from '../data/athletes'
 import { extractAthleteNameMention, tokenize, stem, todayLabel } from './textHelpers'
 
 // Strips the routing command ("Update note for X ankle sprain.") off the
 // front of the dictation, leaving the clinical narrative as the note body.
-const COMMAND_PREFIX = /^\s*(update|add)\s+(a\s+)?note\s+for\s+.+?[.!?]\s*/i
+const COMMAND_PREFIX = /^\s*(update|add)\s+(a\s+)?note\s+(for|to)\s+.+?[.!?]\s*/i
+const SAYING_SPLIT = /\bsaying\b[:,]?\s*(.+)/i
 const TITLE_PATTERN = /titled?\s*:?\s*"([^"]+)"/i
 
+// Real dictation often has no punctuation at all, so a period-anchored strip
+// won't fire. "saying ..." is a common natural way to introduce the actual
+// note content, so prefer that split when present.
 function stripCommandPrefix(text) {
+  const sayingMatch = text.match(SAYING_SPLIT)
+  if (sayingMatch) return sayingMatch[1].trim()
   return text.replace(COMMAND_PREFIX, '').trim()
 }
 
@@ -47,8 +53,8 @@ export function extractDictatedTitle(text) {
 
 export function parseNoteDictation(text, { athletes, injuries } = { athletes: [], injuries: [] }) {
   const trimmed = (text || '').trim()
-  const athleteName = extractAthleteNameMention(trimmed)
-  const athlete = findAthleteByName(athleteName, athletes)
+  const athlete = findAthleteMention(trimmed, athletes)
+  const athleteName = athlete?.name || extractAthleteNameMention(trimmed)
 
   const dictatedTitle = extractDictatedTitle(trimmed)
   const matchedInjury = athlete ? matchInjuryForAthlete(trimmed, athlete.id, injuries) : null

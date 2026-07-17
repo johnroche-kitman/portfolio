@@ -70,3 +70,26 @@ export function findAthleteByName(name, list = athletes) {
     null
   )
 }
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Scans free-form dictation for a known athlete's name, rather than trying to
+// extract a name span first. This is far more robust for real voice input,
+// which is often all-lowercase and doesn't reliably use a fixed connector
+// word like "for" (e.g. "add note to tyler held ankle sprain...").
+export function findAthleteMention(text, list = athletes) {
+  const lower = (text || '').toLowerCase()
+  if (!lower) return null
+
+  const byFullName = list.find((athlete) => new RegExp(`\\b${escapeRegExp(athlete.name.toLowerCase())}\\b`).test(lower))
+  if (byFullName) return byFullName
+
+  return (
+    list.find((athlete) => {
+      const parts = athlete.name.toLowerCase().split(' ').filter(Boolean)
+      return parts.length > 1 && parts.every((part) => new RegExp(`\\b${escapeRegExp(part)}\\b`).test(lower))
+    }) || null
+  )
+}
