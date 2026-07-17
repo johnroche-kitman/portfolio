@@ -5,7 +5,6 @@ import Tooltip from '@mui/material/Tooltip'
 import { useNavigate } from 'react-router-dom'
 import DataTable from '../components/DataTable'
 import PlayerAvatar from '../components/PlayerAvatar'
-import Lozenge from '../components/Lozenge'
 import Button from '../components/Button'
 import Icon from '../components/Icon'
 import { useAppData } from '../state/AppDataContext'
@@ -54,7 +53,7 @@ export default function ReviewQueue() {
     {
       key: 'player',
       label: 'Player',
-      width: '13%',
+      width: '16%',
       render: (row) => {
         const athlete = getAthleteById(row.athleteId)
         return (
@@ -75,7 +74,7 @@ export default function ReviewQueue() {
     {
       key: 'action',
       label: 'Action',
-      width: '9%',
+      width: '10%',
       render: (row) => (
         <Box display="flex" alignItems="center" gap={0.75}>
           <Icon name={ACTION_META[row.type].icon} fontSize="small" sx={{ color: 'var(--color-primary)' }} />
@@ -86,7 +85,7 @@ export default function ReviewQueue() {
     {
       key: 'injury',
       label: 'Injury',
-      width: '14%',
+      width: '18%',
       render: (row) => {
         if (row.type === 'injury') {
           return (
@@ -109,20 +108,9 @@ export default function ReviewQueue() {
       },
     },
     {
-      key: 'source',
-      label: 'Created by',
-      width: '10%',
-      render: (row) => (
-        <Box display="flex" alignItems="center" gap={0.75}>
-          <Icon name="ai" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="body2">{row.addedBy}</Typography>
-        </Box>
-      ),
-    },
-    {
       key: 'summary',
       label: 'Summary',
-      width: '19%',
+      width: '30%',
       render: (row) => {
         if (row.type === 'note') {
           return (
@@ -156,15 +144,9 @@ export default function ReviewQueue() {
       },
     },
     {
-      key: 'status',
-      label: 'Status',
-      width: '13%',
-      render: () => <Lozenge label="Pending review" tone="warning" />,
-    },
-    {
       key: 'actions',
       label: '',
-      width: '22%',
+      width: '26%',
       render: (row) => (
         <Box display="flex" gap={1}>
           <Button
