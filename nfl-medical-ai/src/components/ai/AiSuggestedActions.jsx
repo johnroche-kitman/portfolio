@@ -23,7 +23,7 @@ const SUGGESTIONS = [
   {
     key: 'create-rehab',
     label: 'Create a rehab program',
-    description: 'Dictate the exercises and I will schedule them for today.',
+    description: 'Dictate the exercises and I will schedule them.',
     icon: 'rehab',
     enabled: true,
     template: 'Create a new rehab program for today for ',
