@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import DemoLanding from './pages/DemoLanding'
+import MobileDemo from './pages/MobileDemo'
 import MedicalLayout from './pages/MedicalLayout'
 import Roster from './pages/Roster'
 import ReviewQueue from './pages/ReviewQueue'
@@ -7,13 +9,14 @@ import InjuryOverview from './pages/InjuryOverview'
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/medical/roster" replace />} />
+      <Route path="/" element={<DemoLanding />} />
+      <Route path="/mobile" element={<MobileDemo />} />
       <Route path="/medical" element={<MedicalLayout />}>
         <Route path="roster" element={<Roster />} />
         <Route path="review-queue" element={<ReviewQueue />} />
         <Route path="injury/:injuryId" element={<InjuryOverview />} />
       </Route>
-      <Route path="*" element={<Navigate to="/medical/roster" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

@@ -31,21 +31,23 @@ export default function MainNavigation({ active = 'medical' }) {
         top: 0,
       }}
     >
-      <Box sx={{ py: 2 }}>
-        <Box
-          component="img"
-          src={`${import.meta.env.BASE_URL}nfl-logo.png`}
-          alt="NFL"
-          sx={{
-            width: 34,
-            height: 34,
-            display: 'block',
-            objectFit: 'contain',
-            filter:
-              'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)',
-          }}
-        />
-      </Box>
+      <Tooltip title="Back to demo home" placement="right">
+        <ButtonBase onClick={() => navigate('/')} sx={{ borderRadius: '8px', p: 1, my: 1 }}>
+          <Box
+            component="img"
+            src={`${import.meta.env.BASE_URL}nfl-logo.png`}
+            alt="NFL"
+            sx={{
+              width: 34,
+              height: 34,
+              display: 'block',
+              objectFit: 'contain',
+              filter:
+                'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)',
+            }}
+          />
+        </ButtonBase>
+      </Tooltip>
 
       <Box display="flex" flexDirection="column" gap={1} mt={2} flexGrow={1} width="100%">
         {NAV_ITEMS.map((item) => {

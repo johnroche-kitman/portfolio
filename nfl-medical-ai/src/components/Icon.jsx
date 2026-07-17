@@ -37,6 +37,8 @@ import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined'
 import SummarizeOutlinedIcon from '@mui/icons-material/SummarizeOutlined'
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
+import DesktopWindowsOutlinedIcon from '@mui/icons-material/DesktopWindowsOutlined'
+import PhoneIphoneOutlinedIcon from '@mui/icons-material/PhoneIphoneOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -79,6 +81,8 @@ export const ICONS = {
   summary: SummarizeOutlinedIcon,
   print: PrintOutlinedIcon,
   openInNew: OpenInNewOutlinedIcon,
+  desktop: DesktopWindowsOutlinedIcon,
+  mobile: PhoneIphoneOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {
