@@ -199,7 +199,7 @@ export default function RehabTab({ injury, athlete }) {
           const isToday = key === todayKey()
           const entry = dayEntries.find((e) => e.date === key)
           const dayNumber = computeDayNumber(injury.date, date)
-          const hasPending = pendingForInjury.some((r) => r.date === key)
+          const pendingEntry = pendingForInjury.find((r) => r.date === key)
 
           return (
             <Box
@@ -234,7 +234,7 @@ export default function RehabTab({ injury, athlete }) {
                     >
                       {formatDayLabel(date)}
                     </Box>
-                    {hasPending && <Lozenge label="Pending" tone="warning" />}
+                    {pendingEntry && <Lozenge label="Pending" tone="warning" />}
                   </Box>
                 </Box>
                 <Box display="flex" alignItems="center" gap={0.25}>
@@ -266,6 +266,19 @@ export default function RehabTab({ injury, athlete }) {
                     </Typography>
                   </Box>
                 ))}
+                {!entry &&
+                  (pendingEntry?.exercises || []).map((exercise, idx) => (
+                    <Box key={idx} sx={{ opacity: 0.65 }}>
+                      <Typography variant="body1" fontWeight={600} sx={{ color: '#7a5300' }}>
+                        {exercise.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#7a5300' }}>
+                        {exercise.sets ? `${exercise.sets} Sets` : 'Sets'} |{' '}
+                        {exercise.reps ? `${exercise.reps} Reps` : 'Reps'} |{' '}
+                        {exercise.weight ? `${exercise.weight} kg` : 'kg'}
+                      </Typography>
+                    </Box>
+                  ))}
               </Box>
             </Box>
           )
