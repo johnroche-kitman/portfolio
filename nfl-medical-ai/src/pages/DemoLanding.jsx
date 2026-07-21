@@ -15,7 +15,7 @@ const OPTIONS = [
   {
     key: 'mobile',
     label: 'Mobile view',
-    description: 'Preview the Ask AI assistant full-screen in a phone frame.',
+    description: 'Preview the Ask iP assistant full-screen in a phone frame.',
     icon: 'mobile',
     to: '/mobile',
   },

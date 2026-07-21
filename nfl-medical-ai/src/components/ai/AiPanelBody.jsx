@@ -34,7 +34,7 @@ export default function AiPanelBody({
       >
         <Box display="flex" alignItems="center" gap={1}>
           <Icon name="ai" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="h2">Ask AI</Typography>
+          <Typography variant="h2">Ask iP</Typography>
         </Box>
         {onClose && (
           <IconButton onClick={onClose} size="small">

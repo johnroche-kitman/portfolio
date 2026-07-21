@@ -5,7 +5,7 @@ export default function AiFab({ onClick }) {
   return (
     <Fab
       onClick={onClick}
-      aria-label="Open AI assistant"
+      aria-label="Open Ask iP assistant"
       sx={{
         position: 'fixed',
         bottom: 32,
