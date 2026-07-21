@@ -19,6 +19,7 @@ export default function AiPanelMobile() {
         onSend={conversation.handleSend}
         placeholder={conversation.placeholder}
         onSelectSuggestion={conversation.handleSelectSuggestion}
+        isThinking={conversation.isThinking}
       />
 
       <InjurySummaryModal

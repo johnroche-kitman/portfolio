@@ -53,8 +53,10 @@ export function useAiConversation({ onNavigateAway } = {}) {
   const [pendingAction, setPendingAction] = useState(null)
   const [inputValue, setInputValue] = useState('')
   const [summaryAthleteId, setSummaryAthleteId] = useState(null)
+  const [isThinking, setIsThinking] = useState(false)
   const scrollRef = useRef(null)
   const idCounter = useRef(0)
+  const thinkingTimeoutRef = useRef(null)
   const navigate = useNavigate()
 
   const {
@@ -73,20 +75,46 @@ export function useAiConversation({ onNavigateAway } = {}) {
   useEffect(() => {
     // Skip on mount (no messages yet) so a short viewport — e.g. the mobile
     // phone frame — doesn't open pre-scrolled past the popular actions.
-    if (scrollRef.current && messages.length > 0) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [messages])
+    if (scrollRef.current && (messages.length > 0 || isThinking)) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages, isThinking])
+
+  // Clear a pending "thinking" timer if the component unmounts mid-delay
+  // (e.g. the drawer is closed or the user navigates away).
+  useEffect(() => {
+    return () => {
+      if (thinkingTimeoutRef.current) clearTimeout(thinkingTimeoutRef.current)
+    }
+  }, [])
 
   function pushMessage(role, payload) {
     idCounter.current += 1
     setMessages((prev) => [...prev, { id: `msg-${idCounter.current}`, role, ...payload }])
   }
 
+  // Real assistant responses don't land instantly — fake a short "thinking"
+  // beat before the reply appears so the panel doesn't feel like it's just
+  // echoing canned text back immediately.
+  function respondWithDelay(work) {
+    setIsThinking(true)
+    thinkingTimeoutRef.current = setTimeout(() => {
+      thinkingTimeoutRef.current = null
+      setIsThinking(false)
+      work()
+    }, 600 + Math.random() * 700)
+  }
+
   function selectFollowUp(label, action) {
+    if (isThinking) return
     pushMessage('user', { text: label })
-    action()
+    respondWithDelay(action)
   }
 
   function resetConversation() {
+    if (thinkingTimeoutRef.current) {
+      clearTimeout(thinkingTimeoutRef.current)
+      thinkingTimeoutRef.current = null
+    }
+    setIsThinking(false)
     setMessages([])
     setPendingAction(null)
     setInputValue('')
@@ -478,19 +506,23 @@ export function useAiConversation({ onNavigateAway } = {}) {
   }
 
   function handleSend() {
+    if (isThinking) return
     const value = inputValue.trim()
     if (!value) return
     pushMessage('user', { text: value })
     setInputValue('')
-    processInput(value)
+    respondWithDelay(() => processInput(value))
   }
 
   function handleSelectSuggestion(suggestion) {
+    if (isThinking) return
     const followUp = SUGGESTION_FOLLOWUPS[suggestion.key]
     if (!followUp) return
     pushMessage('user', { text: suggestion.label })
-    setPendingAction({ kind: followUp.kind })
-    pushMessage('assistant', { text: followUp.question })
+    respondWithDelay(() => {
+      setPendingAction({ kind: followUp.kind })
+      pushMessage('assistant', { text: followUp.question })
+    })
   }
 
   function currentPlaceholder() {
@@ -534,5 +566,6 @@ export function useAiConversation({ onNavigateAway } = {}) {
     summaryAthleteId,
     setSummaryAthleteId,
     resetConversation,
+    isThinking,
   }
 }

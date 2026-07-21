@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
 import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import PageTabs from '../components/PageTabs'
 import Card from '../components/Card'
 import PlayerAvatar from '../components/PlayerAvatar'
@@ -44,7 +44,11 @@ function Field({ label, value, emphasizeMissing }) {
 export default function InjuryOverview() {
   const { injuryId } = useParams()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [searchParams] = useSearchParams()
+  const requestedTab = searchParams.get('tab')
+  const [activeTab, setActiveTab] = useState(
+    DETAIL_TABS.some((tab) => tab.value === requestedTab && !tab.disabled) ? requestedTab : 'overview'
+  )
   const { getInjuryById, getAthleteById, acceptInjury, rejectInjury, outstandingBackgroundFields } = useAppData()
 
   const injury = getInjuryById(injuryId)

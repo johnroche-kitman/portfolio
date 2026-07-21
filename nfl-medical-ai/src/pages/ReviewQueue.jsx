@@ -49,6 +49,12 @@ export default function ReviewQueue() {
     else rejectInjury(row.id)
   }
 
+  function openRow(row) {
+    const injuryId = row.type === 'injury' ? row.id : row.injuryId
+    const tab = row.type === 'note' ? '?tab=notes' : row.type === 'rehab' ? '?tab=rehab' : ''
+    navigate(`/medical/injury/${injuryId}${tab}`)
+  }
+
   const columns = [
     {
       key: 'player',
@@ -208,7 +214,7 @@ export default function ReviewQueue() {
           columns={columns}
           rows={rows}
           getRowKey={(row) => `${row.type}-${row.id}`}
-          onRowClick={(row) => navigate(`/medical/injury/${row.type === 'injury' ? row.id : row.injuryId}`)}
+          onRowClick={openRow}
           emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury, note, or rehab program."
         />
       </Box>

@@ -6,6 +6,7 @@ import Icon from '../Icon'
 import AiSuggestedActions from './AiSuggestedActions'
 import AiDictationInput from './AiDictationInput'
 import AiChatMessage from './AiChatMessage'
+import AiThinkingIndicator from './AiThinkingIndicator'
 
 // Presentational Ask AI content: header, scrollable suggestions/chat, and
 // the dictation input. Shared by the desktop drawer (AiPanel) and the
@@ -21,6 +22,7 @@ export default function AiPanelBody({
   placeholder,
   onSelectSuggestion,
   onClose,
+  isThinking,
 }) {
   return (
     <Box display="flex" flexDirection="column" height="100%" minHeight={0}>
@@ -51,14 +53,21 @@ export default function AiPanelBody({
         sx={{ p: 2.5, overflowY: 'auto', backgroundColor: 'var(--background)' }}
       >
         <AiSuggestedActions onSelect={onSelectSuggestion} />
-        {messages.length > 0 && <Divider sx={{ borderColor: 'var(--divider)' }} />}
+        {(messages.length > 0 || isThinking) && <Divider sx={{ borderColor: 'var(--divider)' }} />}
         {messages.map((message) => (
           <AiChatMessage key={message.id} message={message} />
         ))}
+        {isThinking && <AiThinkingIndicator />}
       </Box>
 
       <Box sx={{ p: 2.5, borderTop: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}>
-        <AiDictationInput value={inputValue} onChange={onInputChange} onSubmit={onSend} placeholder={placeholder} />
+        <AiDictationInput
+          value={inputValue}
+          onChange={onInputChange}
+          onSubmit={onSend}
+          placeholder={placeholder}
+          disabled={isThinking}
+        />
       </Box>
     </Box>
   )

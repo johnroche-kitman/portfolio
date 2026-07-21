@@ -30,6 +30,7 @@ export default function AiPanel({ open, onClose }) {
           placeholder={conversation.placeholder}
           onSelectSuggestion={conversation.handleSelectSuggestion}
           onClose={handleClose}
+          isThinking={conversation.isThinking}
         />
       </Drawer>
 

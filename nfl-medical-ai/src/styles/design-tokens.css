@@ -24,6 +24,20 @@
   --nav-width-expanded: 232px;
 }
 
+/* Bouncing dots for AiThinkingIndicator's fake "typing" delay. */
+@keyframes ai-thinking-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Print-one-element trick used by InjurySummaryModal: hide everything, then
    reveal only the marked subtree (works regardless of where MUI's Dialog
    portal mounts it, since descendant visibility:visible overrides an

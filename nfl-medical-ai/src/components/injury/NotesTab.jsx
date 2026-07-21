@@ -36,6 +36,44 @@ function noteTypeTone(noteType) {
   }
 }
 
+function PendingNoteBanner({ note, onAccept, onReject }) {
+  return (
+    <Box
+      sx={{
+        mb: 3,
+        p: 2.5,
+        borderRadius: '8px',
+        backgroundColor: '#fff4dc',
+        border: '1px solid var(--color-warning)',
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap" sx={{ mb: 1.5 }}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Icon name="ai" fontSize="small" sx={{ color: '#7a5300' }} />
+          <Typography variant="body1" sx={{ color: '#7a5300' }}>
+            Created by the AI assistant from a dictated note. Review before accepting.
+          </Typography>
+        </Box>
+        <Box display="flex" gap={1}>
+          <Button onClick={onAccept}>Accept note</Button>
+          <Button tone="danger" onClick={onReject}>
+            Reject
+          </Button>
+        </Box>
+      </Box>
+      <Typography variant="body1" fontWeight={600}>
+        {note.title}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'var(--grey-100)', mb: 1 }}>
+        {note.addedOn} · {note.addedBy}
+      </Typography>
+      <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+        {note.text}
+      </Typography>
+    </Box>
+  )
+}
+
 function NoteCard({ note, athlete, onDelete }) {
   const [anchorEl, setAnchorEl] = useState(null)
 
@@ -104,8 +142,9 @@ function NoteCard({ note, athlete, onDelete }) {
 }
 
 export default function NotesTab({ injury, athlete }) {
-  const { notesByInjury, addManualNote, deleteNoteFromInjury } = useAppData()
+  const { notesByInjury, addManualNote, deleteNoteFromInjury, pendingNotes, acceptNote, rejectNote } = useAppData()
   const notes = notesByInjury[injury.id] || []
+  const pendingForInjury = pendingNotes.filter((n) => n.injuryId === injury.id)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -126,7 +165,21 @@ export default function NotesTab({ injury, athlete }) {
 
   return (
     <Box>
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 3, mb: 2 }}>
+      {pendingForInjury.map((note) => (
+        <PendingNoteBanner
+          key={note.id}
+          note={note}
+          onAccept={() => acceptNote(note.id)}
+          onReject={() => rejectNote(note.id)}
+        />
+      ))}
+
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mt: pendingForInjury.length ? 0 : 3, mb: 2 }}
+      >
         <Typography variant="h2">Notes</Typography>
         <Box display="flex" gap={1.5}>
           <Button onClick={() => setDialogOpen(true)}>Add note</Button>

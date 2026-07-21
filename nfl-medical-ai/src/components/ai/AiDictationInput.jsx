@@ -29,7 +29,7 @@ const ERROR_MESSAGES = {
 // with zero results (interim or final) as a stall and surface it.
 const STALL_TIMEOUT_MS = 7000
 
-export default function AiDictationInput({ value, onChange, onSubmit, autoFocus, placeholder }) {
+export default function AiDictationInput({ value, onChange, onSubmit, autoFocus, placeholder, disabled }) {
   const [listening, setListening] = useState(false)
   const [error, setError] = useState(null)
   const recognitionRef = useRef(null)
@@ -131,6 +131,7 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
         minRows={3}
         maxRows={8}
         autoFocus={autoFocus}
+        disabled={disabled}
         fullWidth
         sx={{
           '& .MuiOutlinedInput-root': { borderRadius: '8px', backgroundColor: 'var(--white)' },
@@ -139,16 +140,19 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
       <Box display="flex" justifyContent="space-between" alignItems="center">
         {SpeechRecognitionApi ? (
           <Tooltip title={listening ? 'Stop dictating' : 'Start dictating'}>
-            <IconButton
-              onClick={toggleListening}
-              sx={{
-                border: '1px solid var(--divider)',
-                color: listening ? 'var(--color-error)' : 'var(--color-primary)',
-                backgroundColor: listening ? '#fbe6e7' : 'transparent',
-              }}
-            >
-              <Icon name={listening ? 'micOff' : 'mic'} fontSize="small" />
-            </IconButton>
+            <span>
+              <IconButton
+                onClick={toggleListening}
+                disabled={disabled}
+                sx={{
+                  border: '1px solid var(--divider)',
+                  color: listening ? 'var(--color-error)' : 'var(--color-primary)',
+                  backgroundColor: listening ? '#fbe6e7' : 'transparent',
+                }}
+              >
+                <Icon name={listening ? 'micOff' : 'mic'} fontSize="small" />
+              </IconButton>
+            </span>
           </Tooltip>
         ) : (
           <Box />
@@ -160,7 +164,7 @@ export default function AiDictationInput({ value, onChange, onSubmit, autoFocus,
         )}
         <Button
           endIcon={<Icon name="send" fontSize="small" />}
-          disabled={!value.trim()}
+          disabled={!value.trim() || disabled}
           onClick={onSubmit}
         >
           Send
