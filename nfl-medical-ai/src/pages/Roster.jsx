@@ -155,7 +155,7 @@ export default function Roster() {
                     variant="body1"
                     onClick={(e) => {
                       e.stopPropagation()
-                      navigate(`/medical/injury/${inj.id}`)
+                      navigate(`/medical/injury/${inj.id}`, { state: { from: 'roster' } })
                     }}
                     sx={{
                       textDecoration: 'underline',

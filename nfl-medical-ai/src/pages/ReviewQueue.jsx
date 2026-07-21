@@ -52,7 +52,7 @@ export default function ReviewQueue() {
   function openRow(row) {
     const injuryId = row.type === 'injury' ? row.id : row.injuryId
     const tab = row.type === 'note' ? '?tab=notes' : row.type === 'rehab' ? '?tab=rehab' : ''
-    navigate(`/medical/injury/${injuryId}${tab}`)
+    navigate(`/medical/injury/${injuryId}${tab}`, { state: { from: 'review-queue' } })
   }
 
   const columns = [

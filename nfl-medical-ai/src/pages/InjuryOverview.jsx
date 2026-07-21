@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography'
 import Grid from '@mui/material/Grid'
 import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import PageTabs from '../components/PageTabs'
 import Card from '../components/Card'
 import PlayerAvatar from '../components/PlayerAvatar'
@@ -22,6 +22,14 @@ const DETAIL_TABS = [
   { value: 'notes', label: 'Notes' },
   { value: 'diagnostics', label: 'Diagnostics', disabled: true },
 ]
+
+// Where this page can be reached from — drives both the back link's label
+// and its destination, since navigate(-1) can't be trusted to land on the
+// right page (e.g. a refresh or a direct link has no history to pop).
+const BACK_LINKS = {
+  'review-queue': { label: 'Back to review queue', path: '/medical/review-queue' },
+  roster: { label: 'Back to roster', path: '/medical/roster' },
+}
 
 function Field({ label, value, emphasizeMissing }) {
   const missing = !value
@@ -44,6 +52,8 @@ function Field({ label, value, emphasizeMissing }) {
 export default function InjuryOverview() {
   const { injuryId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backLink = BACK_LINKS[location.state?.from] || BACK_LINKS.roster
   const [searchParams] = useSearchParams()
   const requestedTab = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState(
@@ -71,14 +81,14 @@ export default function InjuryOverview() {
   return (
     <Box>
       <Box
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(backLink.path)}
         display="flex"
         alignItems="center"
         gap={0.5}
         sx={{ cursor: 'pointer', color: 'var(--grey-100)', mb: 1, width: 'fit-content' }}
       >
         <Icon name="back" fontSize="small" />
-        <Typography variant="body1">Player overview</Typography>
+        <Typography variant="body1">{backLink.label}</Typography>
       </Box>
 
       <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
