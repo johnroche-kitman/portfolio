@@ -12,46 +12,31 @@ import { useAppData } from '../state/AppDataContext'
 const ACTION_META = {
   injury: { icon: 'noteAdd', label: 'Injury' },
   note: { icon: 'factCheck', label: 'Note' },
-  rehab: { icon: 'rehab', label: 'Rehab' },
 }
 
 export default function ReviewQueue() {
-  const {
-    pendingInjuries,
-    pendingNotes,
-    pendingRehabs,
-    getAthleteById,
-    getInjuryById,
-    acceptInjury,
-    rejectInjury,
-    acceptNote,
-    rejectNote,
-    acceptRehab,
-    rejectRehab,
-  } = useAppData()
+  const { pendingInjuries, pendingNotes, getAthleteById, getInjuryById, acceptInjury, rejectInjury, acceptNote, rejectNote } =
+    useAppData()
   const navigate = useNavigate()
 
   const rows = [
     ...pendingInjuries.map((injury) => ({ ...injury, type: 'injury' })),
     ...pendingNotes.map((note) => ({ ...note, type: 'note' })),
-    ...pendingRehabs.map((rehab) => ({ ...rehab, type: 'rehab' })),
   ]
 
   function acceptRow(row) {
     if (row.type === 'note') acceptNote(row.id)
-    else if (row.type === 'rehab') acceptRehab(row.id)
     else acceptInjury(row.id)
   }
 
   function rejectRow(row) {
     if (row.type === 'note') rejectNote(row.id)
-    else if (row.type === 'rehab') rejectRehab(row.id)
     else rejectInjury(row.id)
   }
 
   function openRow(row) {
     const injuryId = row.type === 'injury' ? row.id : row.injuryId
-    const tab = row.type === 'note' ? '?tab=notes' : row.type === 'rehab' ? '?tab=rehab' : ''
+    const tab = row.type === 'note' ? '?tab=notes' : ''
     navigate(`/medical/injury/${injuryId}${tab}`, { state: { from: 'review-queue' } })
   }
 
@@ -130,18 +115,6 @@ export default function ReviewQueue() {
             </Box>
           )
         }
-        if (row.type === 'rehab') {
-          return (
-            <Box>
-              <Typography variant="body1" fontWeight={600}>
-                {row.exercises.length} exercise{row.exercises.length === 1 ? '' : 's'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
-                {row.exercises.map((e) => e.name).join(', ')}
-              </Typography>
-            </Box>
-          )
-        }
         return (
           <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
             {row.rawDictation}
@@ -205,8 +178,7 @@ export default function ReviewQueue() {
         </Tooltip>
       </Box>
       <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 3 }}>
-        Injuries, notes and rehab programs staged by the AI assistant. Review each one and accept to add it to the
-        medical record.
+        Injuries and notes staged by the AI assistant. Review each one and accept to add it to the medical record.
       </Typography>
 
       <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
@@ -215,7 +187,7 @@ export default function ReviewQueue() {
           rows={rows}
           getRowKey={(row) => `${row.type}-${row.id}`}
           onRowClick={openRow}
-          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury, note, or rehab program."
+          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury or note."
         />
       </Box>
     </Box>

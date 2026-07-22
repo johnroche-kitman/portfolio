@@ -515,7 +515,7 @@ export const seedNotes = {
 
 // Seed rehab session history for Tyler Held's two seeded injuries, so the
 // injury summary feature has real "number of rehab sessions" data to show
-// out of the box, matching the acceptRehab day-entry shape in AppDataContext.
+// out of the box, matching the rehabByInjury day-entry shape in AppDataContext.
 export const seedRehabByInjury = {
   'inj-tyler-acl': [
     {

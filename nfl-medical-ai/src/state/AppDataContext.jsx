@@ -10,7 +10,7 @@ function loadInitialState() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      return { pendingNotes: [], pendingRehabs: [], rehabByInjury: {}, ...parsed }
+      return { pendingNotes: [], rehabByInjury: {}, ...parsed }
     }
   } catch {
     // fall through to seed state
@@ -21,7 +21,6 @@ function loadInitialState() {
     athleteNotes: seedNotes,
     notesByInjury: {},
     pendingNotes: [],
-    pendingRehabs: [],
     rehabByInjury: seedRehabByInjury,
   }
 }
@@ -287,82 +286,48 @@ export function AppDataProvider({ children }) {
     [state, persist]
   )
 
+  // Rehab programs dictated to Ask iP go straight onto the injury's rehab
+  // tab — no review-queue step — so this writes the day entry directly,
+  // tagged with addedBy so RehabTab can show where it came from.
   const createRehabFromParsed = useCallback(
     (parsed) => {
-      const id = `rehab-ai-${state.pendingRehabs.length + 1}-${Math.random().toString(36).slice(2, 7)}`
-      const rehab = {
-        id,
-        injuryId: parsed.injuryId,
-        athleteId: parsed.athleteId,
-        date: parsed.date || todayKey(),
-        exercises: parsed.exercises || [],
-        rawDictation: parsed.rawText,
-        addedBy: 'AI assistant',
-        addedOn: todayLabel(),
-        status: 'pending_review',
-      }
-
-      persist({
-        ...state,
-        pendingRehabs: [rehab, ...state.pendingRehabs],
-      })
-
-      return rehab
-    },
-    [state, persist]
-  )
-
-  const acceptRehab = useCallback(
-    (rehabId) => {
-      const rehab = state.pendingRehabs.find((r) => r.id === rehabId)
-      if (!rehab) return
-
-      const dayEntry = {
-        id: `rehab-${rehabId}`,
-        date: rehab.date,
-        exercises: rehab.exercises,
-        addedBy: rehab.addedBy,
-      }
-
-      const existingDays = state.rehabByInjury[rehab.injuryId] || []
-      const dayIndex = existingDays.findIndex((entry) => entry.date === rehab.date)
+      const date = parsed.date || todayKey()
+      const exercises = parsed.exercises || []
+      const existingDays = state.rehabByInjury[parsed.injuryId] || []
+      const dayIndex = existingDays.findIndex((entry) => entry.date === date)
+      const newEntryId = `rehab-ai-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
       const updatedDays =
         dayIndex >= 0
-          ? existingDays.map((entry, i) =>
-              i === dayIndex ? { ...entry, exercises: [...entry.exercises, ...rehab.exercises] } : entry
-            )
-          : [...existingDays, dayEntry]
+          ? existingDays.map((entry, i) => (i === dayIndex ? { ...entry, exercises: [...entry.exercises, ...exercises] } : entry))
+          : [...existingDays, { id: newEntryId, date, exercises, addedBy: 'AI assistant' }]
 
       persist({
         ...state,
-        pendingRehabs: state.pendingRehabs.map((r) => (r.id === rehabId ? { ...r, status: 'accepted' } : r)),
-        rehabByInjury: {
-          ...state.rehabByInjury,
-          [rehab.injuryId]: updatedDays,
-        },
+        rehabByInjury: { ...state.rehabByInjury, [parsed.injuryId]: updatedDays },
       })
+
+      return {
+        id: dayIndex >= 0 ? existingDays[dayIndex].id : newEntryId,
+        injuryId: parsed.injuryId,
+        athleteId: parsed.athleteId,
+        date,
+        exercises,
+      }
     },
     [state, persist]
   )
 
-  const rejectRehab = useCallback(
-    (rehabId) => {
-      persist({
-        ...state,
-        pendingRehabs: state.pendingRehabs.filter((r) => r.id !== rehabId),
-      })
-    },
-    [state, persist]
-  )
-
-  const appendToPendingRehab = useCallback(
-    (rehabId, extraExercises) => {
+  const addExercisesToRehabDay = useCallback(
+    (injuryId, dayEntryId, extraExercises) => {
       if (!extraExercises?.length) return
       persist({
         ...state,
-        pendingRehabs: state.pendingRehabs.map((r) =>
-          r.id === rehabId ? { ...r, exercises: [...r.exercises, ...extraExercises] } : r
-        ),
+        rehabByInjury: {
+          ...state.rehabByInjury,
+          [injuryId]: (state.rehabByInjury[injuryId] || []).map((entry) =>
+            entry.id === dayEntryId ? { ...entry, exercises: [...entry.exercises, ...extraExercises] } : entry
+          ),
+        },
       })
     },
     [state, persist]
@@ -409,7 +374,6 @@ export function AppDataProvider({ children }) {
       notesByInjury: state.notesByInjury,
       pendingInjuries: state.injuries.filter((inj) => inj.status === 'pending_review'),
       pendingNotes: state.pendingNotes.filter((n) => n.status === 'pending_review'),
-      pendingRehabs: state.pendingRehabs.filter((r) => r.status === 'pending_review'),
       rehabByInjury: state.rehabByInjury,
       getAthleteById: (id) => state.athletes.find((a) => a.id === id),
       getInjuriesByAthlete: (athleteId) => state.injuries.filter((inj) => inj.athleteId === athleteId),
@@ -427,9 +391,7 @@ export function AppDataProvider({ children }) {
       addManualNote,
       deleteNoteFromInjury,
       createRehabFromParsed,
-      acceptRehab,
-      rejectRehab,
-      appendToPendingRehab,
+      addExercisesToRehabDay,
       addManualRehabExercise,
       clearRehabDay,
     }),
@@ -446,9 +408,7 @@ export function AppDataProvider({ children }) {
       addManualNote,
       deleteNoteFromInjury,
       createRehabFromParsed,
-      acceptRehab,
-      rejectRehab,
-      appendToPendingRehab,
+      addExercisesToRehabDay,
       addManualRehabExercise,
       clearRehabDay,
     ]

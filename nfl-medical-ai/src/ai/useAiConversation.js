@@ -69,7 +69,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
     addNoteToInjury,
     appendToPendingNote,
     createRehabFromParsed,
-    appendToPendingRehab,
+    addExercisesToRehabDay,
   } = useAppData()
 
   useEffect(() => {
@@ -126,28 +126,42 @@ export function useAiConversation({ onNavigateAway } = {}) {
     onNavigateAway?.()
   }
 
-  function startAddMoreDetail(resultType, targetId) {
-    setPendingAction({ kind: 'awaiting-more-detail', resultType, targetId })
+  function goToRehabTab(injuryId, date) {
+    navigate(`/medical/injury/${injuryId}?tab=rehab&date=${date}`)
+    resetConversation()
+    onNavigateAway?.()
+  }
+
+  function startAddMoreDetail(resultType, targetId, meta) {
+    setPendingAction({ kind: 'awaiting-more-detail', resultType, targetId, meta })
     pushMessage('assistant', { text: 'Sure, what would you like to add?' })
   }
 
-  function followUpOptions(resultType, targetId) {
+  function followUpOptions(resultType, targetId, meta = {}) {
     const noun = NOUN_BY_TYPE[resultType] || resultType
+    const finalOption =
+      resultType === 'rehab'
+        ? {
+            label: 'View rehab program',
+            tone: 'primary',
+            onSelect: () => selectFollowUp('View rehab program', () => goToRehabTab(meta.injuryId, meta.date)),
+          }
+        : {
+            label: 'Go to my review queue',
+            tone: 'primary',
+            onSelect: () => selectFollowUp('Go to my review queue', goToQueue),
+          }
     return [
       {
         label: `Add more information to this ${noun}`,
         onSelect: () =>
-          selectFollowUp(`Add more information to this ${noun}`, () => startAddMoreDetail(resultType, targetId)),
+          selectFollowUp(`Add more information to this ${noun}`, () => startAddMoreDetail(resultType, targetId, meta)),
       },
       {
         label: ANOTHER_LABEL_BY_TYPE[resultType],
         onSelect: () => selectFollowUp(ANOTHER_LABEL_BY_TYPE[resultType], () => setPendingAction(null)),
       },
-      {
-        label: 'Go to my review queue',
-        tone: 'primary',
-        onSelect: () => selectFollowUp('Go to my review queue', goToQueue),
-      },
+      finalOption,
     ]
   }
 
@@ -178,7 +192,10 @@ export function useAiConversation({ onNavigateAway } = {}) {
       pushMessage('assistant', { text: outcome.error, tone: 'error' })
       return
     }
-    pushMessage('assistant', { lines: outcome.summaryLines, options: followUpOptions('rehab', outcome.rehab.id) })
+    pushMessage('assistant', {
+      lines: outcome.summaryLines,
+      options: followUpOptions('rehab', outcome.rehab.id, { injuryId: outcome.rehab.injuryId, date: outcome.rehab.date }),
+    })
   }
 
   function askWhichInjury(parsed, athlete, kind, finalize) {
@@ -468,7 +485,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
     }
 
     if (pendingAction?.kind === 'awaiting-more-detail') {
-      const { resultType, targetId } = pendingAction
+      const { resultType, targetId, meta } = pendingAction
       if (resultType === 'note') {
         appendToPendingNote(targetId, text)
       } else if (resultType === 'rehab') {
@@ -479,12 +496,15 @@ export function useAiConversation({ onNavigateAway } = {}) {
           })
           return
         }
-        appendToPendingRehab(targetId, extraExercises)
+        addExercisesToRehabDay(meta.injuryId, targetId, extraExercises)
       } else {
         addNoteToInjury(targetId, text)
       }
       setPendingAction(null)
-      pushMessage('assistant', { text: `Added more detail: "${text}"`, options: followUpOptions(resultType, targetId) })
+      pushMessage('assistant', {
+        text: `Added more detail: "${text}"`,
+        options: followUpOptions(resultType, targetId, meta),
+      })
       return
     }
 

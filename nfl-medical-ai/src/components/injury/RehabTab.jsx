@@ -7,6 +7,7 @@ import TextField from '@mui/material/TextField'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import InputAdornment from '@mui/material/InputAdornment'
+import { useSearchParams } from 'react-router-dom'
 import Button from '../Button'
 import Icon from '../Icon'
 import Lozenge from '../Lozenge'
@@ -57,53 +58,12 @@ function parseDateKey(iso) {
   return new Date(year, month - 1, day)
 }
 
-function PendingRehabBanner({ rehab, onAccept, onReject }) {
-  return (
-    <Box
-      sx={{
-        mb: 3,
-        p: 2.5,
-        borderRadius: '8px',
-        backgroundColor: '#fff4dc',
-        border: '1px solid var(--color-warning)',
-      }}
-    >
-      <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap" sx={{ mb: 1.5 }}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Icon name="ai" fontSize="small" sx={{ color: '#7a5300' }} />
-          <Typography variant="body1" sx={{ color: '#7a5300' }}>
-            Created by the AI assistant for {formatDayLabel(parseDateKey(rehab.date))}. Review the exercises below
-            before accepting.
-          </Typography>
-        </Box>
-        <Box display="flex" gap={1}>
-          <Button onClick={onAccept}>Accept rehab program</Button>
-          <Button tone="danger" onClick={onReject}>
-            Reject
-          </Button>
-        </Box>
-      </Box>
-      <Box display="flex" flexDirection="column" gap={0.5}>
-        {rehab.exercises.map((exercise, idx) => (
-          <Typography key={idx} variant="body2">
-            <Box component="span" fontWeight={600}>
-              {exercise.name}
-            </Box>{' '}
-            — {exercise.sets ? `${exercise.sets} sets` : 'Sets'}, {exercise.reps ? `${exercise.reps} reps` : 'Reps'}
-            {exercise.weight ? `, ${exercise.weight}kg` : ''}
-          </Typography>
-        ))}
-      </Box>
-    </Box>
-  )
-}
-
 export default function RehabTab({ injury, athlete }) {
-  const { getRehabsByInjury, addManualRehabExercise, clearRehabDay, pendingRehabs, acceptRehab, rejectRehab } =
-    useAppData()
-  const pendingForInjury = pendingRehabs.filter((r) => r.injuryId === injury.id)
+  const { getRehabsByInjury, addManualRehabExercise, clearRehabDay } = useAppData()
+  const [searchParams] = useSearchParams()
+  const focusDate = searchParams.get('date')
   const [windowStart, setWindowStart] = useState(() =>
-    pendingForInjury.length ? startOfDay(parseDateKey(pendingForInjury[0].date)) : startOfDay(new Date())
+    focusDate ? startOfDay(parseDateKey(focusDate)) : startOfDay(new Date())
   )
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogDayKey, setDialogDayKey] = useState(todayKey())
@@ -119,23 +79,7 @@ export default function RehabTab({ injury, athlete }) {
 
   return (
     <Box>
-      {pendingForInjury.map((rehab) => (
-        <PendingRehabBanner
-          key={rehab.id}
-          rehab={rehab}
-          onAccept={() => acceptRehab(rehab.id)}
-          onReject={() => rejectRehab(rehab.id)}
-        />
-      ))}
-
-      <Box
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ mt: pendingForInjury.length ? 0 : 3, mb: 2 }}
-        flexWrap="wrap"
-        gap={1.5}
-      >
+      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 3, mb: 2 }} flexWrap="wrap" gap={1.5}>
         <Box display="flex" alignItems="center" gap={1.5}>
           <Select size="small" value="5" sx={{ width: 100, ...FILTER_CONTROL_SX }}>
             <MenuItem value="5">5 day</MenuItem>
@@ -199,7 +143,7 @@ export default function RehabTab({ injury, athlete }) {
           const isToday = key === todayKey()
           const entry = dayEntries.find((e) => e.date === key)
           const dayNumber = computeDayNumber(injury.date, date)
-          const pendingEntry = pendingForInjury.find((r) => r.date === key)
+          const addedByAi = entry?.addedBy === 'AI assistant'
 
           return (
             <Box
@@ -234,7 +178,13 @@ export default function RehabTab({ injury, athlete }) {
                     >
                       {formatDayLabel(date)}
                     </Box>
-                    {pendingEntry && <Lozenge label="Pending" tone="warning" />}
+                    {addedByAi && (
+                      <Tooltip title="This program was added by Ask iP">
+                        <Box sx={{ display: 'inline-flex' }}>
+                          <Lozenge label="Added by Ask iP" tone="info" />
+                        </Box>
+                      </Tooltip>
+                    )}
                   </Box>
                 </Box>
                 <Box display="flex" alignItems="center" gap={0.25}>
@@ -266,19 +216,6 @@ export default function RehabTab({ injury, athlete }) {
                     </Typography>
                   </Box>
                 ))}
-                {!entry &&
-                  (pendingEntry?.exercises || []).map((exercise, idx) => (
-                    <Box key={idx} sx={{ opacity: 0.65 }}>
-                      <Typography variant="body1" fontWeight={600} sx={{ color: '#7a5300' }}>
-                        {exercise.name}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#7a5300' }}>
-                        {exercise.sets ? `${exercise.sets} Sets` : 'Sets'} |{' '}
-                        {exercise.reps ? `${exercise.reps} Reps` : 'Reps'} |{' '}
-                        {exercise.weight ? `${exercise.weight} kg` : 'kg'}
-                      </Typography>
-                    </Box>
-                  ))}
               </Box>
             </Box>
           )

@@ -1,6 +1,6 @@
-// Turns a parsed "create a rehab program" dictation into a pending rehab
-// program via AppDataContext, and produces the plain-language recap for the
-// AI panel.
+// Turns a parsed "create a rehab program" dictation straight into the
+// athlete's rehab tab via AppDataContext (no review-queue step), and
+// produces the plain-language recap for the AI panel.
 export function applyParsedRehab(parsed, { createRehabFromParsed }) {
   if (!parsed.athleteId) {
     return {
@@ -32,7 +32,7 @@ export function applyParsedRehab(parsed, { createRehabFromParsed }) {
     `Created a new rehab program for ${parsed.athleteName}'s ${parsed.injuryLabel}.`,
     'Scheduled for today.',
     `Added ${rehab.exercises.length} exercise${rehab.exercises.length === 1 ? '' : 's'}: ${exerciseNames}.`,
-    'Saved this rehab program to the review queue for your approval.',
+    "Added it straight to the rehab tab — no approval needed.",
   ]
 
   return { ok: true, rehab, summaryLines }
