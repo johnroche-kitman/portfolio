@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { useNavigate } from 'react-router-dom'
+import PageTabs from '../components/PageTabs'
 import DataTable from '../components/DataTable'
 import PlayerAvatar from '../components/PlayerAvatar'
+import Lozenge from '../components/Lozenge'
 import Button from '../components/Button'
 import Icon from '../components/Icon'
 import { useAppData } from '../state/AppDataContext'
@@ -14,12 +17,27 @@ const ACTION_META = {
   note: { icon: 'factCheck', label: 'Note' },
 }
 
-export default function ReviewQueue() {
-  const { pendingInjuries, pendingNotes, getAthleteById, getInjuryById, acceptInjury, rejectInjury, acceptNote, rejectNote } =
-    useAppData()
-  const navigate = useNavigate()
+const QUEUE_TABS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'history', label: 'History' },
+]
 
-  const rows = [
+export default function ReviewQueue() {
+  const {
+    pendingInjuries,
+    pendingNotes,
+    reviewHistory,
+    getAthleteById,
+    getInjuryById,
+    acceptInjury,
+    rejectInjury,
+    acceptNote,
+    rejectNote,
+  } = useAppData()
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('pending')
+
+  const pendingRows = [
     ...pendingInjuries.map((injury) => ({ ...injury, type: 'injury' })),
     ...pendingNotes.map((note) => ({ ...note, type: 'note' })),
   ]
@@ -40,7 +58,13 @@ export default function ReviewQueue() {
     navigate(`/medical/injury/${injuryId}${tab}`, { state: { from: 'review-queue' } })
   }
 
-  const columns = [
+  function openHistoryRow(row) {
+    if (!row.injuryId) return
+    const tab = row.type === 'note' ? '?tab=notes' : ''
+    navigate(`/medical/injury/${row.injuryId}${tab}`, { state: { from: 'review-queue' } })
+  }
+
+  const pendingColumns = [
     {
       key: 'player',
       label: 'Player',
@@ -150,6 +174,96 @@ export default function ReviewQueue() {
     },
   ]
 
+  const historyColumns = [
+    {
+      key: 'player',
+      label: 'Player',
+      width: '16%',
+      render: (row) => {
+        const athlete = getAthleteById(row.athleteId)
+        return (
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <PlayerAvatar athlete={athlete} size={36} />
+            <Box>
+              <Typography variant="body1" fontWeight={600}>
+                {athlete?.name || 'Unknown athlete'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+                {athlete?.position}
+              </Typography>
+            </Box>
+          </Box>
+        )
+      },
+    },
+    {
+      key: 'action',
+      label: 'Action',
+      width: '10%',
+      render: (row) => (
+        <Box display="flex" alignItems="center" gap={0.75}>
+          <Icon name={ACTION_META[row.type].icon} fontSize="small" sx={{ color: 'var(--color-primary)' }} />
+          <Typography variant="body2">{ACTION_META[row.type].label}</Typography>
+        </Box>
+      ),
+    },
+    {
+      key: 'injury',
+      label: 'Injury',
+      width: '18%',
+      render: (row) => {
+        if (row.type === 'injury') {
+          return (
+            <Typography variant="body1" fontWeight={600}>
+              {row.summary}
+            </Typography>
+          )
+        }
+        const injury = row.injuryId ? getInjuryById(row.injuryId) : null
+        return (
+          <Typography variant="body1" fontWeight={600}>
+            {injury ? injury.pathology || injury.label : 'Unknown injury'}
+          </Typography>
+        )
+      },
+    },
+    {
+      key: 'summary',
+      label: 'Summary',
+      width: '26%',
+      render: (row) => (
+        <Box>
+          {row.type === 'note' && (
+            <Typography variant="body1" fontWeight={600}>
+              {row.summary}
+            </Typography>
+          )}
+          <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+            {row.detail}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      key: 'decidedOn',
+      label: 'Reviewed on',
+      width: '12%',
+      render: (row) => (
+        <Typography variant="body2" sx={{ color: 'var(--grey-100)' }}>
+          {row.decidedOn}
+        </Typography>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      width: '12%',
+      render: (row) => (
+        <Lozenge label={row.decision === 'accepted' ? 'Accepted' : 'Rejected'} tone={row.decision === 'accepted' ? 'success' : 'error'} />
+      ),
+    },
+  ]
+
   return (
     <Box>
       <Box
@@ -163,7 +277,7 @@ export default function ReviewQueue() {
         <Typography variant="body1">Back to roster</Typography>
       </Box>
 
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography variant="h1">Review queue</Typography>
         <Tooltip title="Refresh queue">
           <IconButton
@@ -177,18 +291,27 @@ export default function ReviewQueue() {
           </IconButton>
         </Tooltip>
       </Box>
-      <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 3 }}>
-        Injuries and notes staged by the AI assistant. Review each one and accept to add it to the medical record.
-      </Typography>
 
-      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)' }}>
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => `${row.type}-${row.id}`}
-          onRowClick={openRow}
-          emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury or note."
-        />
+      <PageTabs tabs={QUEUE_TABS} value={activeTab} onChange={setActiveTab} />
+
+      <Box sx={{ backgroundColor: 'var(--white)', borderRadius: '8px', border: '1px solid var(--divider)', mt: 3 }}>
+        {activeTab === 'pending' ? (
+          <DataTable
+            columns={pendingColumns}
+            rows={pendingRows}
+            getRowKey={(row) => `${row.type}-${row.id}`}
+            onRowClick={openRow}
+            emptyMessage="Nothing waiting for review. Use the AI assistant to log a new injury or note."
+          />
+        ) : (
+          <DataTable
+            columns={historyColumns}
+            rows={reviewHistory}
+            getRowKey={(row) => row.id}
+            onRowClick={openHistoryRow}
+            emptyMessage="No reviewed injuries or notes yet."
+          />
+        )}
       </Box>
     </Box>
   )

@@ -10,7 +10,7 @@ function loadInitialState() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw)
-      return { pendingNotes: [], rehabByInjury: {}, ...parsed }
+      return { pendingNotes: [], rehabByInjury: {}, reviewHistory: [], ...parsed }
     }
   } catch {
     // fall through to seed state
@@ -22,6 +22,15 @@ function loadInitialState() {
     notesByInjury: {},
     pendingNotes: [],
     rehabByInjury: seedRehabByInjury,
+    reviewHistory: [],
+  }
+}
+
+function historyEntry(fields) {
+  return {
+    id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    decidedOn: todayLabel(),
+    ...fields,
   }
 }
 
@@ -129,6 +138,7 @@ export function AppDataProvider({ children }) {
 
   const acceptInjury = useCallback(
     (injuryId) => {
+      const injury = state.injuries.find((inj) => inj.id === injuryId)
       persist({
         ...state,
         injuries: state.injuries.map((inj) =>
@@ -136,6 +146,19 @@ export function AppDataProvider({ children }) {
             ? { ...inj, status: 'accepted', subtitle: inj.subtitle === 'Pending review' ? 'Reviewed' : inj.subtitle }
             : inj
         ),
+        reviewHistory: injury
+          ? [
+              historyEntry({
+                type: 'injury',
+                decision: 'accepted',
+                athleteId: injury.athleteId,
+                injuryId: injury.id,
+                summary: injury.pathology || injury.label,
+                detail: injury.rawDictation,
+              }),
+              ...state.reviewHistory,
+            ]
+          : state.reviewHistory,
       })
     },
     [state, persist]
@@ -143,11 +166,25 @@ export function AppDataProvider({ children }) {
 
   const rejectInjury = useCallback(
     (injuryId) => {
+      const injury = state.injuries.find((inj) => inj.id === injuryId)
       const { [injuryId]: _removed, ...restNotes } = state.notesByInjury
       persist({
         ...state,
         injuries: state.injuries.filter((inj) => inj.id !== injuryId),
         notesByInjury: restNotes,
+        reviewHistory: injury
+          ? [
+              historyEntry({
+                type: 'injury',
+                decision: 'rejected',
+                athleteId: injury.athleteId,
+                injuryId: null,
+                summary: injury.pathology || injury.label,
+                detail: injury.rawDictation,
+              }),
+              ...state.reviewHistory,
+            ]
+          : state.reviewHistory,
       })
     },
     [state, persist]
@@ -223,6 +260,17 @@ export function AppDataProvider({ children }) {
           ...state.notesByInjury,
           [note.injuryId]: [...(state.notesByInjury[note.injuryId] || []), injuryNote],
         },
+        reviewHistory: [
+          historyEntry({
+            type: 'note',
+            decision: 'accepted',
+            athleteId: note.athleteId,
+            injuryId: note.injuryId,
+            summary: note.title,
+            detail: note.text,
+          }),
+          ...state.reviewHistory,
+        ],
       })
     },
     [state, persist]
@@ -230,9 +278,23 @@ export function AppDataProvider({ children }) {
 
   const rejectNote = useCallback(
     (noteId) => {
+      const note = state.pendingNotes.find((n) => n.id === noteId)
       persist({
         ...state,
         pendingNotes: state.pendingNotes.filter((n) => n.id !== noteId),
+        reviewHistory: note
+          ? [
+              historyEntry({
+                type: 'note',
+                decision: 'rejected',
+                athleteId: note.athleteId,
+                injuryId: note.injuryId,
+                summary: note.title,
+                detail: note.text,
+              }),
+              ...state.reviewHistory,
+            ]
+          : state.reviewHistory,
       })
     },
     [state, persist]
@@ -374,6 +436,7 @@ export function AppDataProvider({ children }) {
       notesByInjury: state.notesByInjury,
       pendingInjuries: state.injuries.filter((inj) => inj.status === 'pending_review'),
       pendingNotes: state.pendingNotes.filter((n) => n.status === 'pending_review'),
+      reviewHistory: state.reviewHistory,
       rehabByInjury: state.rehabByInjury,
       getAthleteById: (id) => state.athletes.find((a) => a.id === id),
       getInjuriesByAthlete: (athleteId) => state.injuries.filter((inj) => inj.athleteId === athleteId),
