@@ -27,7 +27,12 @@ export default function AiPanel({ open, onClose, chatState }) {
           width: expanded ? `calc(100vw - var(--nav-width))` : COLLAPSED_WIDTH,
           display: 'flex',
           flexDirection: 'row',
-          transition: 'width 0.22s ease',
+          // MUI's Slide transition sets an inline `transition: transform ...`
+          // for the open/close animation, which otherwise clobbers this
+          // property outright (inline style beats a class rule unless
+          // !important). Restate that same transform transition alongside
+          // width so expanding animates too, without losing the slide.
+          transition: 'width 0.22s ease, transform 225ms cubic-bezier(0, 0, 0.2, 1) !important',
         },
       }}
     >
