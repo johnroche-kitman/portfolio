@@ -7,7 +7,6 @@ const RESPONSES = {
     'what are the top injury types that occurred this season?': {
       text:
         'Across all monitored squads this season, lower-extremity injuries (ankle sprains, muscle strains, and growth-plate apophysis) account for 68% of all recorded medical incidents.\n\nHowever, injury profile types shift significantly with age:\n• U9–U10: Dominated by acute impact injuries (contusions and wrist/forearm sprains from falls).\n• U11–U12: Dominated by traction/growth-plate overuse conditions (Sever’s disease and Osgood-Schlatter) triggered by peak height velocity and increased training loads.\n• U16: Dominated by high-velocity soft tissue strains (hamstrings/quadriceps) and contact-related injuries (concussions, ligament sprains).',
-      openInExplore: true,
       table: {
         columns: ['Squad', 'Primary injury type', '% of squad total'],
         rows: [

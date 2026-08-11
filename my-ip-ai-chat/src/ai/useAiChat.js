@@ -89,7 +89,6 @@ export function useAiChat() {
                       role: 'assistant',
                       text: response.text,
                       table: response.table,
-                      openInExplore: response.openInExplore,
                     },
                   ],
                 }

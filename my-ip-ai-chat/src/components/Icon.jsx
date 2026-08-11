@@ -39,6 +39,7 @@ import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlin
 import FolderSharedOutlinedIcon from '@mui/icons-material/FolderSharedOutlined'
 import FilterNoneOutlinedIcon from '@mui/icons-material/FilterNoneOutlined'
 import CropSquareOutlinedIcon from '@mui/icons-material/CropSquareOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -83,6 +84,7 @@ export const ICONS = {
   sharedFolder: FolderSharedOutlinedIcon,
   templatesTab: FilterNoneOutlinedIcon,
   stop: CropSquareOutlinedIcon,
+  delete: DeleteOutlineOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {

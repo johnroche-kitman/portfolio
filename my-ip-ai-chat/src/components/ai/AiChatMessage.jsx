@@ -26,7 +26,10 @@ export default function AiChatMessage({ message }) {
             maxWidth: '85%',
             backgroundColor: 'var(--color-primary)',
             color: '#ffffff',
-            borderRadius: 1.5,
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: 12,
+            borderBottomRightRadius: 12,
             px: 2,
             py: 1.25,
           }}
@@ -42,15 +45,17 @@ export default function AiChatMessage({ message }) {
   return (
     <Box>
       <AssistantText text={message.text} />
-      {message.openInExplore && (
-        <ButtonBase sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1.5, borderRadius: 1 }}>
-          <Icon name="explore" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
-          <Typography variant="body1" sx={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-            Open in Explore
-          </Typography>
-        </ButtonBase>
+      {message.table && (
+        <>
+          <ButtonBase sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1.5, borderRadius: 1 }}>
+            <Icon name="explore" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
+            <Typography variant="body1" sx={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+              Open in Explore
+            </Typography>
+          </ButtonBase>
+          <AiResponseTable table={message.table} />
+        </>
       )}
-      {message.table && <AiResponseTable table={message.table} />}
     </Box>
   )
 }

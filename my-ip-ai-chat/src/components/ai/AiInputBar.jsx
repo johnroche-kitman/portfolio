@@ -33,7 +33,7 @@ export default function AiInputBar({
   }
 
   return (
-    <Box sx={{ borderTop: '1px solid var(--divider)', backgroundColor: 'var(--white)', flexShrink: 0 }}>
+    <Box sx={{ borderTop: '1px solid var(--divider)', backgroundColor: 'var(--input-field-bg)', flexShrink: 0 }}>
       <ButtonBase
         onClick={(event) => canChangeAgent && setMenuAnchor(event.currentTarget)}
         sx={{
@@ -44,7 +44,7 @@ export default function AiInputBar({
           justifyContent: 'flex-start',
           px: 2,
           py: 1,
-          backgroundColor: 'var(--background)',
+          backgroundColor: 'var(--input-chip-bg)',
           cursor: canChangeAgent ? 'pointer' : 'default',
         }}
       >
