@@ -98,7 +98,7 @@ export function useAiChat() {
         )
         stopThinkingTimer()
         setIsThinking(false)
-      }, 1600)
+      }, 15000)
     },
     [stopThinkingTimer]
   )
