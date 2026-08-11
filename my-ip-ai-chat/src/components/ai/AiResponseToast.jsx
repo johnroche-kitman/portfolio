@@ -16,7 +16,6 @@ export default function AiResponseToast({ toast, onOpen, onDismiss }) {
         zIndex: 1400,
         width: 360,
         backgroundColor: 'var(--toast-green-bg)',
-        border: '1px solid rgba(10, 135, 90, 0.24)',
         borderRadius: 1.5,
         p: 2,
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
@@ -25,24 +24,24 @@ export default function AiResponseToast({ toast, onOpen, onDismiss }) {
         gap: 1,
       }}
     >
-      <Icon name="commentAdd" fontSize="small" sx={{ color: 'var(--toast-green)', mt: 0.25, flexShrink: 0 }} />
+      <Icon name="commentAdd" fontSize="small" sx={{ color: 'var(--toast-icon-green)', mt: 0.25, flexShrink: 0 }} />
       <Box flexGrow={1} minWidth={0}>
         <Box display="flex" alignItems="flex-start" justifyContent="space-between" gap={1}>
-          <Typography variant="body1" sx={{ color: 'var(--toast-green)', fontWeight: 700 }}>
+          <Typography variant="body1" sx={{ color: 'var(--toast-title-green)', fontWeight: 700 }}>
             Ask My iP answer ready
           </Typography>
           <Box display="flex" alignItems="center" gap={0.5} flexShrink={0}>
             <ButtonBase onClick={onOpen} sx={{ borderRadius: 1, px: 0.5 }}>
-              <Typography variant="body1" sx={{ color: 'var(--toast-green)', fontWeight: 700 }}>
+              <Typography variant="body1" sx={{ color: 'var(--toast-title-green)', fontWeight: 700 }}>
                 Open
               </Typography>
             </ButtonBase>
-            <IconButton size="small" onClick={onDismiss} sx={{ color: 'var(--toast-green)' }}>
+            <IconButton size="small" onClick={onDismiss} sx={{ color: 'var(--toast-title-green)' }}>
               <Icon name="close" fontSize="small" />
             </IconButton>
           </Box>
         </Box>
-        <Typography variant="body1" sx={{ color: 'var(--toast-green)' }}>
+        <Typography variant="body1" sx={{ color: 'var(--toast-body-green)' }}>
           Your {toast.agentLabel.toLowerCase()} query has been answered
         </Typography>
       </Box>
