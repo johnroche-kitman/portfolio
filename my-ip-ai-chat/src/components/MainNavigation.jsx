@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Tooltip from '@mui/material/Tooltip'
 import ButtonBase from '@mui/material/ButtonBase'
 import IconButton from '@mui/material/IconButton'
+import Badge from '@mui/material/Badge'
 import Icon from './Icon'
 
 const NAV_ITEMS = [
@@ -18,7 +19,7 @@ const NAV_ITEMS = [
   { key: 'administration', name: 'settings', label: 'Administration' },
 ]
 
-export default function MainNavigation({ onOpenChat, chatOpen }) {
+export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen }) {
   return (
     <Box
       sx={{
@@ -55,7 +56,13 @@ export default function MainNavigation({ onOpenChat, chatOpen }) {
             '&:hover': { backgroundColor: chatOpen ? 'var(--color-accent)' : '#ffffff1a' },
           }}
         >
-          <Icon name="askIp" fontSize="small" />
+          <Badge
+            variant="dot"
+            invisible={!hasUnseen}
+            sx={{ '& .MuiBadge-dot': { backgroundColor: 'var(--toast-green)', border: '2px solid #0b1220' } }}
+          >
+            <Icon name="askIp" fontSize="small" />
+          </Badge>
         </ButtonBase>
       </Tooltip>
 

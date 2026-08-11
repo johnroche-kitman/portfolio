@@ -1,6 +1,5 @@
 import Drawer from '@mui/material/Drawer'
 import Box from '@mui/material/Box'
-import { useAiChat } from '../../ai/useAiChat'
 import AiPanelHeader from './AiPanelHeader'
 import AiPanelBody from './AiPanelBody'
 import AiPanelSidebar from './AiPanelSidebar'
@@ -12,11 +11,6 @@ export default function AiPanel({ open, onClose, chatState }) {
   const chatApi = chatState
   const { view, activeChat, chats, expanded, isThinking, thinkingElapsedMs, showThinkingDetail } = chatApi
 
-  function handleClose() {
-    onClose()
-    chatApi.resetConversation()
-  }
-
   const title = view === 'history' ? 'History' : activeChat ? activeChat.title : 'New chat'
   const showNewChat = view !== 'agent-picker' && !expanded
   const showHistory = !expanded
@@ -26,7 +20,7 @@ export default function AiPanel({ open, onClose, chatState }) {
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       ModalProps={{ hideBackdrop: true, disableScrollLock: true }}
       PaperProps={{
         sx: {
@@ -50,7 +44,7 @@ export default function AiPanel({ open, onClose, chatState }) {
           onNewChat={chatApi.startNewChat}
           onHistory={chatApi.showHistory}
           onToggleExpand={() => chatApi.setExpanded((prev) => !prev)}
-          onClose={handleClose}
+          onClose={onClose}
         />
 
         <Box display="flex" flexDirection="column" flexGrow={1} minHeight={0} sx={{ maxWidth: expanded ? 900 : 'none', width: '100%', mx: expanded ? 'auto' : 0 }}>
