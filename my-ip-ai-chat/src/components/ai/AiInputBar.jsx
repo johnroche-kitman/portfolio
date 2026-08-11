@@ -11,7 +11,16 @@ import ListItemText from '@mui/material/ListItemText'
 import Icon from '../Icon'
 import { AGENTS, getAgent } from '../../data/agents'
 
-export default function AiInputBar({ agentKey, onChangeAgent, canChangeAgent, value, onChange, onSubmit, disabled }) {
+export default function AiInputBar({
+  agentKey,
+  onChangeAgent,
+  canChangeAgent,
+  value,
+  onChange,
+  onSubmit,
+  onStop,
+  isThinking,
+}) {
   const [menuAnchor, setMenuAnchor] = useState(null)
   const agent = getAgent(agentKey)
 
@@ -70,7 +79,7 @@ export default function AiInputBar({ agentKey, onChangeAgent, canChangeAgent, va
           placeholder={agent.placeholder}
           multiline
           maxRows={4}
-          disabled={disabled}
+          disabled={isThinking}
           sx={{ fontSize: 14, color: 'var(--color-primary)' }}
         />
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
@@ -78,8 +87,8 @@ export default function AiInputBar({ agentKey, onChangeAgent, canChangeAgent, va
             <Icon name="mic" fontSize="small" sx={{ color: 'var(--color-primary)' }} />
           </IconButton>
           <IconButton
-            onClick={onSubmit}
-            disabled={disabled || !value.trim()}
+            onClick={isThinking ? onStop : onSubmit}
+            disabled={!isThinking && !value.trim()}
             size="small"
             sx={{
               backgroundColor: 'var(--color-primary)',
@@ -88,7 +97,7 @@ export default function AiInputBar({ agentKey, onChangeAgent, canChangeAgent, va
               '&.Mui-disabled': { backgroundColor: 'var(--divider)', color: '#ffffff' },
             }}
           >
-            <Icon name="send" fontSize="small" />
+            <Icon name={isThinking ? 'stop' : 'send'} fontSize="small" />
           </IconButton>
         </Box>
       </Box>

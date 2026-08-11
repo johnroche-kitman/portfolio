@@ -18,20 +18,29 @@ export function useAiChat() {
   const [isThinking, setIsThinking] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showThinkingDetail, setShowThinkingDetail] = useState(false)
+  const [thinkingElapsedMs, setThinkingElapsedMs] = useState(0)
   const thinkingTimeout = useRef(null)
+  const thinkingInterval = useRef(null)
+  const thinkingStartedAt = useRef(0)
+
+  const stopThinkingTimer = useCallback(() => {
+    clearTimeout(thinkingTimeout.current)
+    clearInterval(thinkingInterval.current)
+    setThinkingElapsedMs(0)
+  }, [])
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) || null
   const agentKeyForInput = activeChat ? activeChat.agentKey : selectedAgentKey
 
   const resetConversation = useCallback(() => {
-    clearTimeout(thinkingTimeout.current)
+    stopThinkingTimer()
     setActiveChatId(null)
     setView('agent-picker')
     setInputValue('')
     setIsThinking(false)
     setShowThinkingDetail(false)
     setSelectedAgentKey(AGENTS[0].key)
-  }, [])
+  }, [stopThinkingTimer])
 
   const startNewChat = useCallback(() => {
     resetConversation()
@@ -45,7 +54,7 @@ export function useAiChat() {
     (chatId) => {
       const chat = chats.find((item) => item.id === chatId)
       if (!chat) return
-      clearTimeout(thinkingTimeout.current)
+      stopThinkingTimer()
       setActiveChatId(chatId)
       setSelectedAgentKey(chat.agentKey)
       setView('chat')
@@ -53,37 +62,51 @@ export function useAiChat() {
       setIsThinking(false)
       setShowThinkingDetail(false)
     },
-    [chats]
+    [chats, stopThinkingTimer]
   )
 
-  const runAssistantReply = useCallback((chatId, agentKey, question) => {
-    setIsThinking(true)
-    setShowThinkingDetail(false)
-    clearTimeout(thinkingTimeout.current)
-    thinkingTimeout.current = setTimeout(() => {
-      const response = getMockResponse(agentKey, question)
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === chatId
-            ? {
-                ...chat,
-                messages: [
-                  ...chat.messages,
-                  {
-                    id: nextId('msg'),
-                    role: 'assistant',
-                    text: response.text,
-                    table: response.table,
-                    openInExplore: response.openInExplore,
-                  },
-                ],
-              }
-            : chat
+  const runAssistantReply = useCallback(
+    (chatId, agentKey, question) => {
+      setIsThinking(true)
+      setShowThinkingDetail(false)
+      stopThinkingTimer()
+      thinkingStartedAt.current = Date.now()
+      setThinkingElapsedMs(0)
+      thinkingInterval.current = setInterval(() => {
+        setThinkingElapsedMs(Date.now() - thinkingStartedAt.current)
+      }, 1000)
+      thinkingTimeout.current = setTimeout(() => {
+        const response = getMockResponse(agentKey, question)
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === chatId
+              ? {
+                  ...chat,
+                  messages: [
+                    ...chat.messages,
+                    {
+                      id: nextId('msg'),
+                      role: 'assistant',
+                      text: response.text,
+                      table: response.table,
+                      openInExplore: response.openInExplore,
+                    },
+                  ],
+                }
+              : chat
+          )
         )
-      )
-      setIsThinking(false)
-    }, 1600)
-  }, [])
+        stopThinkingTimer()
+        setIsThinking(false)
+      }, 1600)
+    },
+    [stopThinkingTimer]
+  )
+
+  const cancelThinking = useCallback(() => {
+    stopThinkingTimer()
+    setIsThinking(false)
+  }, [stopThinkingTimer])
 
   const sendMessage = useCallback(
     (rawText, agentKeyOverride) => {
@@ -140,6 +163,8 @@ export function useAiChat() {
     inputValue,
     setInputValue,
     isThinking,
+    thinkingElapsedMs,
+    cancelThinking,
     showThinkingDetail,
     toggleShowThinkingDetail: () => setShowThinkingDetail((prev) => !prev),
     expanded,

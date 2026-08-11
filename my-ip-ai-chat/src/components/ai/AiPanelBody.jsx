@@ -10,6 +10,7 @@ export default function AiPanelBody({
   chat,
   chats,
   isThinking,
+  thinkingElapsedMs,
   showThinkingDetail,
   onToggleThinkingDetail,
   onSelectAgent,
@@ -46,7 +47,12 @@ export default function AiPanelBody({
         <AiChatMessage key={message.id} message={message} />
       ))}
       {isThinking && (
-        <AiThinkingIndicator label={agent.thinkingText} expanded={showThinkingDetail} onToggle={onToggleThinkingDetail} />
+        <AiThinkingIndicator
+          label={agent.thinkingText}
+          elapsedMs={thinkingElapsedMs}
+          expanded={showThinkingDetail}
+          onToggle={onToggleThinkingDetail}
+        />
       )}
     </Box>
   )

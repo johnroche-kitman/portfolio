@@ -18,23 +18,23 @@ export default function AiPanelHeader({ title, showNewChat, expanded, onNewChat,
       <Box display="flex" alignItems="center" gap={0.5}>
         {showNewChat && (
           <Tooltip title="New chat">
-            <IconButton onClick={onNewChat} size="small">
+            <IconButton onClick={onNewChat} size="small" sx={{ color: 'var(--color-primary)' }}>
               <Icon name="edit" fontSize="small" />
             </IconButton>
           </Tooltip>
         )}
         <Tooltip title="History">
-          <IconButton onClick={onHistory} size="small">
+          <IconButton onClick={onHistory} size="small" sx={{ color: 'var(--color-primary)' }}>
             <Icon name="history" fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={expanded ? 'Minimise' : 'Expand'}>
-          <IconButton onClick={onToggleExpand} size="small">
+          <IconButton onClick={onToggleExpand} size="small" sx={{ color: 'var(--color-primary)' }}>
             <Icon name={expanded ? 'minimise' : 'expand'} fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title="Close">
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={onClose} size="small" sx={{ color: 'var(--color-primary)' }}>
             <Icon name="close" fontSize="small" />
           </IconButton>
         </Tooltip>

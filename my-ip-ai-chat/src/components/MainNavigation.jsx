@@ -3,10 +3,8 @@ import Tooltip from '@mui/material/Tooltip'
 import ButtonBase from '@mui/material/ButtonBase'
 import IconButton from '@mui/material/IconButton'
 import Icon from './Icon'
-import AskIpIcon from './ai/AskIpIcon'
 
 const NAV_ITEMS = [
-  { key: 'analysis', name: 'analysis', label: 'Analysis' },
   { key: 'next-gen', name: 'nextGen', label: 'Next Gen' },
   { key: 'athletes', name: 'athletes', label: 'Athletes' },
   { key: 'medical', name: 'medical', label: 'Medical' },
@@ -57,7 +55,7 @@ export default function MainNavigation({ onOpenChat, chatOpen }) {
             '&:hover': { backgroundColor: chatOpen ? 'var(--color-accent)' : '#ffffff1a' },
           }}
         >
-          <AskIpIcon size={20} />
+          <Icon name="askIp" fontSize="small" />
         </ButtonBase>
       </Tooltip>
 

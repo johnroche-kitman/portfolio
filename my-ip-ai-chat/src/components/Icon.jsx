@@ -35,12 +35,14 @@ import ArrowUpwardOutlinedIcon from '@mui/icons-material/ArrowUpwardOutlined'
 import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined'
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
-import SmsOutlinedIcon from '@mui/icons-material/SmsOutlined'
-import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined'
+import FolderSharedOutlinedIcon from '@mui/icons-material/FolderSharedOutlined'
+import FilterNoneOutlinedIcon from '@mui/icons-material/FilterNoneOutlined'
+import CropSquareOutlinedIcon from '@mui/icons-material/CropSquareOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
-  analysis: TryOutlinedIcon,
+  askIp: TryOutlinedIcon,
   nextGen: ScienceOutlinedIcon,
   athletes: GroupsOutlinedIcon,
   medical: LocalHospitalOutlinedIcon,
@@ -77,8 +79,10 @@ export const ICONS = {
   explore: ExploreOutlinedIcon,
   copy: ContentCopyOutlinedIcon,
   expandMore: ExpandMoreOutlinedIcon,
-  chatBubble: SmsOutlinedIcon,
-  sparkle: AutoAwesomeOutlinedIcon,
+  favourites: FavoriteBorderOutlinedIcon,
+  sharedFolder: FolderSharedOutlinedIcon,
+  templatesTab: FilterNoneOutlinedIcon,
+  stop: CropSquareOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {

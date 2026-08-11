@@ -2,7 +2,6 @@ import Box from '@mui/material/Box'
 import ButtonBase from '@mui/material/ButtonBase'
 import Typography from '@mui/material/Typography'
 import Icon from '../Icon'
-import AskIpIcon from './AskIpIcon'
 import { AGENTS } from '../../data/agents'
 
 export default function AgentPicker({ onSelect }) {
@@ -11,20 +10,8 @@ export default function AgentPicker({ onSelect }) {
       <Typography variant="h2" sx={{ color: 'var(--color-primary)', mb: 2 }}>
         Ask My iP
       </Typography>
-      <Box
-        sx={{
-          width: 72,
-          height: 72,
-          borderRadius: 2,
-          border: '2px solid var(--color-primary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mb: 4,
-          color: 'var(--color-primary)',
-        }}
-      >
-        <AskIpIcon size={40} />
+      <Box sx={{ mb: 4, color: 'var(--color-primary)', display: 'flex' }}>
+        <Icon name="askIp" sx={{ fontSize: 48 }} />
       </Box>
 
       <Typography variant="body1" sx={{ color: 'var(--color-primary)', fontWeight: 600, alignSelf: 'flex-start', mb: 1.5 }}>

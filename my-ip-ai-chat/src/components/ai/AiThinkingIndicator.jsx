@@ -6,7 +6,14 @@ import Icon from '../Icon'
 
 const THINKING_STEPS = ['Interpreting your question', 'Querying the relevant data source', 'Formatting the results']
 
-export default function AiThinkingIndicator({ label, expanded, onToggle }) {
+function formatElapsed(ms) {
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`
+}
+
+export default function AiThinkingIndicator({ label, elapsedMs, expanded, onToggle }) {
   return (
     <Box sx={{ mt: 1 }}>
       <ButtonBase onClick={onToggle} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -50,6 +57,9 @@ export default function AiThinkingIndicator({ label, expanded, onToggle }) {
           {label}
         </Typography>
       </Box>
+      <Typography variant="body1" sx={{ color: 'var(--grey-100)', mt: 0.25 }}>
+        {formatElapsed(elapsedMs)}
+      </Typography>
     </Box>
   )
 }

@@ -16,14 +16,34 @@ import Pagination from '@mui/material/Pagination'
 import Icon from '../components/Icon'
 import { TEMPLATE_ROWS } from '../data/templates'
 
+const TABS = [
+  { label: 'Favourites', icon: 'favourites' },
+  { label: 'My folder', icon: 'folder' },
+  { label: 'Shared folder', icon: 'sharedFolder' },
+  { label: 'iP dashboards', icon: 'dashboard' },
+  { label: 'Templates', icon: 'templatesTab' },
+]
+
 export default function MyIpLanding() {
   return (
     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3, pt: 2 }}>
-        <Tabs value={1} sx={{ minHeight: 42 }}>
-          <Tab label="iP dashboards" sx={{ color: 'var(--grey-100)', minHeight: 42 }} />
-          <Tab label="Templates" sx={{ color: 'var(--color-primary)', fontWeight: 600, minHeight: 42 }} />
-        </Tabs>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            backgroundColor: 'var(--color-secondary)',
+            borderRadius: 1,
+            px: 1.5,
+            py: 1,
+            maxWidth: 280,
+            flexGrow: 1,
+          }}
+        >
+          <InputBase placeholder="Search" sx={{ fontSize: 14, color: 'var(--color-primary)', flexGrow: 1 }} />
+          <Icon name="search" fontSize="small" sx={{ color: 'var(--grey-100)' }} />
+        </Box>
 
         <Box display="flex" alignItems="center" gap={1.5}>
           <ToggleButtonGroup size="small" value="list" exclusive>
@@ -49,21 +69,22 @@ export default function MyIpLanding() {
         </Box>
       </Box>
 
-      <Box sx={{ px: 3, mt: 2, maxWidth: 280 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            backgroundColor: 'var(--color-secondary)',
-            borderRadius: 1,
-            px: 1.5,
-            py: 1,
-          }}
-        >
-          <Icon name="search" fontSize="small" sx={{ color: 'var(--grey-100)' }} />
-          <InputBase placeholder="Search" sx={{ fontSize: 14, color: 'var(--color-primary)', flexGrow: 1 }} />
-        </Box>
+      <Box sx={{ px: 3, mt: 1.5 }}>
+        <Tabs value={4} sx={{ minHeight: 42 }}>
+          {TABS.map((tab, index) => (
+            <Tab
+              key={tab.label}
+              label={tab.label}
+              icon={<Icon name={tab.icon} fontSize="small" />}
+              iconPosition="start"
+              sx={{
+                minHeight: 42,
+                color: index === 4 ? 'var(--color-primary)' : 'var(--grey-100)',
+                fontWeight: index === 4 ? 600 : 400,
+              }}
+            />
+          ))}
+        </Tabs>
       </Box>
 
       <Box sx={{ mx: 3, mt: 3, border: '1px solid var(--divider)', borderRadius: 1, overflow: 'hidden' }}>

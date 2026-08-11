@@ -10,7 +10,7 @@ const COLLAPSED_WIDTH = 460
 
 export default function AiPanel({ open, onClose, chatState }) {
   const chatApi = chatState
-  const { view, activeChat, chats, expanded, isThinking, showThinkingDetail } = chatApi
+  const { view, activeChat, chats, expanded, isThinking, thinkingElapsedMs, showThinkingDetail } = chatApi
 
   function handleClose() {
     onClose()
@@ -26,6 +26,7 @@ export default function AiPanel({ open, onClose, chatState }) {
       anchor="right"
       open={open}
       onClose={handleClose}
+      ModalProps={{ hideBackdrop: true, disableScrollLock: true }}
       PaperProps={{
         sx: {
           width: expanded ? `calc(100vw - var(--nav-width))` : COLLAPSED_WIDTH,
@@ -56,6 +57,7 @@ export default function AiPanel({ open, onClose, chatState }) {
             chat={activeChat}
             chats={chats}
             isThinking={isThinking}
+            thinkingElapsedMs={thinkingElapsedMs}
             showThinkingDetail={showThinkingDetail}
             onToggleThinkingDetail={chatApi.toggleShowThinkingDetail}
             onSelectAgent={chatApi.selectAgentCard}
@@ -70,7 +72,8 @@ export default function AiPanel({ open, onClose, chatState }) {
               value={chatApi.inputValue}
               onChange={chatApi.setInputValue}
               onSubmit={() => chatApi.sendMessage()}
-              disabled={isThinking}
+              onStop={chatApi.cancelThinking}
+              isThinking={isThinking}
             />
           )}
         </Box>
