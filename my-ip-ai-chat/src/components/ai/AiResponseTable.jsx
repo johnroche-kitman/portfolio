@@ -46,8 +46,8 @@ export default function AiResponseTable({ table }) {
           </TableBody>
         </Table>
       </Box>
-      <Tooltip title={copied ? 'Copied' : 'Copy table'}>
-        <IconButton size="small" onClick={handleCopy} sx={{ mt: 0.5 }}>
+      <Tooltip title={copied ? 'Copied' : 'Copy response'}>
+        <IconButton size="small" onClick={handleCopy} sx={{ mt: 0.5, color: 'var(--color-primary)' }}>
           <Icon name="copy" fontSize="small" />
         </IconButton>
       </Tooltip>
