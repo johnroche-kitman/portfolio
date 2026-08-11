@@ -4,7 +4,7 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Icon from '../Icon'
 
-export default function AiPanelHeader({ title, showNewChat, expanded, onNewChat, onHistory, onToggleExpand, onClose }) {
+export default function AiPanelHeader({ title, showNewChat, showHistory, expanded, onNewChat, onHistory, onToggleExpand, onClose }) {
   return (
     <Box
       display="flex"
@@ -23,11 +23,13 @@ export default function AiPanelHeader({ title, showNewChat, expanded, onNewChat,
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip title="History">
-          <IconButton onClick={onHistory} size="small" sx={{ color: 'var(--color-primary)' }}>
-            <Icon name="history" fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        {showHistory && (
+          <Tooltip title="History">
+            <IconButton onClick={onHistory} size="small" sx={{ color: 'var(--color-primary)' }}>
+              <Icon name="history" fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title={expanded ? 'Minimise' : 'Expand'}>
           <IconButton onClick={onToggleExpand} size="small" sx={{ color: 'var(--color-primary)' }}>
             <Icon name={expanded ? 'minimise' : 'expand'} fontSize="small" />

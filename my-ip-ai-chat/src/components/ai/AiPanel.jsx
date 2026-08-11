@@ -18,7 +18,8 @@ export default function AiPanel({ open, onClose, chatState }) {
   }
 
   const title = view === 'history' ? 'History' : activeChat ? activeChat.title : 'New chat'
-  const showNewChat = view !== 'agent-picker'
+  const showNewChat = view !== 'agent-picker' && !expanded
+  const showHistory = !expanded
   const showInput = view !== 'history'
 
   return (
@@ -44,6 +45,7 @@ export default function AiPanel({ open, onClose, chatState }) {
         <AiPanelHeader
           title={title}
           showNewChat={showNewChat}
+          showHistory={showHistory}
           expanded={expanded}
           onNewChat={chatApi.startNewChat}
           onHistory={chatApi.showHistory}
