@@ -2,8 +2,9 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import ButtonBase from '@mui/material/ButtonBase'
 import Icon from './Icon'
+import AskIpTriggerButton from './ai/AskIpTriggerButton'
 
-export default function TopBar() {
+export default function TopBar({ showTrigger = false, onOpenChat, hasUnseen }) {
   return (
     <Box
       sx={{
@@ -34,6 +35,7 @@ export default function TopBar() {
           alt="User avatar"
           sx={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
         />
+        {showTrigger && <AskIpTriggerButton onOpenChat={onOpenChat} hasUnseen={hasUnseen} />}
       </Box>
     </Box>
   )

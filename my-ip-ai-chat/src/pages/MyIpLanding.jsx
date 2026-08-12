@@ -14,6 +14,7 @@ import InputBase from '@mui/material/InputBase'
 import Typography from '@mui/material/Typography'
 import Pagination from '@mui/material/Pagination'
 import Icon from '../components/Icon'
+import AskIpTriggerButton from '../components/ai/AskIpTriggerButton'
 import { TEMPLATE_ROWS } from '../data/templates'
 
 const TABS = [
@@ -24,7 +25,7 @@ const TABS = [
   { label: 'Templates', icon: 'templatesTab' },
 ]
 
-export default function MyIpLanding() {
+export default function MyIpLanding({ showTrigger = false, onOpenChat, hasUnseen }) {
   return (
     <Box sx={{ flexGrow: 1, minWidth: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3, pt: 2 }}>
@@ -63,6 +64,7 @@ export default function MyIpLanding() {
           <Button variant="contained" color="primary">
             New dashboard
           </Button>
+          {showTrigger && <AskIpTriggerButton onOpenChat={onOpenChat} hasUnseen={hasUnseen} />}
           <IconButton>
             <Icon name="settings" fontSize="small" />
           </IconButton>

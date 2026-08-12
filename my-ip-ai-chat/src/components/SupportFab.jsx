@@ -1,5 +1,5 @@
 import ButtonBase from '@mui/material/ButtonBase'
-import Icon from './Icon'
+import Box from '@mui/material/Box'
 import { SUPPORT_FAB_SIZE, SUPPORT_FAB_OFFSET } from '../layoutConstants'
 
 // Fixed bottom-right support-chat launcher. Sits below the Drawer's z-index
@@ -16,13 +16,17 @@ export default function SupportFab() {
         height: SUPPORT_FAB_SIZE,
         borderRadius: '50%',
         backgroundColor: '#181818',
-        color: '#ffffff',
         boxShadow: '0 10px 24px rgba(0, 0, 0, 0.35)',
         zIndex: 1100,
         '&:hover': { backgroundColor: '#2b2b2b' },
       }}
     >
-      <Icon name="chatBubble" sx={{ fontSize: 28 }} />
+      <Box
+        component="img"
+        src={`${import.meta.env.BASE_URL}intercom.png`}
+        alt="Support chat"
+        sx={{ width: '62%', height: '62%', objectFit: 'contain' }}
+      />
     </ButtonBase>
   )
 }

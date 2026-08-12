@@ -3,6 +3,7 @@ import Tooltip from '@mui/material/Tooltip'
 import ButtonBase from '@mui/material/ButtonBase'
 import IconButton from '@mui/material/IconButton'
 import Badge from '@mui/material/Badge'
+import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 
 const NAV_ITEMS = [
@@ -19,7 +20,9 @@ const NAV_ITEMS = [
   { key: 'administration', name: 'settings', label: 'Administration' },
 ]
 
-export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen }) {
+export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen, showTrigger = true }) {
+  const navigate = useNavigate()
+
   return (
     <Box
       sx={{
@@ -36,35 +39,37 @@ export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen }) {
         zIndex: 10,
       }}
     >
-      <Tooltip title="My iP" placement="right">
-        <ButtonBase sx={{ borderRadius: '50%', p: 0.5, my: 1.5 }}>
+      <Tooltip title="Back to prototype versions" placement="right">
+        <ButtonBase onClick={() => navigate('/')} sx={{ borderRadius: '50%', p: 0.5, my: 1.5 }}>
           <Box component="img" src={`${import.meta.env.BASE_URL}kitman-logo.png`} alt="Kitman Labs" sx={{ width: 36, height: 36, display: 'block' }} />
         </ButtonBase>
       </Tooltip>
 
-      <Tooltip title="Ask My iP" placement="right">
-        <ButtonBase
-          onClick={onOpenChat}
-          aria-label="Open Ask My iP assistant"
-          sx={{
-            width: 44,
-            height: 32,
-            borderRadius: '6px',
-            mb: 1.5,
-            color: '#ffffff',
-            backgroundColor: chatOpen ? 'var(--color-accent)' : 'transparent',
-            '&:hover': { backgroundColor: chatOpen ? 'var(--color-accent)' : '#ffffff1a' },
-          }}
-        >
-          <Badge
-            variant="dot"
-            invisible={!hasUnseen}
-            sx={{ '& .MuiBadge-dot': { backgroundColor: 'var(--toast-green)', border: '2px solid #0b1220' } }}
+      {showTrigger && (
+        <Tooltip title="Ask My iP" placement="right">
+          <ButtonBase
+            onClick={onOpenChat}
+            aria-label="Open Ask My iP assistant"
+            sx={{
+              width: 44,
+              height: 32,
+              borderRadius: '6px',
+              mb: 1.5,
+              color: '#ffffff',
+              backgroundColor: chatOpen ? 'var(--color-accent)' : 'transparent',
+              '&:hover': { backgroundColor: chatOpen ? 'var(--color-accent)' : '#ffffff1a' },
+            }}
           >
-            <Icon name="askIp" fontSize="small" />
-          </Badge>
-        </ButtonBase>
-      </Tooltip>
+            <Badge
+              variant="dot"
+              invisible={!hasUnseen}
+              sx={{ '& .MuiBadge-dot': { backgroundColor: 'var(--toast-green)', border: '2px solid #0b1220' } }}
+            >
+              <Icon name="askIp" fontSize="small" />
+            </Badge>
+          </ButtonBase>
+        </Tooltip>
+      )}
 
       <Box display="flex" flexDirection="column" gap={0.5} flexGrow={1} width="100%" alignItems="center">
         {NAV_ITEMS.map((item) => (
