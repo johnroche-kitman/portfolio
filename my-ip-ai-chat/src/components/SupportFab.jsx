@@ -15,8 +15,6 @@ export default function SupportFab() {
         width: SUPPORT_FAB_SIZE,
         height: SUPPORT_FAB_SIZE,
         borderRadius: '50%',
-        // Matches the intercom.png asset's own background exactly, so its
-        // square canvas blends into the circular button with no visible seam.
         backgroundColor: '#121212',
         display: 'flex',
         alignItems: 'center',
@@ -27,11 +25,11 @@ export default function SupportFab() {
         '&:hover': { backgroundColor: '#1c1c1c' },
       }}
     >
+      {/* Rendered at its native size, no scaling — just clipped to the circle. */}
       <Box
         component="img"
         src={`${import.meta.env.BASE_URL}intercom.png`}
         alt="Support chat"
-        sx={{ width: '90%', height: '90%', objectFit: 'contain' }}
       />
     </ButtonBase>
   )
