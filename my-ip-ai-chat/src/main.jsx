@@ -5,15 +5,18 @@ import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import { theme } from './theme/muiTheme'
 import App from './App'
+import PasswordGate from './components/PasswordGate'
 import './styles/design-tokens.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <HashRouter>
-        <App />
-      </HashRouter>
+      <PasswordGate>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </PasswordGate>
     </ThemeProvider>
   </React.StrictMode>
 )
