@@ -16,6 +16,16 @@ export default function AiPanel({ open, onClose, chatState }) {
   const showHistory = !expanded
   const showInput = view !== 'history'
 
+  function handleToggleExpand() {
+    // Expanding while on the History screen would otherwise show history
+    // twice — once in the sidebar, once as the main content — so land on
+    // a fresh chat instead.
+    if (!expanded && view === 'history') {
+      chatApi.startNewChat()
+    }
+    chatApi.setExpanded((prev) => !prev)
+  }
+
   return (
     <Drawer
       anchor="right"
@@ -48,7 +58,7 @@ export default function AiPanel({ open, onClose, chatState }) {
           expanded={expanded}
           onNewChat={chatApi.startNewChat}
           onHistory={chatApi.showHistory}
-          onToggleExpand={() => chatApi.setExpanded((prev) => !prev)}
+          onToggleExpand={handleToggleExpand}
           onClose={onClose}
         />
 
