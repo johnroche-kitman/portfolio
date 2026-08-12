@@ -4,6 +4,7 @@ import TopBar from './components/TopBar'
 import MyIpLanding from './pages/MyIpLanding'
 import AiPanel from './components/ai/AiPanel'
 import AiResponseToast from './components/ai/AiResponseToast'
+import SupportFab from './components/SupportFab'
 import { useAiChat } from './ai/useAiChat'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
         <TopBar />
         <MyIpLanding />
       </Box>
+      <SupportFab />
       <AiPanel open={chatState.open} onClose={chatState.closePanel} chatState={chatState} />
       <AiResponseToast toast={chatState.toast} onOpen={chatState.openFromToast} onDismiss={chatState.dismissToast} />
     </Box>

@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import ButtonBase from '@mui/material/ButtonBase'
 import Icon from '../Icon'
+import { TOAST_BOTTOM_OFFSET, SUPPORT_FAB_OFFSET } from '../../layoutConstants'
 
 export default function AiResponseToast({ toast, onOpen, onDismiss }) {
   if (!toast) return null
@@ -11,8 +12,8 @@ export default function AiResponseToast({ toast, onOpen, onDismiss }) {
     <Box
       sx={{
         position: 'fixed',
-        bottom: 24,
-        right: 24,
+        bottom: TOAST_BOTTOM_OFFSET,
+        right: SUPPORT_FAB_OFFSET,
         zIndex: 1400,
         width: 360,
         backgroundColor: 'var(--toast-green-bg)',

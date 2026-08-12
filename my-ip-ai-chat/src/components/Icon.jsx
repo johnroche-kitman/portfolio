@@ -41,6 +41,7 @@ import FilterNoneOutlinedIcon from '@mui/icons-material/FilterNoneOutlined'
 import CropSquareOutlinedIcon from '@mui/icons-material/CropSquareOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined'
+import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 
 // Central registry, every icon in the app must be Outlined per design-system rules
 export const ICONS = {
@@ -87,6 +88,7 @@ export const ICONS = {
   stop: CropSquareOutlinedIcon,
   delete: DeleteOutlineOutlinedIcon,
   commentAdd: AddCommentOutlinedIcon,
+  chatBubble: ChatBubbleOutlineOutlinedIcon,
 }
 
 export default function Icon({ name, ...props }) {
