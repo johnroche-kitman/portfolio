@@ -241,17 +241,17 @@
 /* CSS `d` interpolation only produces a smooth tween when the start and
    end paths have the SAME NUMBER of commands of the SAME TYPE in the
    same order - if they don't match, the browser can't blend them and
-   just swaps discretely (no visible motion), which is what happened with
-   the previous rounded-rect attempt (a 4-command circle morphing into an
-   8-command mixed L/C rectangle). Fixed by representing BOTH the rest
-   shape and the target as matching 12-point straight-edge (all "L")
-   polygons: the "rest" polygon samples 12 points around the eye's own
-   ellipse (so it still reads as an oval), and the target polygon samples
-   12 points around the rectangle-half's boundary at the SAME 12 angles
-   (radial projection from the rect's centre) - so each of the 12 points
-   has a clear, continuous, per-point path to travel, and the browser
-   tweens all 12 simultaneously. Left eye = top half (of the "!" bar),
-   right eye = bottom half; they meet flush at y=58.65 with no gap. */
+   just swaps discretely (no visible motion). Fixed by representing both
+   the rest shape and the target as matching 12-point straight-edge (all
+   "L") polygons. The target's 12 points are EXPLICIT rectangle
+   coordinates (not radial angle-sampling) - angle-sampling doesn't land
+   exactly on the seam corners, so the previous version cut a diagonal
+   chamfer into both halves right where they meet, leaving a visible
+   diamond-shaped gap in the middle of the "!" bar. These points include
+   the exact seam corners (70/81, 58.65) and seam midpoint (75.5, 58.65)
+   in both shapes, so the two halves butt together with a truly flush,
+   dead-straight edge - no gap. Left eye = top half, right eye = bottom
+   half. */
 @keyframes kit-error-eye-left-pill-morph {
   0%,
   13%,
@@ -264,7 +264,7 @@
   26%,
   84% {
     d: path(
-      'M81 47.575L81 50.7504L81 57.1013L75.5 58.65L70 57.1013L70 50.7504L70 47.575L70 44.3996L70 38.0487L75.5 36.5L81 38.0487L81 44.3996Z'
+      'M81 47.575L81 58.65L75.5 58.65L70 58.65L70 47.575L70 42L70 36.5L73.6667 36.5L75.5 36.5L77.3333 36.5L81 36.5L81 42Z'
     );
   }
 }
@@ -281,7 +281,7 @@
   26%,
   84% {
     d: path(
-      'M81 69.725L81 72.9004L81 79.2513L75.5 80.8L70 79.2513L70 72.9004L70 69.725L70 66.5496L70 60.1987L75.5 58.65L81 60.1987L81 66.5496Z'
+      'M81 69.725L81 64.1925L81 58.65L75.5 58.65L70 58.65L70 64.1925L70 69.725L70 75.2625L70 80.8L73.6667 80.8L75.5 80.8L77.3333 80.8Z'
     );
   }
 }
