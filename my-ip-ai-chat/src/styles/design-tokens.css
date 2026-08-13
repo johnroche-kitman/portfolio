@@ -238,16 +238,16 @@
   }
 }
 
-/* Both eyes morph into ellipses (NOT polygons) that stack to form the "!"
-   vertical line - left eye becomes the top half, right eye the bottom
-   half. Each target is the eye's own circle non-uniformly scaled into a
-   tall, NARROW pill (half-width 4.5 vs half-height 11.05) so it reads as
-   a rectangle/bar rather than a rounded blob, while the morph stays
-   curve-to-curve (smooth) rather than circle-to-polygon (which Chrome's
-   generic path interpolation renders as a jarring, lumpy transition) -
-   and since each eye travels to its own half rather than both crossing
-   paths to reach one full bar, they don't collide with each other
-   mid-flight either. */
+/* Both eyes morph into an ACTUAL rounded rectangle (straight vertical
+   sides, corners rounded only on the outer edges) that stacks into the
+   "!" vertical line - left eye becomes the top half (rounded top corners,
+   flush square bottom edge), right eye the bottom half (flush square top
+   edge, rounded bottom corners). The two flush edges meet at the exact
+   same y (58.65) with no gap, so together they read as one continuous
+   rectangle rather than two separate ovals - which is what a true ellipse
+   target did (an ellipse tapers to a POINT at its ends, not a flat edge,
+   so two stacked ellipses always look like two touching dots, never a
+   bar, no matter how you tune their proportions). */
 @keyframes kit-error-eye-left-pill-morph {
   0%,
   13%,
@@ -260,7 +260,7 @@
   26%,
   84% {
     d: path(
-      'M79.9 47.64C79.9 53.7424 77.8853 58.6899 75.4 58.6899C72.9147 58.6899 70.9 53.7424 70.9 47.64C70.9 41.5374 72.9147 36.5899 75.4 36.5899C77.8853 36.5899 79.9 41.5374 79.9 47.64Z'
+      'M73 36.5L78 36.5C79.6569 36.5 81 37.8431 81 39.5L81 58.65L70 58.65L70 39.5C70 37.8431 71.3431 36.5 73 36.5Z'
     );
   }
 }
@@ -277,7 +277,7 @@
   26%,
   84% {
     d: path(
-      'M70.9 69.71C70.9 75.8124 72.9147 80.7599 75.4 80.7599C77.8852 80.7599 79.8998 75.8124 79.8998 69.71C79.8998 63.6074 77.8852 58.6599 75.4 58.6599C72.9147 58.6599 70.9 63.6074 70.9 69.71Z'
+      'M70 58.65L81 58.65L81 77.8C81 79.4569 79.6569 80.8 78 80.8L73 80.8C71.3431 80.8 70 79.4569 70 77.8L70 58.65Z'
     );
   }
 }
