@@ -35,26 +35,14 @@ const ASTERISK_WHISKER_KEYFRAMES = {
 const SPARKLE_STAR_PATH =
   'M48.5938 10.0234L46.5918 27.9922L64.8047 22.9141L66.416 35.2188L49.8145 36.3906L60.7031 50.8926L49.6191 56.8008L42.002 41.5176L35.3125 56.7031L23.7891 50.8926L34.5801 36.3906L18.0762 35.1211L19.9805 22.9141L37.8027 27.9922L35.8008 10.0234H48.5938Z'
 
-// Final flat medical-bag icon. Combined into ONE evenodd path so the cross
-// is a true cut-out through the bag rather than a solid shape hidden
-// underneath it - the source frames drew the cross and the bag as two
-// separately-filled shapes, which occluded the cross entirely once the bag
-// became solid. Scaled 0.92 from its native 149x160 viewBox to fit 155x147.
-const MEDICAL_BAG_OUTLINE_D =
-  'M117 54H97V44C97 38.5 92.5 34 87 34H67C61.5 34 57 38.5 57 44V54H37C31.5 54 27 58.5 27 64V124C27 129.5 31.5 134 37 134H117C122.5 134 127 129.5 127 124V64C127 58.5 122.5 54 117 54ZM67 44H87V54H67V44Z'
-const MEDICAL_BAG_CROSS_D = 'M82 74H72V89H57V99H72V114H82V99H97V89H82V74Z'
-const MEDICAL_BAG_ICON_PATH = `${MEDICAL_BAG_OUTLINE_D} ${MEDICAL_BAG_CROSS_D}`
-
 // state: 'idle' (occasional blink + nose wiggle) | 'thinking' (head tilt +
 // whisker twitch) | 'loading' (ears/whiskers fly off, eyes/nose become a
 // pulsing dot row) | 'vanish' (ears/whiskers/eyes spin into the nose,
 // leaving a dot) | 'sparkle' (whiskers gather at the nose, crossfading into
 // a pulsing sparkle-star, Claude-icon style) | 'error' (Kit's ears morph
-// into "<"/">", the left eye morphs into the "!" bar and the nose morphs
-// into its dot) | 'ready' (Kit's right ear - on the left as viewed - morphs
-// into a tick/check-mark) | 'medical' (left ear morphs into the bag handle,
-// right ear into the outline, three whiskers into the cross, then a brief
-// crossfade polishes the hand-drawn result into the flat bag icon)
+// into "<"/">", both eyes morph into the two halves of the "!" bar and the
+// nose morphs into its dot) | 'ready' (Kit's right ear - on the left as
+// viewed - morphs into a tick/check-mark)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -64,18 +52,12 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const vanish = state === 'vanish'
   const error = state === 'error'
   const sparkle = state === 'sparkle'
-  const medical = state === 'medical'
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
   // For pieces with no transform/morph animation of their own - shrinks on
   // the way out instead of a flat opacity dissolve, so it reads as motion.
   const FADE_OUT_SHRINK = 'kit-fade-out-shrink-hold 3s ease-in-out infinite'
-  const FADE_OUT_SHRINK_MED = 'kit-fade-out-shrink-hold 4s ease-in-out infinite'
-  // Combined transform+opacity for the piece that visibly moves (ready's
-  // ear): morphs its `d` while also fading itself, so the target artwork
-  // fully replaces it right as it lands rather than sitting on top of it.
-  const MED_HIDE = 'kit-medical-piece-hide-for-polish 4s ease-in-out infinite'
 
   const earLeftAnimation = ready
     ? 'kit-ready-ear-morph 3s ease-in-out infinite'
@@ -85,34 +67,32 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         ? 'kit-error-ear-left-morph 3s ease-in-out infinite'
         : sparkle
           ? FADE_OUT_SHRINK
-          : medical
-            ? `kit-medical-ear-left-handle-morph 4s ease-in-out infinite, ${MED_HIDE}`
-            : 'none'
+          : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
       ? 'kit-error-ear-right-morph 3s ease-in-out infinite'
       : ready || sparkle
         ? FADE_OUT_SHRINK
-        : medical
-          ? `kit-medical-ear-right-outline-morph 4s ease-in-out infinite, ${MED_HIDE}`
-          : 'none'
+        : 'none'
   const eyeLeftAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
       : error
-        ? 'kit-error-eye-left-bar-morph 3s ease-in-out infinite'
-        : ready || sparkle || medical
-          ? (medical ? FADE_OUT_SHRINK_MED : FADE_OUT_SHRINK)
+        ? 'kit-error-eye-left-bar-top-morph 3s ease-in-out infinite'
+        : ready || sparkle
+          ? FADE_OUT_SHRINK
           : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
-      : ready || error || sparkle || medical
-        ? (medical ? FADE_OUT_SHRINK_MED : FADE_OUT_SHRINK)
-        : 'none'
+      : error
+        ? 'kit-error-eye-right-bar-bottom-morph 3s ease-in-out infinite'
+        : ready || sparkle
+          ? FADE_OUT_SHRINK
+          : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
     : loading
@@ -121,8 +101,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
         : error
           ? 'kit-error-nose-dot-morph 3s ease-in-out infinite'
-          : ready || sparkle || medical
-            ? (medical ? FADE_OUT_SHRINK_MED : FADE_OUT_SHRINK)
+          : ready || sparkle
+            ? FADE_OUT_SHRINK
             : 'none'
 
   const whiskerAnimation = (side, index) => {
@@ -130,12 +110,6 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
     if (ready || error) return FADE_OUT_SHRINK
     if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite, ${FADE_OUT}`
-    if (medical) {
-      if (side === 'left' && index === 0) return `kit-medical-cross-leftarm-morph 4s ease-in-out infinite, ${MED_HIDE}`
-      if (side === 'left' && index === 1) return `kit-medical-cross-vertical-morph 4s ease-in-out infinite, ${MED_HIDE}`
-      if (side === 'right' && index === 0) return `kit-medical-cross-rightarm-morph 4s ease-in-out infinite, ${MED_HIDE}`
-      return FADE_OUT_SHRINK_MED
-    }
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')
@@ -185,14 +159,10 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           animation: noseAnimation,
         },
         '& .kit-sparkle-star': {
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
+          transformBox: 'view-box',
+          transformOrigin: NOSE_CENTER,
           opacity: 0,
           animation: sparkle ? `${FADE_IN}, kit-sparkle-pop-and-pulse 3s ease-in-out infinite` : 'none',
-        },
-        '& .kit-medical-icon': {
-          opacity: 0,
-          animation: medical ? 'kit-medical-icon-fade 4s ease-in-out infinite' : 'none',
         },
       }}
     >
@@ -232,16 +202,16 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         <path className="kit-nose" d={NOSE} fill="#3B4960" />
       </g>
 
-      {/* Sparkle end-state: exact star artwork, centred on the nose. */}
-      <svg className="kit-sparkle-star" x="44.67" y="70.58" width="70" height="57.3" viewBox="0 0 88 72">
-        <path d={SPARKLE_STAR_PATH} fill="#3B4960" />
-      </svg>
-
-      {/* Medical: the flat bag icon, briefly crossfaded in once the
-          hand-morphed ears/whiskers have arrived, to polish the result. */}
-      <svg className="kit-medical-icon" x="9.05" y="0" width="136.9" height="147" viewBox="0 0 149 160">
-        <path d={MEDICAL_BAG_ICON_PATH} fill="#3B4960" fillRule="evenodd" />
-      </svg>
+      {/* Sparkle end-state: exact star artwork, centred on the nose. The
+          fade/pulse animates on this wrapping <g> (whose transform-box can
+          reference the shared canvas viewBox) rather than on the nested
+          <svg> itself, which would otherwise pivot around ITS OWN small
+          viewBox and drift off-centre. */}
+      <g className="kit-sparkle-star">
+        <svg x="44.67" y="70.58" width="70" height="57.3" viewBox="0 0 88 72">
+          <path d={SPARKLE_STAR_PATH} fill="#3B4960" />
+        </svg>
+      </g>
     </Box>
   )
 }

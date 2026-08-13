@@ -11,11 +11,6 @@ const VARIANTS = [
   { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
   { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
   { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
-  {
-    state: 'medical',
-    label: 'Medical',
-    description: 'Left ear becomes the bag handle, right ear the outline, whiskers the cross',
-  },
 ]
 
 export default function AnimationTests() {

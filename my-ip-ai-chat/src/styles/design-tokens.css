@@ -238,7 +238,9 @@
   }
 }
 
-@keyframes kit-error-eye-left-bar-morph {
+/* The "!" bar is split top/bottom at its midpoint so each eye morphs into
+   its own half, rather than one eye morphing into the whole bar. */
+@keyframes kit-error-eye-left-bar-top-morph {
   0%,
   13%,
   97%,
@@ -249,7 +251,22 @@
   }
   26%,
   84% {
-    d: path('M80.9343 80.7578L69.9027 80.7578L67.5969 36.5864L83.24 36.5864Z');
+    d: path('M82.0872 58.6721L68.7498 58.6721L67.5969 36.5864L83.24 36.5864Z');
+  }
+}
+
+@keyframes kit-error-eye-right-bar-bottom-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path(
+      'M92.1602 71.1347C92.1602 76.3064 94.9552 80.4993 98.4032 80.4993C101.851 80.4993 104.646 76.3064 104.646 71.1347C104.646 65.9629 101.851 61.77 98.4032 61.77C94.9552 61.77 92.1602 65.9629 92.1602 71.1347Z'
+    );
+  }
+  26%,
+  84% {
+    d: path('M80.9343 80.7578L69.9027 80.7578L68.7498 58.6721L82.0872 58.6721Z');
   }
 }
 
@@ -624,113 +641,5 @@
   75%,
   84% {
     transform: scale(1);
-  }
-}
-
-/* Kit "medical": left ear morphs (via `d`, see kit-ready-ear-morph) into
-   the bag handle, right ear into the bag outline, and 3 of the 6 whiskers
-   into the cross's two arms + vertical stroke - using the provided
-   "kit 1.svg".."kit 6.svg" frames as a guideline for the shapes, not a
-   literal 6-step flip-book. Once morphed (26%-84%), the hand-drawn result
-   briefly crossfades (kit-medical-piece-hide-for-polish / -icon-fade) into
-   the flat, precise bag icon before reversing back to Kit. */
-@keyframes kit-medical-ear-left-handle-morph {
-  0%,
-  13%,
-  97%,
-  100% {
-    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
-  }
-  26%,
-  84% {
-    d: path('M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999Z');
-  }
-}
-
-@keyframes kit-medical-ear-right-outline-morph {
-  0%,
-  13%,
-  97%,
-  100% {
-    d: path('M125.368 9L93.207 37.5878L97.3549 42.2539L121.381 20.8972L129.678 62.3837L135.8 61.1593L125.368 9Z');
-  }
-  26%,
-  84% {
-    d: path('M63.5 34.5L125 31L131.5 127L123 127L116.174 40.8972L37 46.5L37 37Z');
-  }
-}
-
-@keyframes kit-medical-cross-leftarm-morph {
-  0%,
-  13%,
-  97%,
-  100% {
-    d: path('M41.4584 96.0153L16.4861 89.7722L18.0003 83.7152L42.9725 89.9583L41.4584 96.0153Z');
-  }
-  26%,
-  84% {
-    d: path('M77.0001 96L49 95.5L49 87L78.0001 85.8879Z');
-  }
-}
-
-@keyframes kit-medical-cross-vertical-morph {
-  0%,
-  13%,
-  97%,
-  100% {
-    d: path('M42.9725 102.258L5.51417 111.623L4 105.566L41.4584 96.2013L42.9725 102.258Z');
-  }
-  26%,
-  84% {
-    d: path('M74.634 125.5L81.8821 49.9977L88.0795 50.7542L81 127Z');
-  }
-}
-
-@keyframes kit-medical-cross-rightarm-morph {
-  0%,
-  13%,
-  97%,
-  100% {
-    d: path('M111.646 96.0153L136.618 89.7722L135.104 83.7152L110.131 89.9583L111.646 96.0153Z');
-  }
-  26%,
-  84% {
-    d: path('M83.5751 89.1476L107.5 89.1476L109 94L84.5001 95.5Z');
-  }
-}
-
-/* Dips the morphed pieces out of view for a short polish window inside the
-   hold, while kit-medical-icon-fade brings the flat bag icon in over the
-   top - then both reverse so the hand-drawn shapes are visible again
-   before unmorphing back to Kit. */
-@keyframes kit-medical-piece-hide-for-polish {
-  0%,
-  13%,
-  26%,
-  36% {
-    opacity: 1;
-  }
-  40%,
-  70% {
-    opacity: 0;
-  }
-  74%,
-  84%,
-  97%,
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes kit-medical-icon-fade {
-  0%,
-  36%,
-  74%,
-  100% {
-    opacity: 0;
-  }
-  40%,
-  70% {
-    opacity: 1;
   }
 }
