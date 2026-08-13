@@ -40,9 +40,12 @@ const SPARKLE_STAR_PATH =
 // pulsing dot row) | 'vanish' (ears/whiskers/eyes spin into the nose,
 // leaving a dot) | 'sparkle' (whiskers gather at the nose, crossfading into
 // a pulsing sparkle-star, Claude-icon style) | 'error' (Kit's ears morph
-// into "<"/">", both eyes morph into the two halves of the "!" bar and the
-// nose morphs into its dot) | 'ready' (Kit's right ear - on the left as
-// viewed - morphs into a tick/check-mark)
+// into "<"/">", both eyes morph into the "!" bar and the nose morphs into
+// its dot) | 'ready' (Kit's right ear - on the left as viewed - morphs
+// into a tick/check-mark) | 'search' (nose morphs into the lens, one
+// whisker into the handle) | 'chart' (3 whiskers morph into 3 ascending
+// bars) | 'medical' (left ear morphs into the bag handle, right ear into a
+// hollow outline ring, 3 whiskers into the cross sitting in the open middle)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -52,6 +55,9 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const vanish = state === 'vanish'
   const error = state === 'error'
   const sparkle = state === 'sparkle'
+  const search = state === 'search'
+  const chart = state === 'chart'
+  const medical = state === 'medical'
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
@@ -65,23 +71,27 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-ear-left-morph 3s ease-in-out infinite'
-        : sparkle
-          ? FADE_OUT_SHRINK
-          : 'none'
+        : medical
+          ? 'kit-medical-ear-left-handle-morph 3s ease-in-out infinite'
+          : sparkle || search || chart
+            ? FADE_OUT_SHRINK
+            : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
       ? 'kit-error-ear-right-morph 3s ease-in-out infinite'
-      : ready || sparkle
-        ? FADE_OUT_SHRINK
-        : 'none'
+      : medical
+        ? 'kit-medical-ear-right-outline-morph 3s ease-in-out infinite'
+        : ready || sparkle || search || chart
+          ? FADE_OUT_SHRINK
+          : 'none'
   const eyeLeftAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
       : error
-        ? 'kit-error-eye-left-bar-top-morph 3s ease-in-out infinite'
-        : ready || sparkle
+        ? 'kit-error-eye-left-bar-morph 3s ease-in-out infinite'
+        : ready || sparkle || search || chart || medical
           ? FADE_OUT_SHRINK
           : 'none'
   const eyeRightAnimation = idle
@@ -89,8 +99,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
       : error
-        ? 'kit-error-eye-right-bar-bottom-morph 3s ease-in-out infinite'
-        : ready || sparkle
+        ? 'kit-error-eye-right-bar-morph 3s ease-in-out infinite'
+        : ready || sparkle || search || chart || medical
           ? FADE_OUT_SHRINK
           : 'none'
   const noseAnimation = idle
@@ -101,15 +111,30 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
         : error
           ? 'kit-error-nose-dot-morph 3s ease-in-out infinite'
-          : ready || sparkle
-            ? FADE_OUT_SHRINK
-            : 'none'
+          : search
+            ? 'kit-search-lens-morph 3s ease-in-out infinite'
+            : ready || sparkle || chart || medical
+              ? FADE_OUT_SHRINK
+              : 'none'
 
   const whiskerAnimation = (side, index) => {
     if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'
     if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
     if (ready || error) return FADE_OUT_SHRINK
     if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite, ${FADE_OUT}`
+    if (search) return side === 'right' && index === 2 ? 'kit-search-handle-morph 3s ease-in-out infinite' : FADE_OUT_SHRINK
+    if (chart) {
+      if (side === 'left' && index === 0) return 'kit-chart-bar1-morph 3s ease-in-out infinite'
+      if (side === 'left' && index === 1) return 'kit-chart-bar2-morph 3s ease-in-out infinite'
+      if (side === 'left' && index === 2) return 'kit-chart-bar3-morph 3s ease-in-out infinite'
+      return FADE_OUT_SHRINK
+    }
+    if (medical) {
+      if (side === 'left' && index === 0) return 'kit-medical-cross-leftarm-morph 3s ease-in-out infinite'
+      if (side === 'left' && index === 1) return 'kit-medical-cross-vertical-morph 3s ease-in-out infinite'
+      if (side === 'right' && index === 0) return 'kit-medical-cross-rightarm-morph 3s ease-in-out infinite'
+      return FADE_OUT_SHRINK
+    }
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')

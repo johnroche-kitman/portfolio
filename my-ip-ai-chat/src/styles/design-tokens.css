@@ -238,9 +238,10 @@
   }
 }
 
-/* The "!" bar is split top/bottom at its midpoint so each eye morphs into
-   its own half, rather than one eye morphing into the whole bar. */
-@keyframes kit-error-eye-left-bar-top-morph {
+/* Both eyes morph into the SAME full "!" bar (rather than splitting it
+   top/bottom) - each travels independently, from its own native shape, to
+   the one target shape. */
+@keyframes kit-error-eye-left-bar-morph {
   0%,
   13%,
   97%,
@@ -251,11 +252,11 @@
   }
   26%,
   84% {
-    d: path('M82.0872 58.6721L68.7498 58.6721L67.5969 36.5864L83.24 36.5864Z');
+    d: path('M80.9343 80.7578L69.9027 80.7578L67.5969 36.5864L83.24 36.5864Z');
   }
 }
 
-@keyframes kit-error-eye-right-bar-bottom-morph {
+@keyframes kit-error-eye-right-bar-morph {
   0%,
   13%,
   97%,
@@ -266,7 +267,7 @@
   }
   26%,
   84% {
-    d: path('M80.9343 80.7578L69.9027 80.7578L68.7498 58.6721L82.0872 58.6721Z');
+    d: path('M80.9343 80.7578L69.9027 80.7578L67.5969 36.5864L83.24 36.5864Z');
   }
 }
 
@@ -641,5 +642,152 @@
   75%,
   84% {
     transform: scale(1);
+  }
+}
+
+/* Kit "search": the nose scales up (same 3-curve circle shape, just a
+   bigger radius) into the lens, and one whisker - already angled
+   down-right - morphs into the handle. Everything else fades. */
+@keyframes kit-search-lens-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path(
+      'M79.6737 92.9854C83.1218 92.9854 85.9168 95.7804 85.9168 99.2284C85.9168 102.676 83.1218 105.471 79.6737 105.471C76.2257 105.471 73.4307 102.676 73.4307 99.2284C73.4307 95.7804 76.2257 92.9854 79.6737 92.9854Z'
+    );
+  }
+  26%,
+  84% {
+    d: path(
+      'M67.9989 50.1509C80.0673 50.1509 89.8498 59.9334 89.8498 72.0014C89.8498 84.068 80.0673 93.8505 67.9989 93.8505C55.9309 93.8505 46.1484 84.068 46.1484 72.0014C46.1484 59.9334 55.9309 50.1509 67.9989 50.1509Z'
+    );
+  }
+}
+
+@keyframes kit-search-handle-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M109.283 111.271L140.498 130L143.71 124.647L112.495 105.918L109.283 111.271Z');
+  }
+  26%,
+  84% {
+    d: path('M81.02 89.97L85.97 85.02L112.85 111.9L107.9 116.85Z');
+  }
+}
+
+/* Kit "chart": 3 of the left whiskers morph into 3 ascending bars -
+   simple rectangles, the easiest possible morph target. Everything else
+   fades. */
+@keyframes kit-chart-bar1-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M41.4584 96.0153L16.4861 89.7722L18.0003 83.7152L42.9725 89.9583L41.4584 96.0153Z');
+  }
+  26%,
+  84% {
+    d: path('M50 115L64 115L64 90L50 90Z');
+  }
+}
+
+@keyframes kit-chart-bar2-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M42.9725 102.258L5.51417 111.623L4 105.566L41.4584 96.2013L42.9725 102.258Z');
+  }
+  26%,
+  84% {
+    d: path('M68 115L82 115L82 75L68 75Z');
+  }
+}
+
+@keyframes kit-chart-bar3-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M43.8214 111.271L12.6061 130L9.39414 124.647L40.6094 105.918L43.8214 111.271Z');
+  }
+  26%,
+  84% {
+    d: path('M86 115L100 115L100 60L86 60Z');
+  }
+}
+
+/* Kit "medical": left ear morphs into the bag handle, right ear into a
+   HOLLOW outline ring (a single path tracing the outer boundary then the
+   inner boundary in the opposite winding direction, joined by a short
+   seam - so it's one continuous shape, matching the ear's single
+   subpath, rather than two overlapping filled shapes). Because the bag is
+   hollow, the cross (3 whiskers) sits in the open middle with nothing to
+   hide it - no fill-rule trick needed. */
+@keyframes kit-medical-ear-left-handle-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
+  }
+  26%,
+  84% {
+    d: path('M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999Z');
+  }
+}
+
+@keyframes kit-medical-ear-right-outline-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M125.368 9L93.207 37.5878L97.3549 42.2539L121.381 20.8972L129.678 62.3837L135.8 61.1593L125.368 9Z');
+  }
+  26%,
+  84% {
+    d: path('M30 28L130 28L130 118L30 118L30 28L35 33L35 113L125 113L125 33L35 33L30 28Z');
+  }
+}
+
+@keyframes kit-medical-cross-leftarm-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M41.4584 96.0153L16.4861 89.7722L18.0003 83.7152L42.9725 89.9583L41.4584 96.0153Z');
+  }
+  26%,
+  84% {
+    d: path('M50 68L75 68L75 78L50 78Z');
+  }
+}
+
+@keyframes kit-medical-cross-vertical-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M42.9725 102.258L5.51417 111.623L4 105.566L41.4584 96.2013L42.9725 102.258Z');
+  }
+  26%,
+  84% {
+    d: path('M75 48L85 48L85 98L75 98Z');
+  }
+}
+
+@keyframes kit-medical-cross-rightarm-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M111.646 96.0153L136.618 89.7722L135.104 83.7152L110.131 89.9583L111.646 96.0153Z');
+  }
+  26%,
+  84% {
+    d: path('M85 68L110 68L110 78L85 78Z');
   }
 }
