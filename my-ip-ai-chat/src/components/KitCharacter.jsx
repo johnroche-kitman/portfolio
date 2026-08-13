@@ -20,10 +20,23 @@ const EYE_LEFT = 'M60.9451 71.1347C60.9451 76.3064 58.15 80.4993 54.702 80.4993C
 const EYE_RIGHT = 'M92.1602 71.1347C92.1602 76.3064 94.9552 80.4993 98.4032 80.4993C101.851 80.4993 104.646 76.3064 104.646 71.1347C104.646 65.9629 101.851 61.77 98.4032 61.77C94.9552 61.77 92.1602 65.9629 92.1602 71.1347Z'
 const NOSE = 'M79.6737 92.9854C83.1218 92.9854 85.9168 95.7804 85.9168 99.2284C85.9168 102.676 83.1218 105.471 79.6737 105.471C76.2257 105.471 73.4307 102.676 73.4307 99.2284C73.4307 95.7804 76.2257 92.9854 79.6737 92.9854Z'
 
-// state: 'idle' (default, occasional blink + nose wiggle) | 'thinking'
-// (head tilt + whisker twitch) | 'ready' (ears swing into a tick mark) |
-// 'loading' (ears/whiskers fly off, eyes/nose shrink into a pulsing dot
-// row) | 'vanish' (ears/whiskers/eyes spin away, nose left as a lone dot)
+// Nose centre, in the SVG's own viewBox units - used as the exact pivot
+// point for the "vanish" spin so it collapses into the nose rather than
+// around the ears/whiskers/eyes group's own (higher-up) bounding box.
+const NOSE_CENTER = '79.6737px 99.2284px'
+
+const ASTERISK_WHISKER_KEYFRAMES = {
+  left: ['kit-asterisk-whisker-l0', 'kit-asterisk-whisker-l1', 'kit-asterisk-whisker-l2'],
+  right: ['kit-asterisk-whisker-r0', 'kit-asterisk-whisker-r1', 'kit-asterisk-whisker-r2'],
+}
+
+// state: 'idle' (occasional blink + nose wiggle) | 'thinking' (head tilt +
+// whisker twitch) | 'ready' (right ear swings into a tick, everything else
+// fades) | 'loading' (ears/whiskers fly off, eyes/nose become a pulsing dot
+// row) | 'vanish' (ears/whiskers/eyes spin into the nose, leaving a dot) |
+// 'error' (ears fold into "<" / ">", eyes form the "!" bar over the nose) |
+// 'sparkle' (ears/eyes fade, whiskers gather at the nose into a pulsing
+// asterisk, Claude-icon style)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -31,44 +44,63 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const ready = state === 'ready'
   const loading = state === 'loading'
   const vanish = state === 'vanish'
+  const error = state === 'error'
+  const sparkle = state === 'sparkle'
 
-  const earLeftAnimation = ready
-    ? 'kit-ear-tick-left 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
-    : loading
-      ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
-      : 'none'
+  const earLeftAnimation = loading
+    ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
+    : error
+      ? 'kit-error-ear-left 3s ease-in-out infinite'
+      : ready || sparkle
+        ? 'kit-fade-out-hold 3s ease-in-out infinite'
+        : 'none'
   const earRightAnimation = ready
-    ? 'kit-ear-tick-right 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
+    ? 'kit-ready-ear-tick-solo 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
     : loading
       ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
-      : 'none'
-  const whiskerLeftAnimation = thinking
-    ? 'kit-whisker-twitch 1.4s ease-in-out infinite'
-    : loading
-      ? 'kit-whisker-flyaway-left 3.2s ease-in-out infinite'
-      : 'none'
-  const whiskerRightAnimation = thinking
-    ? 'kit-whisker-twitch 1.4s ease-in-out infinite'
-    : loading
-      ? 'kit-whisker-flyaway-right 3.2s ease-in-out infinite'
-      : 'none'
+      : error
+        ? 'kit-error-ear-right 3s ease-in-out infinite'
+        : sparkle
+          ? 'kit-fade-out-hold 3s ease-in-out infinite'
+          : 'none'
   const eyeLeftAnimation = idle
-    ? 'kit-blink 4.5s ease-in-out infinite'
+    ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
-      : 'none'
+      : error
+        ? 'kit-error-eye-top 3s ease-in-out infinite'
+        : ready || sparkle
+          ? 'kit-fade-out-hold 3s ease-in-out infinite'
+          : 'none'
   const eyeRightAnimation = idle
-    ? 'kit-blink 4.5s ease-in-out infinite'
+    ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
-      : 'none'
+      : error
+        ? 'kit-error-eye-bottom 3s ease-in-out infinite'
+        : ready || sparkle
+          ? 'kit-fade-out-hold 3s ease-in-out infinite'
+          : 'none'
   const noseAnimation = idle
-    ? 'kit-nose-wiggle 4.5s ease-in-out infinite'
+    ? 'kit-nose-wiggle 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-nose 3.2s ease-in-out infinite'
       : vanish
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
-        : 'none'
+        : ready
+          ? 'kit-fade-out-hold 3s ease-in-out infinite'
+          : sparkle
+            ? 'kit-asterisk-nose-pulse 3s ease-in-out infinite'
+            : 'none'
+
+  const whiskerAnimation = (side, index) => {
+    if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'
+    if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
+    if (ready || error) return 'kit-fade-out-hold 3s ease-in-out infinite'
+    if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite`
+    return 'none'
+  }
+  const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')
 
   return (
     <Box
@@ -85,8 +117,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           animation: thinking ? 'kit-head-tilt 2.6s ease-in-out infinite' : 'none',
         },
         '& .kit-spin-group': {
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
+          transformBox: 'view-box',
+          transformOrigin: NOSE_CENTER,
           animation: vanish ? 'kit-spin-vanish-head 3.2s ease-in-out infinite' : 'none',
         },
         '& .kit-ear-left': {
@@ -98,16 +130,6 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           transformBox: 'fill-box',
           transformOrigin: '0% 100%',
           animation: earRightAnimation,
-        },
-        '& .kit-whisker-left': {
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
-          animation: whiskerLeftAnimation,
-        },
-        '& .kit-whisker-right': {
-          transformBox: 'fill-box',
-          transformOrigin: 'center',
-          animation: whiskerRightAnimation,
         },
         '& .kit-eye-left': {
           transformBox: 'fill-box',
@@ -133,8 +155,12 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           {WHISKERS_LEFT.map((d, i) => (
             <path
               key={`wl-${i}`}
-              className="kit-whisker-left"
-              style={{ animationDelay: thinking ? `${i * 0.12}s` : '0s' }}
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'center',
+                animation: whiskerAnimation('left', i),
+                animationDelay: whiskerDelay(i),
+              }}
               d={d}
               fill="#3B4960"
             />
@@ -142,8 +168,12 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           {WHISKERS_RIGHT.map((d, i) => (
             <path
               key={`wr-${i}`}
-              className="kit-whisker-right"
-              style={{ animationDelay: thinking ? `${i * 0.12}s` : '0s' }}
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'center',
+                animation: whiskerAnimation('right', i),
+                animationDelay: whiskerDelay(i),
+              }}
               d={d}
               fill="#3B4960"
             />

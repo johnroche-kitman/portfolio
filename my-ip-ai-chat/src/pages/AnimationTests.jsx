@@ -8,7 +8,9 @@ const VARIANTS = [
   { state: 'thinking', label: 'Thinking', description: 'Head tilt + whisker twitch' },
   { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
   { state: 'loading', label: 'Loading', description: 'Ears/whiskers fly off, eyes + nose pulse like the thinking dots' },
-  { state: 'vanish', label: 'Vanish', description: 'Ears, whiskers and eyes spin away, leaving the nose as a dot' },
+  { state: 'vanish', label: 'Vanish', description: 'Ears, whiskers and eyes spin into the nose, leaving a dot' },
+  { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
+  { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
 ]
 
 export default function AnimationTests() {
@@ -24,11 +26,33 @@ export default function AnimationTests() {
       <Typography variant="h1" sx={{ mb: 1, textAlign: 'center', color: 'var(--color-primary)' }}>
         Animation tests
       </Typography>
-      <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 5, textAlign: 'center' }}>
+      <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 3, textAlign: 'center' }}>
         Kit, the Ask AI avatar — trying out a few looping states.
       </Typography>
 
-      <Box display="flex" flexWrap="wrap" justifyContent="center" gap={4} mb={4}>
+      <Box display="flex" flexDirection="column" alignItems="center" mb={5}>
+        <Box
+          component="img"
+          src={`${import.meta.env.BASE_URL}ask-kit.png`}
+          alt="Ask KIT panel design mockup, showing where Kit appears in the new chat screen"
+          sx={{
+            width: '100%',
+            maxWidth: 420,
+            borderRadius: 2,
+            border: '1px solid var(--divider)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+          }}
+        />
+        <Typography variant="body2" sx={{ color: 'var(--grey-100)', mt: 1.5, textAlign: 'center' }}>
+          Reference: where Kit sits in the Ask KIT panel design
+        </Typography>
+      </Box>
+
+      <Box
+        display="grid"
+        sx={{ gridTemplateColumns: 'repeat(3, 220px)', justifyContent: 'center', columnGap: 4, rowGap: 5 }}
+        mb={4}
+      >
         {VARIANTS.map((variant) => (
           <Box key={variant.state} display="flex" flexDirection="column" alignItems="center" sx={{ width: 220 }}>
             <Box
