@@ -9,15 +9,8 @@ const VARIANTS = [
   { state: 'loading', label: 'Loading', description: 'Ears/whiskers fly off, eyes + nose pulse like the thinking dots' },
   { state: 'vanish', label: 'Vanish', description: 'Ears, whiskers and eyes spin into the nose, leaving a dot' },
   { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
-  { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
+  { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" line, nose its dot' },
   { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
-  { state: 'search', label: 'Search', description: 'Nose morphs into the lens, a whisker into the handle' },
-  { state: 'chart', label: 'Chart', description: '3 whiskers morph into 3 ascending bars' },
-  {
-    state: 'medical',
-    label: 'Medical',
-    description: 'Left ear becomes the handle, right ear a hollow outline, whiskers the cross',
-  },
 ]
 
 export default function AnimationTests() {
