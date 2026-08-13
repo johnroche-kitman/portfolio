@@ -11,6 +11,11 @@ const VARIANTS = [
   { state: 'vanish', label: 'Vanish', description: 'Ears, whiskers and eyes spin into the nose, leaving a dot' },
   { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
   { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
+  {
+    state: 'medical',
+    label: 'Medical',
+    description: 'Left ear becomes the bag handle, right ear the outline, whiskers the cross',
+  },
 ]
 
 export default function AnimationTests() {

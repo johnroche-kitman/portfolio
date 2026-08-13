@@ -43,13 +43,48 @@ const ERROR_PATHS = [
 const SPARKLE_STAR_PATH =
   'M48.5938 10.0234L46.5918 27.9922L64.8047 22.9141L66.416 35.2188L49.8145 36.3906L60.7031 50.8926L49.6191 56.8008L42.002 41.5176L35.3125 56.7031L23.7891 50.8926L34.5801 36.3906L18.0762 35.1211L19.9805 22.9141L37.8027 27.9922L35.8008 10.0234H48.5938Z'
 
+// "Medical" hand-drawn flip-book frames 2-5 (frame 1 is Kit's own idle
+// rendering, reused as-is; frame 6 is the final flat bag icon below).
+// Each frame is a snapshot mid-transformation: left ear -> bag handle,
+// right ear -> bag outline, whiskers -> the medical cross.
+const MEDICAL_FRAME_2 = [
+  'M41.4584 96.0154L16.4861 89.7723L18.0003 83.7153L42.9725 89.9584L41.4584 96.0154ZM42.9725 102.258L5.51417 111.623L4 105.566L41.4584 96.2014L42.9725 102.258ZM43.8214 111.271L12.6061 130L9.39414 124.647L40.6094 105.918L43.8214 111.271Z',
+  'M93.2297 40.0195L77.8939 -0.185161L44.5654 41.2712L49.431 45.1829L75.9398 12.2093L87.3966 42.2445L93.2297 40.0195Z',
+  'M82.363 94.3001L107.335 88.057L105.821 82L80.8484 88.2431L82.363 94.3001ZM80.8484 100.543L118.307 109.908L119.821 103.851L82.363 94.4861L80.8484 100.543ZM80 109.556L111.215 128.285L114.427 122.932L83.2121 104.203L80 109.556Z',
+  'M81.5 56.5L120.161 29L132 98H126L116.174 40.8972L60.5 81.1593L53 73L81.5 56.5Z',
+  NOSE,
+]
+const MEDICAL_FRAME_3 = [
+  'M54.4584 93.3001L29.4861 87.057L31.0003 81L55.9725 87.2431L54.4584 93.3001ZM55.9725 99.5431L18.5142 108.908L17 102.851L54.4584 93.4861L55.9725 99.5431ZM56.8214 108.556L25.6061 127.285L22.3941 121.932L53.6094 103.203L56.8214 108.556Z',
+  'M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999L106.999 19.4999Z',
+  'M84.3759 86.5709L97.0789 108.959L102.509 105.877L89.806 83.4894L84.3759 86.5709ZM77.9552 86.7836L78.9648 125.382L85.2061 125.219L84.1966 86.6207L77.9552 86.7836ZM69.0448 88.3799L59.3598 123.471L65.3773 125.132L75.0623 90.041L69.0448 88.3799Z',
+  'M63.5 34.5L125 31L131.5 127H123L116.174 40.8972L37 46.5V37L63.5 34.5Z',
+]
+const MEDICAL_FRAME_4 = [
+  'M83.5751 89.148L98.351 68.0705L103.463 71.6543L88.6875 92.7318L83.5751 89.148ZM77.204 88.3248L81.882 49.9981L88.0794 50.7546L83.4014 89.0814L77.204 88.3248ZM68.4857 85.8883L62.184 50.035L68.3323 48.9541L74.634 84.8074L68.4857 85.8883Z',
+  'M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999L106.999 19.4999Z',
+  'M84.3759 86.5709L97.0789 108.959L102.509 105.877L89.806 83.4894L84.3759 86.5709ZM77.9552 86.7836L78.9648 125.382L85.2061 125.219L84.1966 86.6207L77.9552 86.7836ZM69.0448 88.3799L59.3598 123.471L65.3773 125.132L75.0623 90.041L69.0448 88.3799Z',
+  'M63.5 34.5L125 31L131.5 127H123L116.174 40.8972L37 46.5V37L63.5 34.5Z',
+]
+const MEDICAL_FRAME_5 = [
+  'M83.5751 89.1476L107.5 89.1476L109 94L84.5001 95.5L83.5751 89.1476ZM74.634 125.5L81.8821 49.9977L88.0795 50.7542L81 127L74.634 125.5ZM77.0001 96L49 95.5L49 87L78.0001 85.8879L77.0001 96Z',
+  'M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999L106.999 19.4999Z',
+  'M63.5 34.5L125 31L131.5 127H123L116.174 40.8972L37 46.5V37L63.5 34.5Z',
+]
+// Final flat medical-bag icon (frame 6) - its own viewBox (149x160), scaled
+// down slightly (0.92) to fit the shared 155x147 canvas without clipping.
+const MEDICAL_BAG_CROSS_PATH = 'M82 74H72V89H57V99H72V114H82V99H97V89H82V74Z'
+const MEDICAL_BAG_OUTLINE_PATH =
+  'M117 54H97V44C97 38.5 92.5 34 87 34H67C61.5 34 57 38.5 57 44V54H37C31.5 54 27 58.5 27 64V124C27 129.5 31.5 134 37 134H117C122.5 134 127 129.5 127 124V64C127 58.5 122.5 54 117 54ZM67 44H87V54H67V44Z'
+
 // state: 'idle' (occasional blink + nose wiggle) | 'thinking' (head tilt +
 // whisker twitch) | 'ready' (right ear swings into a tick, crossfades into
 // the tick artwork) | 'loading' (ears/whiskers fly off, eyes/nose become a
 // pulsing dot row) | 'vanish' (ears/whiskers/eyes spin into the nose,
 // leaving a dot) | 'error' (ears fold, crossfades into the "< ! >" artwork)
 // | 'sparkle' (whiskers gather at the nose, crossfading into a pulsing
-// sparkle-star, Claude-icon style)
+// sparkle-star, Claude-icon style) | 'medical' (6-frame flip-book into a
+// medical bag icon, for the Performance Medicine agent)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -59,6 +94,7 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const vanish = state === 'vanish'
   const error = state === 'error'
   const sparkle = state === 'sparkle'
+  const medical = state === 'medical'
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
@@ -128,7 +164,11 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         '& .kit-head': {
           transformBox: 'fill-box',
           transformOrigin: 'center',
-          animation: thinking ? 'kit-head-tilt 2.6s ease-in-out infinite' : 'none',
+          animation: thinking
+            ? 'kit-head-tilt 2.6s ease-in-out infinite'
+            : medical
+              ? 'kit-medical-1 6.5s ease-in-out infinite'
+              : 'none',
         },
         '& .kit-spin-group': {
           transformBox: 'view-box',
@@ -231,6 +271,33 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       {/* Sparkle end-state: exact star artwork, centred on the nose. */}
       <svg className="kit-sparkle-star" x="44.67" y="70.58" width="70" height="57.3" viewBox="0 0 88 72">
         <path d={SPARKLE_STAR_PATH} fill="#3B4960" />
+      </svg>
+
+      {/* Medical: frames 2-5 of the hand-drawn flip-book, each crossfading
+          into the next (frame 1 is kit-head above; frame 6 is the flat bag
+          icon below). */}
+      {[MEDICAL_FRAME_2, MEDICAL_FRAME_3, MEDICAL_FRAME_4, MEDICAL_FRAME_5].map((paths, i) => (
+        <g
+          key={`medical-frame-${i + 2}`}
+          style={{ opacity: 0, animation: medical ? `kit-medical-${i + 2} 6.5s ease-in-out infinite` : 'none' }}
+        >
+          {paths.map((d, j) => (
+            <path key={j} d={d} fill="#3B4960" fillRule="evenodd" clipRule="evenodd" />
+          ))}
+        </g>
+      ))}
+
+      {/* Medical frame 6: the final flat bag icon, own viewBox scaled to fit. */}
+      <svg
+        x="9.05"
+        y="0"
+        width="136.9"
+        height="147"
+        viewBox="0 0 149 160"
+        style={{ opacity: 0, animation: medical ? 'kit-medical-6 6.5s ease-in-out infinite' : 'none' }}
+      >
+        <path d={MEDICAL_BAG_CROSS_PATH} fill="#3B4960" />
+        <path d={MEDICAL_BAG_OUTLINE_PATH} fill="#3B4960" />
       </svg>
     </Box>
   )
