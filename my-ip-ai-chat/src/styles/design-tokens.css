@@ -238,29 +238,33 @@
   }
 }
 
-/* Both eyes morph into an ACTUAL rounded rectangle (straight vertical
-   sides, corners rounded only on the outer edges) that stacks into the
-   "!" vertical line - left eye becomes the top half (rounded top corners,
-   flush square bottom edge), right eye the bottom half (flush square top
-   edge, rounded bottom corners). The two flush edges meet at the exact
-   same y (58.65) with no gap, so together they read as one continuous
-   rectangle rather than two separate ovals - which is what a true ellipse
-   target did (an ellipse tapers to a POINT at its ends, not a flat edge,
-   so two stacked ellipses always look like two touching dots, never a
-   bar, no matter how you tune their proportions). */
+/* CSS `d` interpolation only produces a smooth tween when the start and
+   end paths have the SAME NUMBER of commands of the SAME TYPE in the
+   same order - if they don't match, the browser can't blend them and
+   just swaps discretely (no visible motion), which is what happened with
+   the previous rounded-rect attempt (a 4-command circle morphing into an
+   8-command mixed L/C rectangle). Fixed by representing BOTH the rest
+   shape and the target as matching 12-point straight-edge (all "L")
+   polygons: the "rest" polygon samples 12 points around the eye's own
+   ellipse (so it still reads as an oval), and the target polygon samples
+   12 points around the rectangle-half's boundary at the SAME 12 angles
+   (radial projection from the rect's centre) - so each of the 12 points
+   has a clear, continuous, per-point path to travel, and the browser
+   tweens all 12 simultaneously. Left eye = top half (of the "!" bar),
+   right eye = bottom half; they meet flush at y=58.65 with no gap. */
 @keyframes kit-error-eye-left-pill-morph {
   0%,
   13%,
   97%,
   100% {
     d: path(
-      'M60.9451 71.1347C60.9451 76.3064 58.15 80.4993 54.702 80.4993C51.2541 80.4993 48.459 76.3064 48.459 71.1347C48.459 65.9629 51.2541 61.77 54.702 61.77C58.15 61.77 60.9451 65.9629 60.9451 71.1347Z'
+      'M60.9450 71.1347L60.1086 75.8170L57.8235 79.2448L54.7020 80.4994L51.5805 79.2448L49.2954 75.8170L48.4590 71.1347L49.2954 66.4523L51.5805 63.0246L54.7020 61.7700L57.8235 63.0246L60.1086 66.4523Z'
     );
   }
   26%,
   84% {
     d: path(
-      'M73 36.5L78 36.5C79.6569 36.5 81 37.8431 81 39.5L81 58.65L70 58.65L70 39.5C70 37.8431 71.3431 36.5 73 36.5Z'
+      'M81 47.575L81 50.7504L81 57.1013L75.5 58.65L70 57.1013L70 50.7504L70 47.575L70 44.3996L70 38.0487L75.5 36.5L81 38.0487L81 44.3996Z'
     );
   }
 }
@@ -271,17 +275,21 @@
   97%,
   100% {
     d: path(
-      'M92.1602 71.1347C92.1602 76.3064 94.9552 80.4993 98.4032 80.4993C101.851 80.4993 104.646 76.3064 104.646 71.1347C104.646 65.9629 101.851 61.77 98.4032 61.77C94.9552 61.77 92.1602 65.9629 92.1602 71.1347Z'
+      'M104.6462 71.1347L103.8098 75.8170L101.5247 79.2448L98.4032 80.4994L95.2817 79.2448L92.9966 75.8170L92.1602 71.1347L92.9966 66.4523L95.2817 63.0246L98.4032 61.7700L101.5247 63.0246L103.8098 66.4523Z'
     );
   }
   26%,
   84% {
     d: path(
-      'M70 58.65L81 58.65L81 77.8C81 79.4569 79.6569 80.8 78 80.8L73 80.8C71.3431 80.8 70 79.4569 70 77.8L70 58.65Z'
+      'M81 69.725L81 72.9004L81 79.2513L75.5 80.8L70 79.2513L70 72.9004L70 69.725L70 66.5496L70 60.1987L75.5 58.65L81 60.1987L81 66.5496Z'
     );
   }
 }
 
+/* Same matching-structure fix for the nose - it natively has 3 cubic
+   segments, but the reference "!" dot glyph has 6, so it couldn't
+   interpolate either. Target is now the nose's own circle formula
+   (same 3-C structure), just scaled up and repositioned. */
 @keyframes kit-error-nose-dot-morph {
   0%,
   13%,
@@ -294,7 +302,7 @@
   26%,
   84% {
     d: path(
-      'M67.4161 96.22C67.4161 93.3868 68.1847 91.3974 69.7219 90.2521C71.2892 89.1068 73.173 88.5341 75.3732 88.5341C77.5132 88.5341 79.3519 89.1068 80.8891 90.2521C82.4564 91.3974 83.24 93.3868 83.24 96.22C83.24 98.9327 82.4564 100.8919 80.8891 102.0974C79.3519 103.3031 77.5132 103.9059 75.3732 103.9059C73.173 103.9059 71.2892 103.3031 69.7219 102.0974C68.1847 100.8919 67.4161 98.9327 67.4161 96.22Z'
+      'M75.5 89.2C79.8081 89.2 83.3001 92.6921 83.3001 97C83.3001 101.3074 79.8081 104.7995 75.5 104.7995C71.1921 104.7995 67.7 101.3074 67.7 97C67.7 92.6921 71.1921 89.2 75.5 89.2Z'
     );
   }
 }
