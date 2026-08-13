@@ -6,11 +6,11 @@ import KitCharacter from '../components/KitCharacter'
 const VARIANTS = [
   { state: 'idle', label: 'Idle', description: 'Occasional blink/squint + nose wiggle' },
   { state: 'thinking', label: 'Thinking', description: 'Head tilt + whisker twitch' },
-  { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
   { state: 'loading', label: 'Loading', description: 'Ears/whiskers fly off, eyes + nose pulse like the thinking dots' },
   { state: 'vanish', label: 'Vanish', description: 'Ears, whiskers and eyes spin into the nose, leaving a dot' },
-  { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
   { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
+  { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" bar' },
+  { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
   {
     state: 'medical',
     label: 'Medical',

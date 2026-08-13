@@ -163,30 +163,9 @@
   }
 }
 
-/* Paired with kit-fade-in-hold on the end-state overlay artwork - pops in
-   with a slight overshoot rather than just fading up, so the crossfade
-   reads as an arrival rather than a dissolve. */
-@keyframes kit-overlay-pop-in {
-  0%,
-  13% {
-    transform: scale(0.5);
-  }
-  26% {
-    transform: scale(1.08);
-  }
-  34%,
-  84% {
-    transform: scale(1);
-  }
-  97%,
-  100% {
-    transform: scale(0.5);
-  }
-}
-
-/* Combines the pop-in/pop-out arrival with the Claude-style double pulse -
-   kept as one keyframe (rather than stacked with kit-overlay-pop-in) since
-   two animations can't both drive `transform` on the same element. */
+/* Combines a pop-in/pop-out arrival with the Claude-style double pulse -
+   kept as one keyframe since two animations can't both drive `transform`
+   on the same element. */
 @keyframes kit-sparkle-pop-and-pulse {
   0%,
   13% {
@@ -211,48 +190,83 @@
   }
 }
 
-/* Kit "ready": everything fades, and Kit's right ear - on the LEFT as we
-   look at it - swings down and rotates ~200deg towards a tick shape before
-   fading itself, crossfading into the precise tick overlay artwork. */
-@keyframes kit-ready-ear-tick-solo {
+/* Kit "ready": Kit's right ear - on the LEFT as we look at it - morphs its
+   own outline (the `d` property, not a transform) directly into the tick/
+   check-mark artwork's exact shape and position, then morphs back. Chrome,
+   Edge and Safari all animate `d` between arbitrary paths, so this is a
+   true shape morph rather than a crossfade - everything else just fades. */
+@keyframes kit-ready-ear-morph {
   0%,
   13%,
   97%,
   100% {
-    transform: translate(0, 0) rotate(0deg);
+    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
   }
   26%,
   84% {
-    transform: translate(42px, 52px) rotate(-200deg);
+    d: path('M55.3218 97.6398L29.7186 70.5861L21 79.7338L55.3218 116L129 38.1476L120.343 29L55.3218 97.6398Z');
   }
 }
 
-/* Kit "error": ears fold down and in (a hint of "<"/">" motion) then fade,
-   crossfading into the precise "< ! >" overlay artwork - eyes/whiskers just
-   fade via kit-fade-out-hold. */
-@keyframes kit-error-ear-left {
+/* Kit "error": both ears morph directly into the "<"/">" chevrons, the
+   left eye morphs into the "!" bar and the nose morphs into its dot - all
+   via `d` shape morphing (see kit-ready-ear-morph) at the exact position
+   of the reference artwork. The right eye and whiskers just fade. */
+@keyframes kit-error-ear-left-morph {
   0%,
   13%,
   97%,
   100% {
-    transform: translate(0, 0) rotate(0deg);
+    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
   }
   26%,
   84% {
-    transform: translate(-4px, 46px) rotate(-25deg);
+    d: path('M57.8548 93.5073L12.9601 73.7048L12.9601 67.2396L57.8548 44.8148L57.8548 55.6656L26.9304 69.9975L57.8548 82.7019Z');
   }
 }
 
-@keyframes kit-error-ear-right {
+@keyframes kit-error-ear-right-morph {
   0%,
   13%,
   97%,
   100% {
-    transform: translate(0, 0) rotate(0deg);
+    d: path('M125.368 9L93.207 37.5878L97.3549 42.2539L121.381 20.8972L129.678 62.3837L135.8 61.1593L125.368 9Z');
   }
   26%,
   84% {
-    transform: translate(4px, 46px) rotate(25deg);
+    d: path('M92.7561 82.7019L123.6806 69.9975L92.7561 55.6656L92.7561 44.8148L137.6509 67.2396L137.6509 73.7048L92.7561 93.5073Z');
+  }
+}
+
+@keyframes kit-error-eye-left-bar-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path(
+      'M60.9451 71.1347C60.9451 76.3064 58.15 80.4993 54.702 80.4993C51.2541 80.4993 48.459 76.3064 48.459 71.1347C48.459 65.9629 51.2541 61.77 54.702 61.77C58.15 61.77 60.9451 65.9629 60.9451 71.1347Z'
+    );
+  }
+  26%,
+  84% {
+    d: path('M80.9343 80.7578L69.9027 80.7578L67.5969 36.5864L83.24 36.5864Z');
+  }
+}
+
+@keyframes kit-error-nose-dot-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path(
+      'M79.6737 92.9854C83.1218 92.9854 85.9168 95.7804 85.9168 99.2284C85.9168 102.676 83.1218 105.471 79.6737 105.471C76.2257 105.471 73.4307 102.676 73.4307 99.2284C73.4307 95.7804 76.2257 92.9854 79.6737 92.9854Z'
+    );
+  }
+  26%,
+  84% {
+    d: path(
+      'M67.4161 96.22C67.4161 93.3868 68.1847 91.3974 69.7219 90.2521C71.2892 89.1068 73.173 88.5341 75.3732 88.5341C77.5132 88.5341 79.3519 89.1068 80.8891 90.2521C82.4564 91.3974 83.24 93.3868 83.24 96.22C83.24 98.9327 82.4564 100.8919 80.8891 102.0974C79.3519 103.3031 77.5132 103.9059 75.3732 103.9059C73.173 103.9059 71.2892 103.3031 69.7219 102.0974C68.1847 100.8919 67.4161 98.9327 67.4161 96.22Z'
+    );
   }
 }
 
@@ -613,142 +627,110 @@
   }
 }
 
-/* Kit "medical": a 6-frame hand-drawn flip-book crossfade (provided
-   reference frames "kit 1.svg".."kit 6.svg") showing Kit's left ear
-   becoming a bag handle, right ear becoming the bag outline, and whiskers
-   gathering into the medical cross - settling on a flat bag icon (frame 6)
-   before reversing back through the same frames to Kit. Frame 1 is Kit's
-   normal idle rendering (kit-head), so only frames 2-6 need new artwork;
-   each keyframe below is one frame's hold-window, timed to crossfade
-   exactly into its neighbours on both the forward and reverse pass. */
-@keyframes kit-medical-1 {
+/* Kit "medical": left ear morphs (via `d`, see kit-ready-ear-morph) into
+   the bag handle, right ear into the bag outline, and 3 of the 6 whiskers
+   into the cross's two arms + vertical stroke - using the provided
+   "kit 1.svg".."kit 6.svg" frames as a guideline for the shapes, not a
+   literal 6-step flip-book. Once morphed (26%-84%), the hand-drawn result
+   briefly crossfades (kit-medical-piece-hide-for-polish / -icon-fade) into
+   the flat, precise bag icon before reversing back to Kit. */
+@keyframes kit-medical-ear-left-handle-morph {
   0%,
-  4% {
-    opacity: 1;
-  }
-  8% {
-    opacity: 0;
-  }
-  92% {
-    opacity: 0;
-  }
-  96%,
+  13%,
+  97%,
   100% {
-    opacity: 1;
-  }
-}
-
-@keyframes kit-medical-2 {
-  0%,
-  4% {
-    opacity: 0;
-  }
-  8%,
-  10% {
-    opacity: 1;
-  }
-  14% {
-    opacity: 0;
-  }
-  86% {
-    opacity: 0;
-  }
-  90%,
-  92% {
-    opacity: 1;
-  }
-  96%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes kit-medical-3 {
-  0%,
-  10% {
-    opacity: 0;
-  }
-  14%,
-  16% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  80% {
-    opacity: 0;
-  }
-  84%,
-  86% {
-    opacity: 1;
-  }
-  90%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes kit-medical-4 {
-  0%,
-  16% {
-    opacity: 0;
-  }
-  20%,
-  22% {
-    opacity: 1;
-  }
-  26% {
-    opacity: 0;
-  }
-  74% {
-    opacity: 0;
-  }
-  78%,
-  80% {
-    opacity: 1;
-  }
-  84%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes kit-medical-5 {
-  0%,
-  22% {
-    opacity: 0;
+    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
   }
   26%,
-  28% {
-    opacity: 1;
-  }
-  34% {
-    opacity: 0;
-  }
-  66% {
-    opacity: 0;
-  }
-  72%,
-  74% {
-    opacity: 1;
-  }
-  78%,
-  100% {
-    opacity: 0;
+  84% {
+    d: path('M106.999 19.4999L77.893 -0.185226L46.9993 22.5002L58 25.5L71.5 12.2092L83 12.2092L96.4992 22.4999Z');
   }
 }
 
-@keyframes kit-medical-6 {
+@keyframes kit-medical-ear-right-outline-morph {
   0%,
-  28% {
-    opacity: 0;
+  13%,
+  97%,
+  100% {
+    d: path('M125.368 9L93.207 37.5878L97.3549 42.2539L121.381 20.8972L129.678 62.3837L135.8 61.1593L125.368 9Z');
   }
-  34%,
-  66% {
+  26%,
+  84% {
+    d: path('M63.5 34.5L125 31L131.5 127L123 127L116.174 40.8972L37 46.5L37 37Z');
+  }
+}
+
+@keyframes kit-medical-cross-leftarm-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M41.4584 96.0153L16.4861 89.7722L18.0003 83.7152L42.9725 89.9583L41.4584 96.0153Z');
+  }
+  26%,
+  84% {
+    d: path('M77.0001 96L49 95.5L49 87L78.0001 85.8879Z');
+  }
+}
+
+@keyframes kit-medical-cross-vertical-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M42.9725 102.258L5.51417 111.623L4 105.566L41.4584 96.2013L42.9725 102.258Z');
+  }
+  26%,
+  84% {
+    d: path('M74.634 125.5L81.8821 49.9977L88.0795 50.7542L81 127Z');
+  }
+}
+
+@keyframes kit-medical-cross-rightarm-morph {
+  0%,
+  13%,
+  97%,
+  100% {
+    d: path('M111.646 96.0153L136.618 89.7722L135.104 83.7152L110.131 89.9583L111.646 96.0153Z');
+  }
+  26%,
+  84% {
+    d: path('M83.5751 89.1476L107.5 89.1476L109 94L84.5001 95.5Z');
+  }
+}
+
+/* Dips the morphed pieces out of view for a short polish window inside the
+   hold, while kit-medical-icon-fade brings the flat bag icon in over the
+   top - then both reverse so the hand-drawn shapes are visible again
+   before unmorphing back to Kit. */
+@keyframes kit-medical-piece-hide-for-polish {
+  0%,
+  13%,
+  26%,
+  36% {
     opacity: 1;
   }
-  72%,
+  40%,
+  70% {
+    opacity: 0;
+  }
+  74%,
+  84%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes kit-medical-icon-fade {
+  0%,
+  36%,
+  74%,
   100% {
     opacity: 0;
+  }
+  40%,
+  70% {
+    opacity: 1;
   }
 }
