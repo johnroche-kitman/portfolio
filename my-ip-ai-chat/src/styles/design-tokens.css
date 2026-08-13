@@ -128,9 +128,42 @@
   }
 }
 
-/* Kit "ready": everything fades except the right ear, which swings down to
-   the centre and rotates ~200deg into a tick/check-mark stroke, then
-   springs back - looped. */
+/* Mirror of kit-fade-out-hold - used by the polished end-state overlay
+   artwork (ready tick / error glyph / sparkle star) so it crossfades in
+   exactly as Kit's own features fade out, and back out as they return. */
+@keyframes kit-fade-in-hold {
+  0%,
+  13%,
+  97%,
+  100% {
+    opacity: 0;
+  }
+  26%,
+  84% {
+    opacity: 1;
+  }
+}
+
+@keyframes kit-sparkle-overlay-pulse {
+  0%,
+  13%,
+  26%,
+  55%,
+  75%,
+  84%,
+  97%,
+  100% {
+    transform: scale(1);
+  }
+  45%,
+  65% {
+    transform: scale(1.15);
+  }
+}
+
+/* Kit "ready": everything fades, and Kit's right ear - on the LEFT as we
+   look at it - swings down and rotates ~200deg towards a tick shape before
+   fading itself, crossfading into the precise tick overlay artwork. */
 @keyframes kit-ready-ear-tick-solo {
   0%,
   13%,
@@ -140,13 +173,13 @@
   }
   26%,
   84% {
-    transform: translate(-42px, 52px) rotate(200deg);
+    transform: translate(42px, 52px) rotate(-200deg);
   }
 }
 
-/* Kit "error": ears fold down and in to read as "<" and ">", while the eyes
-   slide together above the nose to form the "!" bar (the nose is already
-   the dot beneath it) - whiskers fade via kit-fade-out-hold. */
+/* Kit "error": ears fold down and in (a hint of "<"/">" motion) then fade,
+   crossfading into the precise "< ! >" overlay artwork - eyes/whiskers just
+   fade via kit-fade-out-hold. */
 @keyframes kit-error-ear-left {
   0%,
   13%,
@@ -170,32 +203,6 @@
   26%,
   84% {
     transform: translate(4px, 46px) rotate(25deg);
-  }
-}
-
-@keyframes kit-error-eye-top {
-  0%,
-  13%,
-  97%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  26%,
-  84% {
-    transform: translate(25px, -8px) scale(0.5, 2);
-  }
-}
-
-@keyframes kit-error-eye-bottom {
-  0%,
-  13%,
-  97%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  26%,
-  84% {
-    transform: translate(-19px, 13px) scale(0.55, 1.6);
   }
 }
 
@@ -406,12 +413,11 @@
   }
 }
 
-/* Kit "sparkle": ears and eyes fade (via kit-fade-out-hold), the 6 whiskers
-   travel to the nose and fan out into 6 evenly-spaced spokes (60deg apart)
-   forming an asterisk, then the whole mark pulses twice like Claude's
-   breathing icon before flying back out to whiskers. Each whisker keeps its
-   own translate/rotate target throughout the hold so the pulse (scale only)
-   layers on top without disturbing the asterisk shape. */
+/* Kit "sparkle": ears, eyes and nose fade (via kit-fade-out-hold), the 6
+   whiskers travel towards the nose fanning out (60deg apart) while also
+   fading themselves, crossfading into the precise sparkle-star overlay
+   artwork, which pulses like Claude's breathing icon (kit-sparkle-overlay-
+   pulse) before everything flies back out to whiskers. */
 @keyframes kit-asterisk-whisker-l0 {
   0%,
   13%,

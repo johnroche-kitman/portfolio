@@ -30,13 +30,26 @@ const ASTERISK_WHISKER_KEYFRAMES = {
   right: ['kit-asterisk-whisker-r0', 'kit-asterisk-whisker-r1', 'kit-asterisk-whisker-r2'],
 }
 
+// Polished end-state artwork (provided as reference SVGs) that Kit's own
+// features crossfade into at the hold of each animation, rather than
+// resting on a rough approximation built from ear/eye/whisker geometry.
+const READY_TICK_PATH =
+  'M39.3218 76.6398L13.7186 49.5861L5 58.7338L39.3218 95L113 17.1476L104.343 8L39.3218 76.6398Z'
+const ERROR_PATHS = [
+  'M97.4766 70.418L130.875 56.6973L97.4766 41.2188V29.5L145.963 53.7188V60.7012L97.4766 82.0879V70.418Z',
+  'M84.709 68.3184H72.7949L70.3047 20.6133H87.1992L84.709 68.3184ZM70.1094 85.0176C70.1094 81.9577 70.9395 79.8092 72.5996 78.5723C74.2923 77.3353 76.3268 76.7168 78.7031 76.7168C81.0143 76.7168 83 77.3353 84.6602 78.5723C86.3529 79.8092 87.1992 81.9577 87.1992 85.0176C87.1992 87.9473 86.3529 90.0632 84.6602 91.3652C83 92.6673 81.0143 93.3184 78.7031 93.3184C76.3268 93.3184 74.2923 92.6673 72.5996 91.3652C70.9395 90.0632 70.1094 87.9473 70.1094 85.0176Z',
+  'M59.7832 82.0879L11.2969 60.7012V53.7188L59.7832 29.5V41.2188L26.3848 56.6973L59.7832 70.418V82.0879Z',
+]
+const SPARKLE_STAR_PATH =
+  'M48.5938 10.0234L46.5918 27.9922L64.8047 22.9141L66.416 35.2188L49.8145 36.3906L60.7031 50.8926L49.6191 56.8008L42.002 41.5176L35.3125 56.7031L23.7891 50.8926L34.5801 36.3906L18.0762 35.1211L19.9805 22.9141L37.8027 27.9922L35.8008 10.0234H48.5938Z'
+
 // state: 'idle' (occasional blink + nose wiggle) | 'thinking' (head tilt +
-// whisker twitch) | 'ready' (right ear swings into a tick, everything else
-// fades) | 'loading' (ears/whiskers fly off, eyes/nose become a pulsing dot
-// row) | 'vanish' (ears/whiskers/eyes spin into the nose, leaving a dot) |
-// 'error' (ears fold into "<" / ">", eyes form the "!" bar over the nose) |
-// 'sparkle' (ears/eyes fade, whiskers gather at the nose into a pulsing
-// asterisk, Claude-icon style)
+// whisker twitch) | 'ready' (right ear swings into a tick, crossfades into
+// the tick artwork) | 'loading' (ears/whiskers fly off, eyes/nose become a
+// pulsing dot row) | 'vanish' (ears/whiskers/eyes spin into the nose,
+// leaving a dot) | 'error' (ears fold, crossfades into the "< ! >" artwork)
+// | 'sparkle' (whiskers gather at the nose, crossfading into a pulsing
+// sparkle-star, Claude-icon style)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -47,57 +60,54 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const error = state === 'error'
   const sparkle = state === 'sparkle'
 
-  const earLeftAnimation = loading
-    ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
-    : error
-      ? 'kit-error-ear-left 3s ease-in-out infinite'
-      : ready || sparkle
-        ? 'kit-fade-out-hold 3s ease-in-out infinite'
-        : 'none'
-  const earRightAnimation = ready
-    ? 'kit-ready-ear-tick-solo 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
+  const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
+  const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
+
+  const earLeftAnimation = ready
+    ? `kit-ready-ear-tick-solo 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite, ${FADE_OUT}`
     : loading
-      ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
+      ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
       : error
-        ? 'kit-error-ear-right 3s ease-in-out infinite'
+        ? `kit-error-ear-left 3s ease-in-out infinite, ${FADE_OUT}`
         : sparkle
-          ? 'kit-fade-out-hold 3s ease-in-out infinite'
+          ? FADE_OUT
           : 'none'
+  const earRightAnimation = loading
+    ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
+    : error
+      ? `kit-error-ear-right 3s ease-in-out infinite, ${FADE_OUT}`
+      : ready || sparkle
+        ? FADE_OUT
+        : 'none'
   const eyeLeftAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
-      : error
-        ? 'kit-error-eye-top 3s ease-in-out infinite'
-        : ready || sparkle
-          ? 'kit-fade-out-hold 3s ease-in-out infinite'
-          : 'none'
+      : ready || error || sparkle
+        ? FADE_OUT
+        : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
-      : error
-        ? 'kit-error-eye-bottom 3s ease-in-out infinite'
-        : ready || sparkle
-          ? 'kit-fade-out-hold 3s ease-in-out infinite'
-          : 'none'
+      : ready || error || sparkle
+        ? FADE_OUT
+        : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-nose 3.2s ease-in-out infinite'
       : vanish
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
-        : ready
-          ? 'kit-fade-out-hold 3s ease-in-out infinite'
-          : sparkle
-            ? 'kit-asterisk-nose-pulse 3s ease-in-out infinite'
-            : 'none'
+        : ready || sparkle
+          ? FADE_OUT
+          : 'none'
 
   const whiskerAnimation = (side, index) => {
     if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'
     if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
-    if (ready || error) return 'kit-fade-out-hold 3s ease-in-out infinite'
-    if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite`
+    if (ready || error) return FADE_OUT
+    if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite, ${FADE_OUT}`
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')
@@ -146,6 +156,20 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           transformOrigin: 'center',
           animation: noseAnimation,
         },
+        '& .kit-ready-tick': {
+          opacity: 0,
+          animation: ready ? FADE_IN : 'none',
+        },
+        '& .kit-error-glyph': {
+          opacity: 0,
+          animation: error ? FADE_IN : 'none',
+        },
+        '& .kit-sparkle-star': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+          opacity: 0,
+          animation: sparkle ? `${FADE_IN}, kit-sparkle-overlay-pulse 3s ease-in-out infinite` : 'none',
+        },
       }}
     >
       <g className="kit-head">
@@ -183,6 +207,23 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         </g>
         <path className="kit-nose" d={NOSE} fill="#3B4960" />
       </g>
+
+      {/* Ready end-state: exact tick artwork, centred in the 155x147 canvas. */}
+      <svg className="kit-ready-tick" x="16" y="21" width="123" height="105" viewBox="0 0 123 105">
+        <path d={READY_TICK_PATH} fill="#3B4960" />
+      </svg>
+
+      {/* Error end-state: exact "< ! >" artwork, scaled to fit the canvas width. */}
+      <svg className="kit-error-glyph" x="2.5" y="17.5" width="150" height="112" viewBox="0 0 162 121">
+        {ERROR_PATHS.map((d, i) => (
+          <path key={`err-${i}`} d={d} fill="#3B4960" />
+        ))}
+      </svg>
+
+      {/* Sparkle end-state: exact star artwork, centred on the nose. */}
+      <svg className="kit-sparkle-star" x="44.67" y="70.58" width="70" height="57.3" viewBox="0 0 88 72">
+        <path d={SPARKLE_STAR_PATH} fill="#3B4960" />
+      </svg>
     </Box>
   )
 }
