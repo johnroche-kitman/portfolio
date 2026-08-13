@@ -20,6 +20,11 @@ const VERSIONS = [
       'Ask My iP opens from an icon in the top app bar, to the right of the user avatar. (John\'s preferred option)',
   },
   {
+    to: '/icon-options',
+    title: 'Icon options',
+    description: 'Comparing a few icon treatments for the Ask My iP panel header.',
+  },
+  {
     to: '/animation-tests',
     title: 'Animation tests',
     description: 'Kit, the Ask AI avatar — trying out looping eye and nose animations.',

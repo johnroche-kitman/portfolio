@@ -241,11 +241,13 @@
 /* Both eyes morph into ellipses (NOT polygons) that stack to form the "!"
    vertical line - left eye becomes the top half, right eye the bottom
    half. Each target is the eye's own circle non-uniformly scaled into a
-   tall pill, so the morph is curve-to-curve (smooth) rather than
-   circle-to-polygon (which Chrome's generic path interpolation renders as
-   a jarring, lumpy transition) - and since each eye travels to its own
-   half rather than both crossing paths to reach one full bar, they don't
-   collide with each other mid-flight either. */
+   tall, NARROW pill (half-width 4.5 vs half-height 11.05) so it reads as
+   a rectangle/bar rather than a rounded blob, while the morph stays
+   curve-to-curve (smooth) rather than circle-to-polygon (which Chrome's
+   generic path interpolation renders as a jarring, lumpy transition) -
+   and since each eye travels to its own half rather than both crossing
+   paths to reach one full bar, they don't collide with each other
+   mid-flight either. */
 @keyframes kit-error-eye-left-pill-morph {
   0%,
   13%,
@@ -258,7 +260,7 @@
   26%,
   84% {
     d: path(
-      'M82.4001 47.64C82.4001 53.7424 79.2661 58.6899 75.4 58.6899C71.5341 58.6899 68.4001 53.7424 68.4001 47.64C68.4001 41.5374 71.5341 36.5899 75.4 36.5899C79.2661 36.5899 82.4001 41.5374 82.4001 47.64Z'
+      'M79.9 47.64C79.9 53.7424 77.8853 58.6899 75.4 58.6899C72.9147 58.6899 70.9 53.7424 70.9 47.64C70.9 41.5374 72.9147 36.5899 75.4 36.5899C77.8853 36.5899 79.9 41.5374 79.9 47.64Z'
     );
   }
 }
@@ -275,7 +277,7 @@
   26%,
   84% {
     d: path(
-      'M68.4001 69.71C68.4001 75.8124 71.5339 80.7599 75.4 80.7599C79.2658 80.7599 82.3997 75.8124 82.3997 69.71C82.3997 63.6074 79.2658 58.6599 75.4 58.6599C71.5339 58.6599 68.4001 63.6074 68.4001 69.71Z'
+      'M70.9 69.71C70.9 75.8124 72.9147 80.7599 75.4 80.7599C77.8852 80.7599 79.8998 75.8124 79.8998 69.71C79.8998 63.6074 77.8852 58.6599 75.4 58.6599C72.9147 58.6599 70.9 63.6074 70.9 69.71Z'
     );
   }
 }
