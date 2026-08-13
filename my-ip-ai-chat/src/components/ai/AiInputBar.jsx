@@ -48,7 +48,10 @@ export default function AiInputBar({
           cursor: canChangeAgent ? 'pointer' : 'default',
         }}
       >
-        <Typography variant="body1" sx={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+        <Typography variant="body1" sx={{ color: 'var(--color-primary)' }}>
+          <Box component="span" sx={{ fontWeight: 600 }}>
+            Agent:
+          </Box>{' '}
           {agent.label}
         </Typography>
         {canChangeAgent && <Icon name="arrowDropDown" fontSize="small" sx={{ color: 'var(--color-primary)' }} />}
