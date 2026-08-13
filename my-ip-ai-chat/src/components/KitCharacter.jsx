@@ -62,6 +62,10 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
+  // For pieces with no transform animation of their own - shrinks on the
+  // way out instead of a flat opacity dissolve, so it reads as motion.
+  const FADE_OUT_SHRINK = 'kit-fade-out-shrink-hold 3s ease-in-out infinite'
+  const POP_IN = 'kit-fade-in-hold 3s ease-in-out infinite, kit-overlay-pop-in 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
 
   const earLeftAnimation = ready
     ? `kit-ready-ear-tick-solo 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite, ${FADE_OUT}`
@@ -70,28 +74,28 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       : error
         ? `kit-error-ear-left 3s ease-in-out infinite, ${FADE_OUT}`
         : sparkle
-          ? FADE_OUT
+          ? FADE_OUT_SHRINK
           : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
       ? `kit-error-ear-right 3s ease-in-out infinite, ${FADE_OUT}`
       : ready || sparkle
-        ? FADE_OUT
+        ? FADE_OUT_SHRINK
         : 'none'
   const eyeLeftAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
       : ready || error || sparkle
-        ? FADE_OUT
+        ? FADE_OUT_SHRINK
         : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
       : ready || error || sparkle
-        ? FADE_OUT
+        ? FADE_OUT_SHRINK
         : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
@@ -100,13 +104,13 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       : vanish
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
         : ready || sparkle
-          ? FADE_OUT
+          ? FADE_OUT_SHRINK
           : 'none'
 
   const whiskerAnimation = (side, index) => {
     if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'
     if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
-    if (ready || error) return FADE_OUT
+    if (ready || error) return FADE_OUT_SHRINK
     if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite, ${FADE_OUT}`
     return 'none'
   }
@@ -157,18 +161,22 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           animation: noseAnimation,
         },
         '& .kit-ready-tick': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
           opacity: 0,
-          animation: ready ? FADE_IN : 'none',
+          animation: ready ? POP_IN : 'none',
         },
         '& .kit-error-glyph': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
           opacity: 0,
-          animation: error ? FADE_IN : 'none',
+          animation: error ? POP_IN : 'none',
         },
         '& .kit-sparkle-star': {
           transformBox: 'fill-box',
           transformOrigin: 'center',
           opacity: 0,
-          animation: sparkle ? `${FADE_IN}, kit-sparkle-overlay-pulse 3s ease-in-out infinite` : 'none',
+          animation: sparkle ? `${FADE_IN}, kit-sparkle-pop-and-pulse 3s ease-in-out infinite` : 'none',
         },
       }}
     >

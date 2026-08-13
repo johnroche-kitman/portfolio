@@ -144,20 +144,70 @@
   }
 }
 
-@keyframes kit-sparkle-overlay-pulse {
+/* Like kit-fade-out-hold, but shrinks slightly on the way out instead of a
+   flat opacity dissolve - for pieces with no transform animation of their
+   own (eyes/nose/passive ear), so the disappearance reads as motion rather
+   than a plain fade. */
+@keyframes kit-fade-out-shrink-hold {
   0%,
   13%,
-  26%,
-  55%,
-  75%,
-  84%,
   97%,
   100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  26%,
+  84% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+/* Paired with kit-fade-in-hold on the end-state overlay artwork - pops in
+   with a slight overshoot rather than just fading up, so the crossfade
+   reads as an arrival rather than a dissolve. */
+@keyframes kit-overlay-pop-in {
+  0%,
+  13% {
+    transform: scale(0.5);
+  }
+  26% {
+    transform: scale(1.08);
+  }
+  34%,
+  84% {
+    transform: scale(1);
+  }
+  97%,
+  100% {
+    transform: scale(0.5);
+  }
+}
+
+/* Combines the pop-in/pop-out arrival with the Claude-style double pulse -
+   kept as one keyframe (rather than stacked with kit-overlay-pop-in) since
+   two animations can't both drive `transform` on the same element. */
+@keyframes kit-sparkle-pop-and-pulse {
+  0%,
+  13% {
+    transform: scale(0.5);
+  }
+  26% {
+    transform: scale(1.08);
+  }
+  34%,
+  55%,
+  75%,
+  84% {
     transform: scale(1);
   }
   45%,
   65% {
     transform: scale(1.15);
+  }
+  97%,
+  100% {
+    transform: scale(0.5);
   }
 }
 
