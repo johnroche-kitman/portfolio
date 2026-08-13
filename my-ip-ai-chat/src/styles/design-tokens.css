@@ -136,3 +136,210 @@
     transform: translate(-40px, 40px) rotate(-38deg) scale(1.35);
   }
 }
+
+/* Kit "loading": ears and whiskers fly off, eyes and nose settle onto one
+   horizontal line and shrink into dots, then pulse left-to-right twice
+   (like the AiThinkingIndicator dots) before everything flies back in.
+   All four pieces share the same rest/arrive/depart timestamps (13/26/84/97%)
+   so the flying-away and coming-back beats stay in sync; only the pulse
+   peaks inside that shared hold window are offset per dot for the ripple. */
+@keyframes kit-ear-flyaway-left {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  26%,
+  84% {
+    transform: translate(-40px, -46px) rotate(-35deg);
+    opacity: 0;
+  }
+  97% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes kit-ear-flyaway-right {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  26%,
+  84% {
+    transform: translate(40px, -46px) rotate(35deg);
+    opacity: 0;
+  }
+  97% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes kit-whisker-flyaway-left {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  26%,
+  84% {
+    transform: translate(-45px, 6px);
+    opacity: 0;
+  }
+  97% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes kit-whisker-flyaway-right {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  26%,
+  84% {
+    transform: translate(45px, 6px);
+    opacity: 0;
+  }
+  97% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes kit-loading-eye-left {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  26%,
+  84% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  32% {
+    transform: translate(0, 14px) scale(0.9);
+  }
+  38% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  58% {
+    transform: translate(0, 14px) scale(0.9);
+  }
+  64% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  97% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes kit-loading-nose {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  26%,
+  84% {
+    transform: translate(0, -14px) scale(0.85);
+  }
+  38% {
+    transform: translate(0, -14px) scale(1.15);
+  }
+  44% {
+    transform: translate(0, -14px) scale(0.85);
+  }
+  64% {
+    transform: translate(0, -14px) scale(1.15);
+  }
+  70% {
+    transform: translate(0, -14px) scale(0.85);
+  }
+  97% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes kit-loading-eye-right {
+  0%,
+  13%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  26%,
+  84% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  44% {
+    transform: translate(0, 14px) scale(0.9);
+  }
+  50% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  70% {
+    transform: translate(0, 14px) scale(0.9);
+  }
+  76% {
+    transform: translate(0, 14px) scale(0.6);
+  }
+  97% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Kit "vanish": ears, whiskers and eyes spin rapidly and shrink away to
+   nothing, leaving the nose behind as a single pulsing dot, then the head
+   spins back in. 1080deg -> 1440deg (both multiples of 360deg) so the
+   reappear lands back on the same visual angle as the rest frame, and the
+   loop repeats seamlessly. */
+@keyframes kit-spin-vanish-head {
+  0%,
+  10% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50%,
+  85% {
+    transform: rotate(1080deg) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(1440deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes kit-nose-vanish-pulse {
+  0%,
+  10% {
+    transform: scale(1);
+  }
+  22% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(0.65);
+  }
+  58% {
+    transform: scale(1);
+  }
+  66% {
+    transform: scale(0.65);
+  }
+  74% {
+    transform: scale(1);
+  }
+  85%,
+  100% {
+    transform: scale(1);
+  }
+}

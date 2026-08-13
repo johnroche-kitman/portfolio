@@ -21,12 +21,54 @@ const EYE_RIGHT = 'M92.1602 71.1347C92.1602 76.3064 94.9552 80.4993 98.4032 80.4
 const NOSE = 'M79.6737 92.9854C83.1218 92.9854 85.9168 95.7804 85.9168 99.2284C85.9168 102.676 83.1218 105.471 79.6737 105.471C76.2257 105.471 73.4307 102.676 73.4307 99.2284C73.4307 95.7804 76.2257 92.9854 79.6737 92.9854Z'
 
 // state: 'idle' (default, occasional blink + nose wiggle) | 'thinking'
-// (head tilt + whisker twitch) | 'ready' (ears swing into a tick mark)
+// (head tilt + whisker twitch) | 'ready' (ears swing into a tick mark) |
+// 'loading' (ears/whiskers fly off, eyes/nose shrink into a pulsing dot
+// row) | 'vanish' (ears/whiskers/eyes spin away, nose left as a lone dot)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
+  const idle = state === 'idle'
   const thinking = state === 'thinking'
   const ready = state === 'ready'
-  const idle = state === 'idle'
+  const loading = state === 'loading'
+  const vanish = state === 'vanish'
+
+  const earLeftAnimation = ready
+    ? 'kit-ear-tick-left 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
+    : loading
+      ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
+      : 'none'
+  const earRightAnimation = ready
+    ? 'kit-ear-tick-right 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite'
+    : loading
+      ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
+      : 'none'
+  const whiskerLeftAnimation = thinking
+    ? 'kit-whisker-twitch 1.4s ease-in-out infinite'
+    : loading
+      ? 'kit-whisker-flyaway-left 3.2s ease-in-out infinite'
+      : 'none'
+  const whiskerRightAnimation = thinking
+    ? 'kit-whisker-twitch 1.4s ease-in-out infinite'
+    : loading
+      ? 'kit-whisker-flyaway-right 3.2s ease-in-out infinite'
+      : 'none'
+  const eyeLeftAnimation = idle
+    ? 'kit-blink 4.5s ease-in-out infinite'
+    : loading
+      ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
+      : 'none'
+  const eyeRightAnimation = idle
+    ? 'kit-blink 4.5s ease-in-out infinite'
+    : loading
+      ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
+      : 'none'
+  const noseAnimation = idle
+    ? 'kit-nose-wiggle 4.5s ease-in-out infinite'
+    : loading
+      ? 'kit-loading-nose 3.2s ease-in-out infinite'
+      : vanish
+        ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
+        : 'none'
 
   return (
     <Box
@@ -42,45 +84,74 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           transformOrigin: 'center',
           animation: thinking ? 'kit-head-tilt 2.6s ease-in-out infinite' : 'none',
         },
-        '& .kit-whisker': {
+        '& .kit-spin-group': {
           transformBox: 'fill-box',
           transformOrigin: 'center',
-          animation: thinking ? 'kit-whisker-twitch 1.4s ease-in-out infinite' : 'none',
+          animation: vanish ? 'kit-spin-vanish-head 3.2s ease-in-out infinite' : 'none',
         },
         '& .kit-ear-left': {
           transformBox: 'fill-box',
           transformOrigin: '100% 100%',
-          animation: ready ? 'kit-ear-tick-left 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite' : 'none',
+          animation: earLeftAnimation,
         },
         '& .kit-ear-right': {
           transformBox: 'fill-box',
           transformOrigin: '0% 100%',
-          animation: ready ? 'kit-ear-tick-right 3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite' : 'none',
+          animation: earRightAnimation,
         },
-        '& .kit-eye': {
+        '& .kit-whisker-left': {
           transformBox: 'fill-box',
           transformOrigin: 'center',
-          animation: idle ? 'kit-blink 4.5s ease-in-out infinite' : 'none',
+          animation: whiskerLeftAnimation,
+        },
+        '& .kit-whisker-right': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+          animation: whiskerRightAnimation,
+        },
+        '& .kit-eye-left': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+          animation: eyeLeftAnimation,
+        },
+        '& .kit-eye-right': {
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+          animation: eyeRightAnimation,
         },
         '& .kit-nose': {
           transformBox: 'fill-box',
           transformOrigin: 'center',
-          animation: idle ? 'kit-nose-wiggle 4.5s ease-in-out infinite' : 'none',
+          animation: noseAnimation,
         },
       }}
     >
       <g className="kit-head">
-        <path className="kit-ear-left" d={EAR_LEFT} fill="#3B4960" />
-        <path className="kit-ear-right" d={EAR_RIGHT} fill="#3B4960" />
-        {WHISKERS_LEFT.map((d, i) => (
-          <path key={`wl-${i}`} className="kit-whisker" style={{ animationDelay: `${i * 0.12}s` }} d={d} fill="#3B4960" />
-        ))}
-        {WHISKERS_RIGHT.map((d, i) => (
-          <path key={`wr-${i}`} className="kit-whisker" style={{ animationDelay: `${i * 0.12}s` }} d={d} fill="#3B4960" />
-        ))}
-        <path className="kit-eye" d={EYE_LEFT} fill="#3B4960" />
+        <g className="kit-spin-group">
+          <path className="kit-ear-left" d={EAR_LEFT} fill="#3B4960" />
+          <path className="kit-ear-right" d={EAR_RIGHT} fill="#3B4960" />
+          {WHISKERS_LEFT.map((d, i) => (
+            <path
+              key={`wl-${i}`}
+              className="kit-whisker-left"
+              style={{ animationDelay: thinking ? `${i * 0.12}s` : '0s' }}
+              d={d}
+              fill="#3B4960"
+            />
+          ))}
+          {WHISKERS_RIGHT.map((d, i) => (
+            <path
+              key={`wr-${i}`}
+              className="kit-whisker-right"
+              style={{ animationDelay: thinking ? `${i * 0.12}s` : '0s' }}
+              d={d}
+              fill="#3B4960"
+            />
+          ))}
+          <path className="kit-eye-left" d={EYE_LEFT} fill="#3B4960" />
+          <path className="kit-eye-right" d={EYE_RIGHT} fill="#3B4960" />
+        </g>
         <path className="kit-nose" d={NOSE} fill="#3B4960" />
-        <path className="kit-eye" d={EYE_RIGHT} fill="#3B4960" />
       </g>
     </Box>
   )
