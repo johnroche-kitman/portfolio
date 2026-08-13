@@ -16,7 +16,8 @@ const VERSIONS = [
   {
     to: '/v3',
     title: 'Version 3 - Launch from App Bar',
-    description: 'Ask My iP opens from an icon in the top app bar, to the right of the user avatar.',
+    description:
+      'Ask My iP opens from an icon in the top app bar, to the right of the user avatar. (John\'s preferred option)',
   },
 ]
 
@@ -81,6 +82,16 @@ export default function VersionsLanding() {
           </Box>
         ))}
       </Box>
+      <Typography
+        component="a"
+        href="https://www.figma.com/design/TTG2OZj3D1JxQiB9oyQVq4/My-iP?node-id=11653-24387&t=6vR2ouaASDmHICRO-1"
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="body1"
+        sx={{ color: 'var(--color-primary)', mt: 3, textDecoration: 'underline' }}
+      >
+        View the Figma design file
+      </Typography>
     </Box>
   )
 }
