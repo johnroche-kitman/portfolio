@@ -43,3 +43,40 @@
     opacity: 1;
   }
 }
+
+/* Kit character (Ask AI avatar): a quick blink/squint near the end of an
+   otherwise-idle loop, timed just after the nose wiggle so it reads as one
+   "sniff and blink" beat rather than two unrelated tics. */
+@keyframes kit-blink {
+  0%,
+  78%,
+  100% {
+    transform: scaleY(1);
+  }
+  84% {
+    transform: scaleY(0.15);
+  }
+  90% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes kit-nose-wiggle {
+  0%,
+  70%,
+  100% {
+    transform: translateX(0);
+  }
+  74% {
+    transform: translateX(-1.4px);
+  }
+  78% {
+    transform: translateX(1.4px);
+  }
+  82% {
+    transform: translateX(-0.8px);
+  }
+  86% {
+    transform: translateX(0.8px);
+  }
+}

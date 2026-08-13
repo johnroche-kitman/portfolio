@@ -19,6 +19,11 @@ const VERSIONS = [
     description:
       'Ask My iP opens from an icon in the top app bar, to the right of the user avatar. (John\'s preferred option)',
   },
+  {
+    to: '/animation-tests',
+    title: 'Animation tests',
+    description: 'Kit, the Ask AI avatar — trying out looping eye and nose animations.',
+  },
 ]
 
 export default function VersionsLanding() {
