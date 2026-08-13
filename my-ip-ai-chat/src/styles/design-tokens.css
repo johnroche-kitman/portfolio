@@ -80,3 +80,59 @@
     transform: translateX(0.8px);
   }
 }
+
+/* Kit "thinking": a continuous, busy loop rather than an occasional tic -
+   the whole head rocks gently while the whiskers twitch like they're
+   sensing something, staggered per-whisker via animation-delay. */
+@keyframes kit-head-tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes kit-whisker-twitch {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+/* Kit "ready": ears swing down and in to form a tick/check mark, like the
+   Kitman logo's accent stroke, then spring back - looped with an overshoot
+   ease so the "landing" feels confident rather than mechanical. */
+@keyframes kit-ear-tick-left {
+  0%,
+  15%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  45%,
+  70% {
+    transform: translate(38px, 46px) rotate(132deg);
+  }
+}
+
+@keyframes kit-ear-tick-right {
+  0%,
+  15%,
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  45%,
+  70% {
+    transform: translate(-40px, 40px) rotate(-38deg) scale(1.35);
+  }
+}
