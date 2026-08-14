@@ -21,6 +21,21 @@ const VARIANTS = [
     label: 'Bar chart',
     description: 'Whiskers morph into 6 bars on a baseline, nose widens into the axis line',
   },
+  {
+    state: 'search',
+    label: 'Search',
+    description: 'Eyes and nose spin into a magnifying-glass ring, one whisker becomes the handle',
+  },
+  {
+    state: 'loading2',
+    label: 'Loading (spin)',
+    description: 'Ears and whiskers fade, eyes and nose spin rapidly in place',
+  },
+  {
+    state: 'medical',
+    label: 'Medical',
+    description: 'Whiskers fold into a centred medical cross',
+  },
 ]
 
 export default function AnimationTests() {
