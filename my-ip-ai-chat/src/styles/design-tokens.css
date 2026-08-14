@@ -1533,3 +1533,18 @@
     transform: matrix(-0.3885, -0.3015, -1.5539, 0.0754, 54.0137, -59.9121);
   }
 }
+
+/* Whisker-right[1] rigidly becomes the second hand, pointing straight up
+   from the ring's centre to just short of the inner rim. */
+@keyframes kit-stopwatch-hand-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    transform: none;
+  }
+  26%,
+  74% {
+    transform: matrix(-0.0971, -0.4020, 0.3885, -0.1005, -52.1178, -36.9121);
+  }
+}

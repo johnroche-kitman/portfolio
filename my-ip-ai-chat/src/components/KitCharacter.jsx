@@ -170,7 +170,11 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (search) return side === 'right' && index === 1 ? 'kit-search-handle-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     if (loading2) return SOUNDWAVE_FADE
     if (cone) return side === 'left' && index === 0 ? 'kit-cone-base-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
-    if (stopwatch) return side === 'left' && index === 1 ? 'kit-stopwatch-crown-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
+    if (stopwatch) {
+      if (side === 'left' && index === 1) return 'kit-stopwatch-crown-morph 6s ease-in-out infinite'
+      if (side === 'right' && index === 1) return 'kit-stopwatch-hand-morph 6s ease-in-out infinite'
+      return SOUNDWAVE_FADE
+    }
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')
