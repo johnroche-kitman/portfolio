@@ -16,6 +16,11 @@ const VARIANTS = [
     label: 'Soundwave',
     description: 'Whiskers morph into a pulsing soundwave - speech-to-text mode',
   },
+  {
+    state: 'barchart',
+    label: 'Bar chart',
+    description: 'Whiskers morph into 6 bars on a baseline, nose widens into the axis line',
+  },
 ]
 
 export default function AnimationTests() {
