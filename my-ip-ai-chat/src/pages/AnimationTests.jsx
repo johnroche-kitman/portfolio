@@ -11,6 +11,11 @@ const VARIANTS = [
   { state: 'sparkle', label: 'Sparkle', description: 'Whiskers gather at the nose into a pulsing asterisk' },
   { state: 'error', label: 'Error', description: 'Ears fold into "<" and ">", eyes form the "!" line, nose its dot' },
   { state: 'ready', label: 'Ready', description: 'Ears swing into a tick, like the Kitman mark' },
+  {
+    state: 'soundwave',
+    label: 'Soundwave',
+    description: 'Whiskers morph into a pulsing soundwave - speech-to-text mode',
+  },
 ]
 
 export default function AnimationTests() {

@@ -30,6 +30,13 @@ const ASTERISK_WHISKER_KEYFRAMES = {
   right: ['kit-asterisk-whisker-r0', 'kit-asterisk-whisker-r1', 'kit-asterisk-whisker-r2'],
 }
 
+// Each whisker morphs into one bar of the "soundwave" (see "kit 7.svg"),
+// left-to-right across the 6 bars.
+const SOUNDWAVE_BAR_KEYFRAMES = {
+  left: ['kit-soundwave-bar-a-morph', 'kit-soundwave-bar-b-morph', 'kit-soundwave-bar-c-morph'],
+  right: ['kit-soundwave-bar-d-morph', 'kit-soundwave-bar-e-morph', 'kit-soundwave-bar-f-morph'],
+}
+
 // Sparkle end-state artwork (provided reference SVG) that the whiskers
 // crossfade into once gathered at the nose.
 const SPARKLE_STAR_PATH =
@@ -42,7 +49,9 @@ const SPARKLE_STAR_PATH =
 // a pulsing sparkle-star, Claude-icon style) | 'error' (Kit's ears morph
 // into "<"/">", both eyes morph into an ellipse that stacks into the "!"
 // vertical line, and the nose morphs into its dot) | 'ready' (Kit's right
-// ear - on the left as viewed - morphs into a tick/check-mark)
+// ear - on the left as viewed - morphs into a tick/check-mark) |
+// 'soundwave' (ears/eyes/nose fade, the 6 whiskers morph into a 6-bar
+// soundwave that pulses like a live waveform - speech-to-text mode)
 export default function KitCharacter({ size = 155, state = 'idle' }) {
   const height = size * (147 / 155)
   const idle = state === 'idle'
@@ -52,12 +61,14 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const vanish = state === 'vanish'
   const error = state === 'error'
   const sparkle = state === 'sparkle'
+  const soundwave = state === 'soundwave'
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
   // For pieces with no transform/morph animation of their own - shrinks on
   // the way out instead of a flat opacity dissolve, so it reads as motion.
   const FADE_OUT_SHRINK = 'kit-fade-out-shrink-hold 3s ease-in-out infinite'
+  const SOUNDWAVE_FADE = 'kit-soundwave-fade-out-shrink 6s ease-in-out infinite'
 
   const earLeftAnimation = ready
     ? 'kit-ready-ear-morph 3s ease-in-out infinite'
@@ -65,15 +76,15 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-ear-left-morph 3s ease-in-out infinite'
-        : sparkle
-          ? FADE_OUT_SHRINK
+        : sparkle || soundwave
+          ? (soundwave ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
           : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
       ? 'kit-error-ear-right-morph 3s ease-in-out infinite'
-      : ready || sparkle
-        ? FADE_OUT_SHRINK
+      : ready || sparkle || soundwave
+        ? (soundwave ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
         : 'none'
   const eyeLeftAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
@@ -81,8 +92,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-eye-left-pill-morph 3s ease-in-out infinite'
-        : ready || sparkle
-          ? FADE_OUT_SHRINK
+        : ready || sparkle || soundwave
+          ? (soundwave ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
           : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
@@ -90,8 +101,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-eye-right-pill-morph 3s ease-in-out infinite'
-        : ready || sparkle
-          ? FADE_OUT_SHRINK
+        : ready || sparkle || soundwave
+          ? (soundwave ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
           : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
@@ -101,8 +112,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
         ? 'kit-nose-vanish-pulse 3.2s ease-in-out infinite'
         : error
           ? 'kit-error-nose-dot-morph 3s ease-in-out infinite'
-          : ready || sparkle
-            ? FADE_OUT_SHRINK
+          : ready || sparkle || soundwave
+            ? (soundwave ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
             : 'none'
 
   const whiskerAnimation = (side, index) => {
@@ -110,6 +121,7 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (loading) return `kit-whisker-flyaway-${side} 3.2s ease-in-out infinite`
     if (ready || error) return FADE_OUT_SHRINK
     if (sparkle) return `${ASTERISK_WHISKER_KEYFRAMES[side][index]} 3s ease-in-out infinite, ${FADE_OUT}`
+    if (soundwave) return `${SOUNDWAVE_BAR_KEYFRAMES[side][index]} 6s ease-in-out infinite`
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')
