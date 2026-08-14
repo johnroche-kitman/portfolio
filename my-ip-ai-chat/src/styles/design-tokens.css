@@ -1213,111 +1213,258 @@
   }
 }
 
-/* Loading (spin): eyes are non-uniformly scaled in place (exact - an
-   ellipse legitimately becomes a true circle this way, no d-morph
-   needed) into the same size as the nose, then all 3 translate onto
-   a shared orbit circle around a central pivot and continuously
-   revolve (3 full turns during the hold) - a classic 3-dot loading
-   spinner. Ears + all 6 whiskers fade (kit-soundwave-fade-out-shrink). */
+/* Loading (spin): eyes+nose grow/shrink (scale to a perfect circle,
+   exact - no d-morph) AND begin orbiting the shared pivot
+   simultaneously - growth is a smoothstep envelope over the whole
+   13%-87% span (up over the first ~18%, holding, back down over the
+   last ~18%), while the spin angle advances continuously and
+   monotonically the entire time, so rotation is already under way
+   as the dots grow out and still going as they shrink back - no
+   dead moment where it's grown but not yet spinning. Ears + all 6
+   whiskers fade (kit-soundwave-fade-out-shrink). */
 @keyframes kit-loading-spin-nose-morph {
   0%,
-  13%,
-  87%,
   100% {
     transform: none;
   }
-  26%,
-  74% {
-    transform: translate(-2.1737px, 3.7716px) scale(1.0000, 1.0000);
+  13% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
-  32% {
-    transform: translate(-14.9016px, -26.9563px) scale(1.0000, 1.0000);
+  16.0833% {
+    transform: translate(-2.7791px, -1.3596px) scale(1.0000, 1.0000);
   }
-  38% {
-    transform: translate(15.8263px, -14.2284px) scale(1.0000, 1.0000);
+  19.1667% {
+    transform: translate(-5.1575px, -13.7626px) scale(1.0000, 1.0000);
   }
-  44% {
-    transform: translate(-14.9016px, -1.5005px) scale(1.0000, 1.0000);
+  22.25% {
+    transform: translate(8.4262px, -21.5213px) scale(1.0000, 1.0000);
+  }
+  25.3333% {
+    transform: translate(13.3125px, -5.1886px) scale(1.0000, 1.0000);
+  }
+  28.4167% {
+    transform: translate(-6.8324px, 3.1583px) scale(1.0000, 1.0000);
+  }
+  31.5% {
+    transform: translate(-20.1737px, -14.2284px) scale(1.0000, 1.0000);
+  }
+  34.5833% {
+    transform: translate(-6.8324px, -31.6151px) scale(1.0000, 1.0000);
+  }
+  37.6667% {
+    transform: translate(13.4148px, -23.2284px) scale(1.0000, 1.0000);
+  }
+  40.75% {
+    transform: translate(10.5542px, -1.5005px) scale(1.0000, 1.0000);
+  }
+  43.8333% {
+    transform: translate(-11.1737px, 1.3601px) scale(1.0000, 1.0000);
+  }
+  46.9167% {
+    transform: translate(-19.5604px, -18.8871px) scale(1.0000, 1.0000);
   }
   50% {
     transform: translate(-2.1737px, -32.2284px) scale(1.0000, 1.0000);
   }
-  56% {
-    transform: translate(10.5542px, -1.5005px) scale(1.0000, 1.0000);
+  53.0833% {
+    transform: translate(15.2130px, -18.8871px) scale(1.0000, 1.0000);
   }
-  62% {
-    transform: translate(-20.1737px, -14.2284px) scale(1.0000, 1.0000);
+  56.1667% {
+    transform: translate(6.8263px, 1.3601px) scale(1.0000, 1.0000);
   }
-  68% {
-    transform: translate(10.5542px, -26.9563px) scale(1.0000, 1.0000);
+  59.25% {
+    transform: translate(-14.9016px, -1.5005px) scale(1.0000, 1.0000);
+  }
+  62.3333% {
+    transform: translate(-17.7622px, -23.2284px) scale(1.0000, 1.0000);
+  }
+  65.4167% {
+    transform: translate(2.4850px, -31.6151px) scale(1.0000, 1.0000);
+  }
+  68.5% {
+    transform: translate(15.8263px, -14.2284px) scale(1.0000, 1.0000);
+  }
+  71.5833% {
+    transform: translate(2.4850px, 3.1583px) scale(1.0000, 1.0000);
+  }
+  74.6667% {
+    transform: translate(-17.6268px, -5.1886px) scale(1.0000, 1.0000);
+  }
+  77.75% {
+    transform: translate(-11.8971px, -21.5213px) scale(1.0000, 1.0000);
+  }
+  80.8333% {
+    transform: translate(3.1508px, -13.7626px) scale(1.0000, 1.0000);
+  }
+  83.9167% {
+    transform: translate(2.1614px, -1.3596px) scale(1.0000, 1.0000);
+  }
+  87% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
 }
 
 @keyframes kit-loading-spin-eye-left-morph {
   0%,
-  13%,
-  87%,
   100% {
     transform: none;
   }
-  26%,
-  74% {
-    transform: translate(7.2095px, 4.8654px) scale(1.0000, 0.6666);
+  13% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
-  32% {
-    transform: translate(40.1846px, 9.2066px) scale(1.0000, 0.6666);
+  16.0833% {
+    transform: translate(3.9010px, -0.5003px) scale(1.0000, 0.9526);
   }
-  38% {
-    transform: translate(13.7980px, 29.4538px) scale(1.0000, 0.6666);
+  19.1667% {
+    transform: translate(18.8312px, 6.3999px) scale(1.0000, 0.8461);
   }
-  44% {
-    transform: translate(18.1392px, -3.5213px) scale(1.0000, 0.6666);
+  22.25% {
+    transform: translate(21.9208px, 24.9508px) scale(1.0000, 0.7339);
+  }
+  25.3333% {
+    transform: translate(7.1546px, 22.6911px) scale(1.0000, 0.6692);
+  }
+  28.4167% {
+    transform: translate(10.0700px, 1.1374px) scale(1.0000, 0.6666);
+  }
+  31.5% {
+    transform: translate(31.7979px, -1.7231px) scale(1.0000, 0.6666);
+  }
+  34.5833% {
+    transform: translate(40.1846px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  37.6667% {
+    transform: translate(22.7979px, 31.8654px) scale(1.0000, 0.6666);
+  }
+  40.75% {
+    transform: translate(5.4113px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  43.8333% {
+    transform: translate(13.7979px, -1.7231px) scale(1.0000, 0.6666);
+  }
+  46.9167% {
+    transform: translate(35.5259px, 1.1374px) scale(1.0000, 0.6666);
   }
   50% {
     transform: translate(38.3864px, 22.8653px) scale(1.0000, 0.6666);
   }
-  56% {
-    transform: translate(5.4113px, 18.5241px) scale(1.0000, 0.6666);
+  53.0833% {
+    transform: translate(18.1392px, 31.2520px) scale(1.0000, 0.6666);
   }
-  62% {
-    transform: translate(31.7980px, -1.7231px) scale(1.0000, 0.6666);
+  56.1667% {
+    transform: translate(4.7980px, 13.8654px) scale(1.0000, 0.6666);
   }
-  68% {
-    transform: translate(27.4567px, 31.2520px) scale(1.0000, 0.6666);
+  59.25% {
+    transform: translate(18.1392px, -3.5213px) scale(1.0000, 0.6666);
+  }
+  62.3333% {
+    transform: translate(38.3864px, 4.8654px) scale(1.0000, 0.6666);
+  }
+  65.4167% {
+    transform: translate(35.5259px, 26.5933px) scale(1.0000, 0.6666);
+  }
+  68.5% {
+    transform: translate(13.7980px, 29.4538px) scale(1.0000, 0.6666);
+  }
+  71.5833% {
+    transform: translate(5.4113px, 9.2066px) scale(1.0000, 0.6666);
+  }
+  74.6667% {
+    transform: translate(22.6242px, -4.1031px) scale(1.0000, 0.6692);
+  }
+  77.75% {
+    transform: translate(32.0824px, 7.3503px) scale(1.0000, 0.7339);
+  }
+  80.8333% {
+    transform: translate(14.6770px, 13.5951px) scale(1.0000, 0.8461);
+  }
+  83.9167% {
+    transform: translate(1.4307px, 3.7783px) scale(1.0000, 0.9526);
+  }
+  87% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
 }
 
 @keyframes kit-loading-spin-eye-right-morph {
   0%,
-  13%,
-  87%,
   100% {
     transform: none;
   }
-  26%,
-  74% {
-    transform: translate(-5.3146px, 4.8654px) scale(1.0000, 0.6666);
+  13% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
-  32% {
-    transform: translate(-25.5618px, 31.2520px) scale(1.0000, 0.6666);
+  16.0833% {
+    transform: translate(-1.1615px, 3.7783px) scale(1.0000, 0.9526);
   }
-  38% {
-    transform: translate(-29.9031px, -1.7231px) scale(1.0000, 0.6666);
+  19.1667% {
+    transform: translate(-13.8024px, 13.5951px) scale(1.0000, 0.8461);
   }
-  44% {
-    transform: translate(-3.5164px, 18.5241px) scale(1.0000, 0.6666);
+  22.25% {
+    transform: translate(-30.5696px, 7.3503px) scale(1.0000, 0.7339);
+  }
+  25.3333% {
+    transform: translate(-20.7438px, -4.1031px) scale(1.0000, 0.6692);
+  }
+  28.4167% {
+    transform: translate(-3.5164px, 9.2066px) scale(1.0000, 0.6666);
+  }
+  31.5% {
+    transform: translate(-11.9031px, 29.4538px) scale(1.0000, 0.6666);
+  }
+  34.5833% {
+    transform: translate(-33.6310px, 26.5933px) scale(1.0000, 0.6666);
+  }
+  37.6667% {
+    transform: translate(-36.4916px, 4.8653px) scale(1.0000, 0.6666);
+  }
+  40.75% {
+    transform: translate(-16.2444px, -3.5213px) scale(1.0000, 0.6666);
+  }
+  43.8333% {
+    transform: translate(-2.9031px, 13.8653px) scale(1.0000, 0.6666);
+  }
+  46.9167% {
+    transform: translate(-16.2444px, 31.2520px) scale(1.0000, 0.6666);
   }
   50% {
     transform: translate(-36.4916px, 22.8654px) scale(1.0000, 0.6666);
   }
-  56% {
-    transform: translate(-16.2444px, -3.5213px) scale(1.0000, 0.6666);
+  53.0833% {
+    transform: translate(-33.6310px, 1.1374px) scale(1.0000, 0.6666);
   }
-  62% {
-    transform: translate(-11.9031px, 29.4538px) scale(1.0000, 0.6666);
+  56.1667% {
+    transform: translate(-11.9031px, -1.7231px) scale(1.0000, 0.6666);
   }
-  68% {
-    transform: translate(-38.2898px, 9.2066px) scale(1.0000, 0.6666);
+  59.25% {
+    transform: translate(-3.5164px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  62.3333% {
+    transform: translate(-20.9031px, 31.8654px) scale(1.0000, 0.6666);
+  }
+  65.4167% {
+    transform: translate(-38.2898px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  68.5% {
+    transform: translate(-29.9031px, -1.7231px) scale(1.0000, 0.6666);
+  }
+  71.5833% {
+    transform: translate(-8.1752px, 1.1374px) scale(1.0000, 0.6666);
+  }
+  74.6667% {
+    transform: translate(-5.2741px, 22.6911px) scale(1.0000, 0.6692);
+  }
+  77.75% {
+    transform: translate(-20.4080px, 24.9508px) scale(1.0000, 0.7339);
+  }
+  80.8333% {
+    transform: translate(-17.9566px, 6.3999px) scale(1.0000, 0.8461);
+  }
+  83.9167% {
+    transform: translate(-3.6318px, -0.5003px) scale(1.0000, 0.9526);
+  }
+  87% {
+    transform: translate(0.0000px, 0.0000px) scale(1.0000, 1.0000);
   }
 }
 
