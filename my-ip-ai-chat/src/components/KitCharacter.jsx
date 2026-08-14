@@ -85,7 +85,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const loading2 = state === 'loading2'
   const medical = state === 'medical'
   const cone = state === 'cone'
-  const fadesOut = soundwave || barchart || search || loading2 || medical || cone
+  const stopwatch = state === 'stopwatch'
+  const fadesOut = soundwave || barchart || search || loading2 || medical || cone || stopwatch
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
@@ -152,9 +153,11 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
               ? 'kit-ring-nose-morph 6s ease-in-out infinite'
               : loading2
                 ? 'kit-loading-spin-nose-morph 6s linear infinite'
-                : ready || sparkle || fadesOut
-                  ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-                  : 'none'
+                : stopwatch
+                  ? 'kit-stopwatch-face-morph 6s ease-in-out infinite'
+                  : ready || sparkle || fadesOut
+                    ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+                    : 'none'
 
   const whiskerAnimation = (side, index) => {
     if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'
@@ -167,6 +170,7 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (search) return side === 'right' && index === 1 ? 'kit-search-handle-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     if (loading2) return SOUNDWAVE_FADE
     if (cone) return side === 'left' && index === 0 ? 'kit-cone-base-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
+    if (stopwatch) return side === 'left' && index === 1 ? 'kit-stopwatch-crown-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')

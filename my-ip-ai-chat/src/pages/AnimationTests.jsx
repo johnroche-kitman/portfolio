@@ -41,6 +41,11 @@ const VARIANTS = [
     label: 'Training cone',
     description: 'An ear morphs into the cone body, a whisker into its base - Sessions and games',
   },
+  {
+    state: 'stopwatch',
+    label: 'Stopwatch',
+    description: 'Nose morphs into the watch-face ring, a whisker becomes the crown button',
+  },
 ]
 
 export default function AnimationTests() {
