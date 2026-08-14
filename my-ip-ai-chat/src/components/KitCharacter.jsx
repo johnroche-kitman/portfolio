@@ -115,22 +115,26 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-loading-eye-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-eye-left-pill-morph 3s ease-in-out infinite'
-        : search || loading2
+        : search
           ? 'kit-ring-eye-left-morph 6s ease-in-out infinite'
-          : ready || sparkle || soundwave || barchart || medical
-            ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-            : 'none'
+          : loading2
+            ? 'kit-loading-spin-eye-left-morph 6s linear infinite'
+            : ready || sparkle || soundwave || barchart || medical
+              ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+              : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
     : loading
       ? 'kit-loading-eye-right 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-eye-right-pill-morph 3s ease-in-out infinite'
-        : search || loading2
+        : search
           ? 'kit-ring-eye-right-morph 6s ease-in-out infinite'
-          : ready || sparkle || soundwave || barchart || medical
-            ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-            : 'none'
+          : loading2
+            ? 'kit-loading-spin-eye-right-morph 6s linear infinite'
+            : ready || sparkle || soundwave || barchart || medical
+              ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+              : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
     : loading
@@ -141,11 +145,13 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           ? 'kit-error-nose-dot-morph 3s ease-in-out infinite'
           : barchart
             ? 'kit-barchart-nose-line-morph 6s ease-in-out infinite'
-            : search || loading2
+            : search
               ? 'kit-ring-nose-morph 6s ease-in-out infinite'
-              : ready || sparkle || soundwave || medical
-                ? (soundwave || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-                : 'none'
+              : loading2
+                ? 'kit-loading-spin-nose-morph 6s linear infinite'
+                : ready || sparkle || soundwave || medical
+                  ? (soundwave || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+                  : 'none'
 
   const whiskerAnimation = (side, index) => {
     if (thinking) return 'kit-whisker-twitch 1.4s ease-in-out infinite'

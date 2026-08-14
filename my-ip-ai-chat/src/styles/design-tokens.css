@@ -1213,3 +1213,111 @@
   }
 }
 
+/* Loading (spin): eyes are non-uniformly scaled in place (exact - an
+   ellipse legitimately becomes a true circle this way, no d-morph
+   needed) into the same size as the nose, then all 3 translate onto
+   a shared orbit circle around a central pivot and continuously
+   revolve (3 full turns during the hold) - a classic 3-dot loading
+   spinner. Ears + all 6 whiskers fade (kit-soundwave-fade-out-shrink). */
+@keyframes kit-loading-spin-nose-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    transform: none;
+  }
+  26%,
+  74% {
+    transform: translate(-2.1737px, 3.7716px) scale(1.0000, 1.0000);
+  }
+  32% {
+    transform: translate(-14.9016px, -26.9563px) scale(1.0000, 1.0000);
+  }
+  38% {
+    transform: translate(15.8263px, -14.2284px) scale(1.0000, 1.0000);
+  }
+  44% {
+    transform: translate(-14.9016px, -1.5005px) scale(1.0000, 1.0000);
+  }
+  50% {
+    transform: translate(-2.1737px, -32.2284px) scale(1.0000, 1.0000);
+  }
+  56% {
+    transform: translate(10.5542px, -1.5005px) scale(1.0000, 1.0000);
+  }
+  62% {
+    transform: translate(-20.1737px, -14.2284px) scale(1.0000, 1.0000);
+  }
+  68% {
+    transform: translate(10.5542px, -26.9563px) scale(1.0000, 1.0000);
+  }
+}
+
+@keyframes kit-loading-spin-eye-left-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    transform: none;
+  }
+  26%,
+  74% {
+    transform: translate(7.2095px, 4.8654px) scale(1.0000, 0.6666);
+  }
+  32% {
+    transform: translate(40.1846px, 9.2066px) scale(1.0000, 0.6666);
+  }
+  38% {
+    transform: translate(13.7980px, 29.4538px) scale(1.0000, 0.6666);
+  }
+  44% {
+    transform: translate(18.1392px, -3.5213px) scale(1.0000, 0.6666);
+  }
+  50% {
+    transform: translate(38.3864px, 22.8653px) scale(1.0000, 0.6666);
+  }
+  56% {
+    transform: translate(5.4113px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  62% {
+    transform: translate(31.7980px, -1.7231px) scale(1.0000, 0.6666);
+  }
+  68% {
+    transform: translate(27.4567px, 31.2520px) scale(1.0000, 0.6666);
+  }
+}
+
+@keyframes kit-loading-spin-eye-right-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    transform: none;
+  }
+  26%,
+  74% {
+    transform: translate(-5.3146px, 4.8654px) scale(1.0000, 0.6666);
+  }
+  32% {
+    transform: translate(-25.5618px, 31.2520px) scale(1.0000, 0.6666);
+  }
+  38% {
+    transform: translate(-29.9031px, -1.7231px) scale(1.0000, 0.6666);
+  }
+  44% {
+    transform: translate(-3.5164px, 18.5241px) scale(1.0000, 0.6666);
+  }
+  50% {
+    transform: translate(-36.4916px, 22.8654px) scale(1.0000, 0.6666);
+  }
+  56% {
+    transform: translate(-16.2444px, -3.5213px) scale(1.0000, 0.6666);
+  }
+  62% {
+    transform: translate(-11.9031px, 29.4538px) scale(1.0000, 0.6666);
+  }
+  68% {
+    transform: translate(-38.2898px, 9.2066px) scale(1.0000, 0.6666);
+  }
+}
+
