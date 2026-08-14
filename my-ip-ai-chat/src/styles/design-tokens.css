@@ -1468,39 +1468,6 @@
   }
 }
 
-/* Training cone: ear-left is already a thin 2-strip chevron (its native
-   "ear" shape), so it morphs via a matching 6-point d-path into a
-   BIGGER thin chevron - the cone's two outline legs, mitred at the tip
-   - rather than a solid filled wedge, keeping the same thin-line look
-   as the rest of Kit (whiskers, bars). Whisker-left[0] rigidly becomes
-   the flat base underneath (transform:matrix(), same technique as the
-   bar/cross states). Ear-right, remaining whiskers, eyes and nose
-   fade (kit-soundwave-fade-out-shrink). */
-@keyframes kit-cone-body-morph {
-  0%,
-  13%,
-  87%,
-  100% {
-    d: path('M27.7357 9.0000L43.8163 23.2939L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9.0000Z');
-  }
-  26%,
-  74% {
-    d: path('M82.1249 22.6192L109.2082 100.0000L101.7918 100.0000L77.5000 30.5948L53.2082 100.0000L45.7918 100.0000L72.8751 22.6192L82.1249 22.6192Z');
-  }
-}
-
-@keyframes kit-cone-base-morph {
-  0%,
-  13%,
-  87%,
-  100% {
-    transform: none;
-  }
-  26%,
-  74% {
-    transform: matrix(-2.5628, 0.3108, -0.6407, -1.2431, 47.7707, 14.1347);
-  }
-}
 /* Stopwatch: nose morphs, via a matching 26-point d-path (13 on the
    native circle mapped to 13 on the ring's outer arc, mirrored for
    the inner arc - same technique as the magnifying-glass lens, just

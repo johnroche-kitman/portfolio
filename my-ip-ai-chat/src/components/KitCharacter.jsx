@@ -84,9 +84,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const search = state === 'search'
   const loading2 = state === 'loading2'
   const medical = state === 'medical'
-  const cone = state === 'cone'
   const stopwatch = state === 'stopwatch'
-  const fadesOut = soundwave || barchart || search || loading2 || medical || cone || stopwatch
+  const fadesOut = soundwave || barchart || search || loading2 || medical || stopwatch
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
@@ -101,11 +100,9 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-ear-left-morph 3s ease-in-out infinite'
-        : cone
-          ? 'kit-cone-body-morph 6s ease-in-out infinite'
-          : sparkle || fadesOut
-            ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-            : 'none'
+        : sparkle || fadesOut
+          ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+          : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
@@ -169,7 +166,6 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (medical) return `${CROSS_BAR_KEYFRAMES[side][index]} 6s ease-in-out infinite`
     if (search) return side === 'right' && index === 1 ? 'kit-search-handle-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     if (loading2) return SOUNDWAVE_FADE
-    if (cone) return side === 'left' && index === 0 ? 'kit-cone-base-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     if (stopwatch) {
       if (side === 'left' && index === 1) return 'kit-stopwatch-crown-morph 6s ease-in-out infinite'
       if (side === 'right' && index === 1) return 'kit-stopwatch-hand-morph 6s ease-in-out infinite'

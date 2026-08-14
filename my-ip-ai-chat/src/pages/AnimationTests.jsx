@@ -37,11 +37,6 @@ const VARIANTS = [
     description: 'Whiskers fold into a centred medical cross',
   },
   {
-    state: 'cone',
-    label: 'Training cone',
-    description: 'An ear morphs into the cone body, a whisker into its base - Sessions and games',
-  },
-  {
     state: 'stopwatch',
     label: 'Stopwatch',
     description: 'Nose morphs into the watch-face ring, a whisker becomes the crown button',
