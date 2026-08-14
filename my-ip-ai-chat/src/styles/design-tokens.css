@@ -1468,11 +1468,12 @@
   }
 }
 
-/* Training cone: ear-left (native 6-point chevron) morphs via a
-   matching 6-point d-path into a solid triangle (cone body) - each
-   edge subdivided with a midpoint so both shapes share the same
-   point count/order, no crossfade. Whisker-left[0] rigidly becomes
-   the cone's flat base (transform:matrix(), same technique as the
+/* Training cone: ear-left is already a thin 2-strip chevron (its native
+   "ear" shape), so it morphs via a matching 6-point d-path into a
+   BIGGER thin chevron - the cone's two outline legs, mitred at the tip
+   - rather than a solid filled wedge, keeping the same thin-line look
+   as the rest of Kit (whiskers, bars). Whisker-left[0] rigidly becomes
+   the flat base underneath (transform:matrix(), same technique as the
    bar/cross states). Ear-right, remaining whiskers, eyes and nose
    fade (kit-soundwave-fade-out-shrink). */
 @keyframes kit-cone-body-morph {
@@ -1484,7 +1485,7 @@
   }
   26%,
   74% {
-    d: path('M77.5000 20.0000L91.5000 60.0000L105.5000 100.0000L77.5000 100.0000L49.5000 100.0000L63.5000 60.0000L77.5000 20.0000Z');
+    d: path('M77.5000 20.0000L108.8035 98.8438L102.1965 101.1562L77.5000 30.5948L52.8035 101.1562L46.1965 98.8438L77.5000 20.0000Z');
   }
 }
 
