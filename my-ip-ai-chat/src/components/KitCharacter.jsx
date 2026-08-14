@@ -84,7 +84,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
   const search = state === 'search'
   const loading2 = state === 'loading2'
   const medical = state === 'medical'
-  const fadesOut = soundwave || barchart || search || loading2 || medical
+  const cone = state === 'cone'
+  const fadesOut = soundwave || barchart || search || loading2 || medical || cone
 
   const FADE_OUT = 'kit-fade-out-hold 3s ease-in-out infinite'
   const FADE_IN = 'kit-fade-in-hold 3s ease-in-out infinite'
@@ -99,9 +100,11 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
       ? 'kit-ear-flyaway-left 3.2s ease-in-out infinite'
       : error
         ? 'kit-error-ear-left-morph 3s ease-in-out infinite'
-        : sparkle || fadesOut
-          ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
-          : 'none'
+        : cone
+          ? 'kit-cone-body-morph 6s ease-in-out infinite'
+          : sparkle || fadesOut
+            ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+            : 'none'
   const earRightAnimation = loading
     ? 'kit-ear-flyaway-right 3.2s ease-in-out infinite'
     : error
@@ -119,8 +122,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           ? 'kit-ring-eye-left-morph 6s ease-in-out infinite'
           : loading2
             ? 'kit-loading-spin-eye-left-morph 6s linear infinite'
-            : ready || sparkle || soundwave || barchart || medical
-              ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+            : ready || sparkle || fadesOut
+              ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
               : 'none'
   const eyeRightAnimation = idle
     ? 'kit-blink 2s ease-in-out infinite'
@@ -132,8 +135,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
           ? 'kit-ring-eye-right-morph 6s ease-in-out infinite'
           : loading2
             ? 'kit-loading-spin-eye-right-morph 6s linear infinite'
-            : ready || sparkle || soundwave || barchart || medical
-              ? (soundwave || barchart || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+            : ready || sparkle || fadesOut
+              ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
               : 'none'
   const noseAnimation = idle
     ? 'kit-nose-wiggle 2s ease-in-out infinite'
@@ -149,8 +152,8 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
               ? 'kit-ring-nose-morph 6s ease-in-out infinite'
               : loading2
                 ? 'kit-loading-spin-nose-morph 6s linear infinite'
-                : ready || sparkle || soundwave || medical
-                  ? (soundwave || medical ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
+                : ready || sparkle || fadesOut
+                  ? (fadesOut ? SOUNDWAVE_FADE : FADE_OUT_SHRINK)
                   : 'none'
 
   const whiskerAnimation = (side, index) => {
@@ -163,6 +166,7 @@ export default function KitCharacter({ size = 155, state = 'idle' }) {
     if (medical) return `${CROSS_BAR_KEYFRAMES[side][index]} 6s ease-in-out infinite`
     if (search) return side === 'right' && index === 1 ? 'kit-search-handle-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     if (loading2) return SOUNDWAVE_FADE
+    if (cone) return side === 'left' && index === 0 ? 'kit-cone-base-morph 6s ease-in-out infinite' : SOUNDWAVE_FADE
     return 'none'
   }
   const whiskerDelay = (index) => (thinking ? `${index * 0.12}s` : '0s')

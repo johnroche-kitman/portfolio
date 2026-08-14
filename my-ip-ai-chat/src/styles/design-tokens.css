@@ -1468,3 +1468,35 @@
   }
 }
 
+/* Training cone: ear-left (native 6-point chevron) morphs via a
+   matching 6-point d-path into a solid triangle (cone body) - each
+   edge subdivided with a midpoint so both shapes share the same
+   point count/order, no crossfade. Whisker-left[0] rigidly becomes
+   the cone's flat base (transform:matrix(), same technique as the
+   bar/cross states). Ear-right, remaining whiskers, eyes and nose
+   fade (kit-soundwave-fade-out-shrink). */
+@keyframes kit-cone-body-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    d: path('M27.7357 9L59.8969 37.5878L55.7492 42.2539L31.7229 20.8972L23.4257 62.3837L17.3038 61.1593L27.7357 9Z');
+  }
+  26%,
+  74% {
+    d: path('M77.5000 20.0000L91.5000 60.0000L105.5000 100.0000L77.5000 100.0000L49.5000 100.0000L63.5000 60.0000L77.5000 20.0000Z');
+  }
+}
+
+@keyframes kit-cone-base-morph {
+  0%,
+  13%,
+  87%,
+  100% {
+    transform: none;
+  }
+  26%,
+  74% {
+    transform: matrix(-2.5628, 0.3108, -0.6407, -1.2431, 47.7707, 14.1347);
+  }
+}

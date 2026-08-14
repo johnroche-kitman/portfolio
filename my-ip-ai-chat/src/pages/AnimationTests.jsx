@@ -36,6 +36,11 @@ const VARIANTS = [
     label: 'Medical',
     description: 'Whiskers fold into a centred medical cross',
   },
+  {
+    state: 'cone',
+    label: 'Training cone',
+    description: 'An ear morphs into the cone body, a whisker into its base - Sessions and games',
+  },
 ]
 
 export default function AnimationTests() {
