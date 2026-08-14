@@ -881,13 +881,15 @@
 /* Kit "barchart": same rigid rotate/scale/translate technique as
    "soundwave" (see kit-soundwave-bar-*-morph) - each whisker morphs via
    `transform: matrix()`, never a `d` crossfade - but the 6 bars are
-   BOTTOM-aligned (shared baseline y=90, only the top edge moves as each
-   bar's height pulses) instead of centre-aligned, so it reads as a bar
-   chart rather than a waveform. The nose does NOT fade: it rigidly
-   scales (translate+scale, no rotation needed) from its native circle
-   into a long, thin horizontal line sitting right at the baseline,
-   forming the axis line under the bars. Ears/eyes still fade
-   (kit-soundwave-fade-out-shrink). */
+   BOTTOM-aligned on a shared baseline and, unlike soundwave, hold a
+   single STATIC height once formed (no pulsing) - bars ordered
+   tallest-to-smallest left to right. A small gap separates the bars'
+   baseline from the axis line below them. The nose does NOT fade: it
+   morphs, via a matching 4-point `d` path (square proxy -> rectangle,
+   no rotation involved so it reads as a rigid horizontal stretch, not a
+   crossfade), from its native circle footprint into a long, thin,
+   sharp-cornered rectangle forming the axis line under the bars.
+   Ears/eyes still fade (kit-soundwave-fade-out-shrink). */
 @keyframes kit-barchart-bar-a-morph {
   0%,
   13%,
@@ -895,26 +897,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(0.2556, -1.3741, -1.0224, -0.3435, 17.3707, -18.0953);
-  }
-  34% {
-    transform: matrix(0.2556, -1.5940, -1.0224, -0.3985, 17.3707, -21.0121);
-  }
-  42% {
-    transform: matrix(0.2556, -0.9933, -1.0224, -0.2483, 17.3707, -13.0432);
-  }
-  50% {
-    transform: matrix(0.2556, -1.8139, -1.0224, -0.4535, 17.3707, -23.9289);
-  }
-  58% {
-    transform: matrix(0.2556, -0.9933, -1.0224, -0.2483, 17.3707, -13.0432);
-  }
-  66% {
-    transform: matrix(0.2556, -1.5940, -1.0224, -0.3985, 17.3707, -21.0121);
-  }
+  26%,
   74% {
-    transform: matrix(0.2556, -1.3741, -1.0224, -0.3435, 17.3707, -18.0953);
+    transform: matrix(0.2556, -1.3741, -1.0224, -0.3435, 52.7507, -22.0953);
   }
 }
 
@@ -925,26 +910,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(-0.2890, -0.8343, -1.1561, 0.2086, 35.2137, -30.5147);
-  }
-  34% {
-    transform: matrix(-0.2890, -0.5487, -1.1561, 0.1372, 35.2137, -24.8321);
-  }
-  42% {
-    transform: matrix(-0.2890, -0.6533, -1.1561, 0.1633, 35.2137, -26.9121);
-  }
-  50% {
-    transform: matrix(-0.2890, -0.7578, -1.1561, 0.1895, 35.2137, -28.9921);
-  }
-  58% {
-    transform: matrix(-0.2890, -0.4722, -1.1561, 0.1181, 35.2137, -23.3094);
-  }
-  66% {
-    transform: matrix(-0.2890, -0.8623, -1.1561, 0.2156, 35.2137, -31.0721);
-  }
+  26%,
   74% {
-    transform: matrix(-0.2890, -0.4722, -1.1561, 0.1181, 35.2137, -23.3094);
+    transform: matrix(-0.2890, -0.6533, -1.1561, 0.1633, 71.3737, -30.9121);
   }
 }
 
@@ -955,26 +923,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(-0.5983, -1.1660, -0.9972, 0.6996, 43.1422, -52.7097);
-  }
-  34% {
-    transform: matrix(-0.5983, -0.6209, -0.9972, 0.3725, 43.1422, -41.1374);
-  }
-  42% {
-    transform: matrix(-0.5983, -1.1660, -0.9972, 0.6996, 43.1422, -52.7097);
-  }
-  50% {
-    transform: matrix(-0.5983, -0.7669, -0.9972, 0.4602, 43.1422, -44.2382);
-  }
-  58% {
-    transform: matrix(-0.5983, -0.9130, -0.9972, 0.5478, 43.1422, -47.3390);
-  }
-  66% {
-    transform: matrix(-0.5983, -1.0591, -0.9972, 0.6355, 43.1422, -50.4398);
-  }
+  26%,
   74% {
-    transform: matrix(-0.5983, -0.6600, -0.9972, 0.3960, 43.1422, -41.9683);
+    transform: matrix(-0.5983, -0.9130, -0.9972, 0.5478, 32.0922, -51.3390);
   }
 }
 
@@ -985,26 +936,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(0.2809, 0.9784, 1.1234, -0.2446, -40.8948, -12.8453);
-  }
-  34% {
-    transform: matrix(0.2809, 0.8219, 1.1234, -0.2055, -40.8948, -10.7685);
-  }
-  42% {
-    transform: matrix(0.2809, 1.2495, 1.1234, -0.3124, -40.8948, -16.4424);
-  }
-  50% {
-    transform: matrix(0.2809, 0.6653, 1.1234, -0.1663, -40.8948, -8.6917);
-  }
-  58% {
-    transform: matrix(0.2809, 1.2495, 1.1234, -0.3124, -40.8948, -16.4424);
-  }
-  66% {
-    transform: matrix(0.2809, 0.8219, 1.1234, -0.2055, -40.8948, -10.7685);
-  }
+  26%,
   74% {
-    transform: matrix(0.2809, 0.9784, 1.1234, -0.2446, -40.8948, -12.8452);
+    transform: matrix(0.2809, 0.9784, 1.1234, -0.2446, -17.8048, -16.8453);
   }
 }
 
@@ -1015,26 +949,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(-0.2999, 0.7051, 1.1996, 0.1763, -34.7578, -27.9430);
-  }
-  34% {
-    transform: matrix(-0.2999, 1.1314, 1.1996, 0.2829, -34.7578, -36.4277);
-  }
-  42% {
-    transform: matrix(-0.2999, 0.9754, 1.1996, 0.2439, -34.7578, -33.3221);
-  }
-  50% {
-    transform: matrix(-0.2999, 0.8193, 1.1996, 0.2048, -34.7578, -30.2165);
-  }
-  58% {
-    transform: matrix(-0.2999, 1.2457, 1.1996, 0.3114, -34.7578, -38.7011);
-  }
-  66% {
-    transform: matrix(-0.2999, 0.6633, 1.1996, 0.1658, -34.7578, -27.1109);
-  }
+  26%,
   74% {
-    transform: matrix(-0.2999, 1.2457, 1.1996, 0.3114, -34.7578, -38.7011);
+    transform: matrix(-0.2999, 0.9754, 1.1996, 0.2439, -82.5178, -37.3221);
   }
 }
 
@@ -1045,26 +962,9 @@
   100% {
     transform: none;
   }
-  26% {
-    transform: matrix(-0.6049, 0.6229, 1.0082, 0.3737, -20.9265, -41.1803);
-  }
-  34% {
-    transform: matrix(-0.6049, 1.1374, 1.0082, 0.6824, -20.9265, -52.1018);
-  }
-  42% {
-    transform: matrix(-0.6049, 0.6229, 1.0082, 0.3737, -20.9265, -41.1803);
-  }
-  50% {
-    transform: matrix(-0.6049, 0.9995, 1.0082, 0.5997, -20.9265, -49.1754);
-  }
-  58% {
-    transform: matrix(-0.6049, 0.8617, 1.0082, 0.5170, -20.9265, -46.2490);
-  }
-  66% {
-    transform: matrix(-0.6049, 0.7238, 1.0082, 0.4343, -20.9265, -43.3226);
-  }
+  26%,
   74% {
-    transform: matrix(-0.6049, 1.1005, 1.0082, 0.6603, -20.9265, -51.3177);
+    transform: matrix(-0.6049, 0.8617, 1.0082, 0.5170, -56.7465, -50.2490);
   }
 }
 
@@ -1073,10 +973,10 @@
   13%,
   87%,
   100% {
-    transform: none;
+    d: path('M73.4307 92.9854L85.9168 92.9854L85.9168 105.4710L73.4307 105.4710Z');
   }
   26%,
   74% {
-    transform: translate(-3.1490px, -9.2280px) scale(6.0067, 0.2403);
+    d: path('M39.6000 89.0000L113.0700 89.0000L113.0700 92.0000L39.6000 92.0000Z');
   }
 }
