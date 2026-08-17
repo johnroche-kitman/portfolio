@@ -20,7 +20,13 @@ const NAV_ITEMS = [
   { key: 'administration', name: 'settings', label: 'Administration' },
 ]
 
-export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen, showTrigger = true }) {
+export default function MainNavigation({
+  onOpenChat,
+  chatOpen,
+  hasUnseen,
+  showTrigger = true,
+  activeKey = 'next-gen',
+}) {
   const navigate = useNavigate()
 
   return (
@@ -72,25 +78,33 @@ export default function MainNavigation({ onOpenChat, chatOpen, hasUnseen, showTr
       )}
 
       <Box display="flex" flexDirection="column" gap={0.5} flexGrow={1} width="100%" alignItems="center">
-        {NAV_ITEMS.map((item) => (
-          <Tooltip key={item.key} title={item.label} placement="right">
-            <span>
-              <ButtonBase
-                disabled
-                sx={{
-                  width: 44,
-                  height: 32,
-                  justifyContent: 'center',
-                  borderRadius: '6px',
-                  color: '#ffffffb3',
-                  '&.Mui-disabled': { color: '#ffffffb3' },
-                }}
-              >
-                <Icon name={item.name} fontSize="small" />
-              </ButtonBase>
-            </span>
-          </Tooltip>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const selected = item.key === activeKey
+          return (
+            <Tooltip key={item.key} title={item.label} placement="right">
+              {/* Full-rail-width segment so the selected state fills the whole
+                  strip, as in the design. The 4px white leading line is an
+                  inset shadow rather than a border so it doesn't nudge the
+                  icon off the rail's centre line. */}
+              <span style={{ width: '100%' }}>
+                <ButtonBase
+                  disabled
+                  sx={{
+                    width: '100%',
+                    height: 32,
+                    justifyContent: 'center',
+                    color: selected ? '#ffffff' : '#ffffffb3',
+                    backgroundColor: selected ? 'var(--color-accent)' : 'transparent',
+                    boxShadow: selected ? 'inset 4px 0 0 0 #ffffff' : 'none',
+                    '&.Mui-disabled': { color: selected ? '#ffffff' : '#ffffffb3' },
+                  }}
+                >
+                  <Icon name={item.name} fontSize="small" />
+                </ButtonBase>
+              </span>
+            </Tooltip>
+          )
+        })}
       </Box>
 
       <Box display="flex" flexDirection="column" gap={1} mb={2}>
