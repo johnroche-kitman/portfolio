@@ -19,6 +19,8 @@
   --white: #ffffff;
   --input-chip-bg: #eceef0;
   --input-field-bg: #f4f4f6;
+  /* MUI standard-variant input underline (components/input/standard/enabledBorder) */
+  --input-underline: #3b49606b;
   --toast-green: #0a875a;
   --toast-blue-bg: #eaf1f9;
   --toast-icon-blue: #000b4c;

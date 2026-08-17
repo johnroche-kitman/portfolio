@@ -153,7 +153,8 @@ export default function AiHistoryList({ chats, onSelect, dense }) {
             alignItems: 'center',
             gap: 1,
             backgroundColor: 'var(--color-secondary)',
-            borderRadius: 1,
+            borderRadius: '4px 4px 0 0',
+            borderBottom: '1px solid var(--input-underline)',
             px: 1.5,
             py: 1,
           }}
