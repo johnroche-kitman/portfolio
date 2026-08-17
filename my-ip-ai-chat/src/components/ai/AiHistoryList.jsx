@@ -146,7 +146,7 @@ export default function AiHistoryList({ chats, onSelect, dense }) {
 
   return (
     <>
-      <Box sx={{ px: dense ? 2 : 3, pb: 1 }}>
+      <Box sx={{ px: dense ? 2 : 3, pt: dense ? 0 : 0.75, pb: 1 }}>
         <Box
           sx={{
             display: 'flex',
