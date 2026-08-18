@@ -25,7 +25,12 @@ export default function PrototypeShell({ triggerLocation }) {
         <MyIpLanding showTrigger={triggerLocation === 'toolbar'} onOpenChat={chatState.openPanel} hasUnseen={chatState.hasUnseen} />
       </Box>
       <SupportFab />
-      <AiPanel open={chatState.open} onClose={chatState.closePanel} chatState={chatState} />
+      <AiPanel
+        open={chatState.open}
+        onClose={chatState.closePanel}
+        chatState={chatState}
+        anchor={triggerLocation === 'nav' ? 'left' : 'right'}
+      />
       <AiResponseToast toast={chatState.toast} onOpen={chatState.openFromToast} onDismiss={chatState.dismissToast} />
     </Box>
   )

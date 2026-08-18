@@ -7,8 +7,12 @@ import AiInputBar from './AiInputBar'
 
 const COLLAPSED_WIDTH = 460
 
-export default function AiPanel({ open, onClose, chatState }) {
+// Which edge the panel slides in from. In v1 the launcher lives in the main
+// nav rail, so the panel opens alongside it on the left; the other variants
+// launch from the toolbar/app bar and keep it on the right.
+export default function AiPanel({ open, onClose, chatState, anchor = 'right' }) {
   const chatApi = chatState
+  const anchorLeft = anchor === 'left'
   const { view, activeChat, chats, expanded, isThinking, thinkingElapsedMs, showThinkingDetail } = chatApi
 
   const title = view === 'history' ? 'History' : activeChat ? activeChat.title : 'New chat'
@@ -28,13 +32,18 @@ export default function AiPanel({ open, onClose, chatState }) {
 
   return (
     <Drawer
-      anchor="right"
+      anchor={anchor}
       open={open}
       onClose={onClose}
       ModalProps={{ hideBackdrop: true, disableScrollLock: true }}
       PaperProps={{
         sx: {
           width: expanded ? `calc(100vw - var(--nav-width))` : COLLAPSED_WIDTH,
+          // Left-anchored, MUI pins the paper to left: 0, which would put it
+          // underneath the nav rail. Offset it so the panel starts where the
+          // rail ends - which also makes the expanded width above line up,
+          // since it's measured from the rail's inner edge either way.
+          ...(anchorLeft && { left: 'var(--nav-width)' }),
           display: 'flex',
           flexDirection: 'row',
           // MUI's Slide transition sets an inline `transition: transform ...`
