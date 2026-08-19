@@ -84,6 +84,14 @@
       <span className="material-icons-outlined" style={{ fontSize: size, lineHeight: 1, color, ...style }}>{name}</span>
     );
 
+    // Material's Clear glyph, same mark as @mui/icons-material/Clear.
+    // In the real codebase write `import ClearIcon from '@mui/icons-material/Clear'`.
+    // This prototype has no bundler, and pulling the icons package in through the
+    // import map loads a second copy of MUI's internals, which breaks
+    // FormControl context — disabled stops reaching the inputs. The icon font
+    // renders the identical glyph with none of that.
+    const ClearIcon = ({ sx = {} }) => <MI name="clear" size={sx.fontSize || 20} color={sx.color} />;
+
     /* ── Theme ───────────────────────────────────────────────────────── */
     const theme = createTheme({
       palette: {
@@ -163,15 +171,24 @@
 
     const MAX_METRICS = 6;
 
-    const seedMetrics = () =>
+    // The grid always holds exactly MAX_METRICS slots. A slot with an empty
+    // metric name is an open row waiting to be filled; clearing a row empties
+    // it in place rather than removing it, so the row count never changes.
+    const emptySlot = () => ({ metric: '', targets: {} });
+    const emptySlots = () => Array.from({ length: MAX_METRICS }, emptySlot);
+    const isFilled = (slot) => Boolean(slot && slot.metric);
+
+    const seedMetrics = () => {
+      const slots = emptySlots();
       ['Total distance', 'High speed running', 'Sprint distance', 'Accelerations (count)', 'Decelerations (count)']
-        .map((metric) => ({
-          metric,
-          targets: GD_DEFAULT.reduce((acc, day) => ({ ...acc, [day]: '4000' }), {}),
-        }));
+        .forEach((metric, i) => {
+          slots[i] = { metric, targets: GD_DEFAULT.reduce((acc, day) => ({ ...acc, [day]: '4000' }), {}) };
+        });
+      return slots;
+    };
 
     // A squad + position combination holds its own metrics and its own import window.
-    const emptyCombination = () => ({ imports: 'Last 5 imports', metrics: [] });
+    const emptyCombination = () => ({ imports: 'Last 5 imports', metrics: emptySlots() });
 
     const seedConfig = () => {
       const cfg = {};
@@ -292,9 +309,11 @@
       const filled = [];
       POSITIONS.forEach((position) => {
         const combo = cfg.byPosition[position];
-        if (!combo || combo.metrics.length === 0) return;
+        if (!combo) return;
+        const set = combo.metrics.filter(isFilled);
+        if (set.length === 0) return;
         filled.push({ position, imports: combo.imports });
-        combo.metrics.forEach((row) => rows.push({ position, ...row }));
+        set.forEach((row) => rows.push({ position, ...row }));
       });
 
       // The design states the window once beneath the table. Only name the positions
@@ -410,8 +429,8 @@
       const cfg   = draft[squad];
       const combo = cfg.byPosition[position] || emptyCombination();
       const rows  = combo.metrics;
-      const atMax = rows.length >= MAX_METRICS;
-      const usedMetrics = rows.map((r) => r.metric);
+      const usedCount = rows.filter(isFilled).length;
+      const usedMetrics = rows.filter(isFilled).map((r) => r.metric);
       const unusedDays = GD_ALL.filter((d) => !cfg.days.includes(d));
 
       const mutate = (fn) => {
@@ -422,23 +441,17 @@
       };
 
       const setMetric = (index, metric) => mutate((next) => {
-        const list = next[squad].byPosition[position].metrics;
-        if (index === list.length) {
-          list.push({ metric, targets: {} });
-        } else {
-          list[index].metric = metric;
-        }
+        next[squad].byPosition[position].metrics[index].metric = metric;
       });
 
       const setTarget = (index, day, raw) => mutate((next) => {
         const value = raw.replace(/[^0-9.]/g, '');
-        const list = next[squad].byPosition[position].metrics;
-        if (index === list.length) return;
-        list[index].targets[day] = value;
+        next[squad].byPosition[position].metrics[index].targets[day] = value;
       });
 
-      const removeMetric = (index) => mutate((next) => {
-        next[squad].byPosition[position].metrics.splice(index, 1);
+      // Empties the row in place. The six rows are fixed, so nothing shifts up.
+      const clearMetric = (index) => mutate((next) => {
+        next[squad].byPosition[position].metrics[index] = emptySlot();
       });
 
       const addDay = (day) => mutate((next) => {
@@ -451,7 +464,7 @@
         const cur = next[squad];
         cur.days = cur.days.filter((d) => d !== day);
         Object.values(cur.byPosition).forEach((c) =>
-          c.metrics.forEach((row) => { delete row.targets[day]; })
+          c.metrics.forEach((slot) => { delete slot.targets[day]; })
         );
       });
 
@@ -471,8 +484,7 @@
 
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
 
-      // The trailing blank row is how a metric gets added, matching the design.
-      const displayRows = atMax ? rows : [...rows, null];
+      // Always six rows. An empty one is how a metric gets added.
       const tableWidth = CONTENT_X + COL_METRIC + (cfg.days.length + 1) * COL_DAY;
 
       return (
@@ -537,73 +549,78 @@
             </Box>
           </Box>
 
-          {/* Metric rows */}
-          {displayRows.map((row, index) => (
-            <Box
-              key={row ? `${row.metric}-${index}` : 'new-row'}
-              sx={{
-                display: 'flex', alignItems: 'center', height: ROW_H,
-                borderBottom: `1px solid ${DIVIDER}`,
-                '&:hover .row-remove': { opacity: row ? 1 : 0 },
-              }}
-            >
-              <Box sx={{ width: COL_METRIC, flex: 'none', pl: '18px' }}>
-                <TextField
-                  select
-                  value={row ? row.metric : ''}
-                  onChange={(e) => setMetric(index, e.target.value)}
-                  variant="filled"
-                  hiddenLabel
-                  sx={{
-                    width: IN_METRIC,
-                    '& .MuiFilledInput-root': { height: 52 },
-                    '& .MuiSelect-select': { py: 0, display: 'flex', alignItems: 'center', height: 52, fontSize: 15, color: PRIMARY },
-                  }}
-                >
-                  {METRIC_LIBRARY.map((metric) => (
-                    <MenuItem
-                      key={metric}
-                      value={metric}
-                      disabled={usedMetrics.includes(metric) && (!row || row.metric !== metric)}
-                    >
-                      {metric}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Box>
-
-              {cfg.days.map((day) => (
-                <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+          {/* Six fixed rows */}
+          {rows.map((slot, index) => {
+            const filledRow = isFilled(slot);
+            return (
+              <Box
+                key={index}
+                sx={{
+                  display: 'flex', alignItems: 'center', height: ROW_H,
+                  borderBottom: `1px solid ${DIVIDER}`,
+                  '&:hover .row-clear': { opacity: filledRow ? 1 : 0 },
+                }}
+              >
+                <Box sx={{ width: COL_METRIC, flex: 'none', pl: '18px' }}>
                   <TextField
-                    value={row ? (row.targets[day] ?? '') : ''}
-                    onChange={(e) => setTarget(index, day, e.target.value)}
-                    disabled={!row}
+                    select
+                    value={slot.metric}
+                    onChange={(e) => setMetric(index, e.target.value)}
                     variant="filled"
                     hiddenLabel
-                    inputProps={{ inputMode: 'numeric' }}
                     sx={{
-                      width: IN_DAY,
+                      width: IN_METRIC,
                       '& .MuiFilledInput-root': { height: 52 },
-                      '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
+                      '& .MuiSelect-select': { py: 0, display: 'flex', alignItems: 'center', height: 52, fontSize: 15, color: PRIMARY },
                     }}
-                  />
-                </Box>
-              ))}
-
-              <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
-                {row && (
-                  <IconButton
-                    className="row-remove"
-                    onClick={() => removeMetric(index)}
-                    sx={{ opacity: 0, transition: 'opacity .12s' }}
-                    aria-label={`Remove ${row.metric}`}
                   >
-                    <MI name="delete_outline" size={20} color={GREY100} />
-                  </IconButton>
-                )}
+                    {METRIC_LIBRARY.map((metric) => (
+                      <MenuItem
+                        key={metric}
+                        value={metric}
+                        disabled={usedMetrics.includes(metric) && slot.metric !== metric}
+                      >
+                        {metric}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+
+                {cfg.days.map((day) => (
+                  <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+                    <TextField
+                      value={slot.targets[day] ?? ''}
+                      onChange={(e) => setTarget(index, day, e.target.value)}
+                      disabled={!slot.metric}
+                      variant="filled"
+                      hiddenLabel
+                      inputProps={{ inputMode: 'numeric', disabled: !slot.metric }}
+                      sx={{
+                        width: IN_DAY,
+                        '& .MuiFilledInput-root': { height: 52 },
+                        '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
+                      }}
+                    />
+                  </Box>
+                ))}
+
+                <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+                  {filledRow && (
+                    <Tooltip title="Clear row">
+                      <IconButton
+                        className="row-clear"
+                        onClick={() => clearMetric(index)}
+                        sx={{ opacity: 0, transition: 'opacity .12s' }}
+                        aria-label={`Clear ${slot.metric}`}
+                      >
+                        <ClearIcon sx={{ fontSize: 20, color: GREY100 }} />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            );
+          })}
 
           </Box>
           </Box>
@@ -620,9 +637,8 @@
             />
           </Box>
 
-          <Typography sx={{ fontSize: 13, color: atMax ? PRIMARY : GREY100, mt: 2, pl: `${CONTENT_X}px` }}>
-            {rows.length} of {MAX_METRICS} metrics used for {squad} &middot; {position === 'All' ? 'all positions' : position.toLowerCase()}
-            {atMax && '. Remove one to add a different metric.'}
+          <Typography sx={{ fontSize: 13, color: GREY100, mt: 2, pl: `${CONTENT_X}px` }}>
+            {usedCount} of {MAX_METRICS} metrics used for {squad} &middot; {position === 'All' ? 'all positions' : position.toLowerCase()}
           </Typography>
         </Box>
       );
@@ -706,7 +722,6 @@
 
     /* ── Version 1 ───────────────────────────────────────────────────── */
     function VersionOne({ onHome }) {
-      const [tab, setTab]           = useState('Workload');
       const [section, setSection]   = useState('Participation and RPE');
       const [config, setConfig]     = useState(seedConfig);
       const [draft, setDraft]       = useState(null);
@@ -728,11 +743,15 @@
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <TopBar contextLabel={contextLabel} />
 
+            {/* Display only — Workload is the only tab in scope for this prototype. */}
             <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
               <Tabs
-                value={tab}
-                onChange={(_, v) => setTab(v)}
-                sx={{ minHeight: 46, px: 1, '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 } }}
+                value="Workload"
+                sx={{
+                  minHeight: 46, px: 1,
+                  '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+                  '& .MuiTab-root': { pointerEvents: 'none' },
+                }}
               >
                 {ORG_TABS.map((label) => <Tab key={label} label={label} value={label} />)}
               </Tabs>
@@ -742,13 +761,7 @@
               <SubNav value={section} onChange={setSection} />
 
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {tab !== 'Workload' ? (
-                  <Box sx={{ p: 6 }}>
-                    <Typography sx={{ fontSize: 14, color: GREY100 }}>
-                      {tab} is outside the scope of this prototype. Select Workload to continue.
-                    </Typography>
-                  </Box>
-                ) : section === SUB_SECTIONS[0] ? (
+                {section === SUB_SECTIONS[0] ? (
                   <ParticipationView />
                 ) : editing ? (
                   <EditView
