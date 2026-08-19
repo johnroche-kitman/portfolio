@@ -65,7 +65,7 @@
       createTheme, ThemeProvider, CssBaseline,
       Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
       Tabs, Tab, List, ListItemButton, ListItemText,
-      TextField, MenuItem, Menu, Avatar,
+      TextField, MenuItem, Menu, Avatar, ButtonBase,
     } from '@mui/material';
 
     /* ── Design tokens (Figma variables, Playbook toolkit) ───────────── */
@@ -76,6 +76,7 @@
     const DIVIDER     = '#3b49601f';
     const PRIMARY_SEL = '#3b496014'; // primary/selected
     const ACTIVE_NAV  = '#0F28FF';
+    const UNDERLINE   = '#3b49606b'; // components/input/standard/enabledBorder
     const RADIUS      = 4;
 
     /* ── Material icon helper (Outlined only) ────────────────────────── */
@@ -113,9 +114,11 @@
         MuiListItemText: { styleOverrides: { primary: { fontFamily: "'Open Sans', sans-serif", fontSize: 15 } } },
         MuiFilledInput: { styleOverrides: { root: {
           backgroundColor: NEUTRAL_200,
-          borderRadius: RADIUS,
+          // Square bottom corners over a 1px underline, per the Playbook toolkit.
+          borderRadius: `${RADIUS}px ${RADIUS}px 0 0`,
+          borderBottom: `1px solid ${UNDERLINE}`,
           '&:hover':        { backgroundColor: '#e8e9eb' },
-          '&.Mui-focused':  { backgroundColor: NEUTRAL_200 },
+          '&.Mui-focused':  { backgroundColor: NEUTRAL_200, borderBottomColor: PRIMARY },
           '&:before, &:after': { display: 'none' },
         }}},
         MuiInputLabel: { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
@@ -167,14 +170,15 @@
           targets: GD_DEFAULT.reduce((acc, day) => ({ ...acc, [day]: '4000' }), {}),
         }));
 
+    // A squad + position combination holds its own metrics and its own import window.
+    const emptyCombination = () => ({ imports: 'Last 5 imports', metrics: [] });
+
     const seedConfig = () => {
       const cfg = {};
       SQUADS.forEach((squad) => {
         cfg[squad] = {
-          imports: 'Last 5 imports',
           days: [...GD_DEFAULT],
-          // One independent metric set per squad + position combination.
-          byPosition: { All: seedMetrics() },
+          byPosition: { All: { imports: 'Last 5 imports', metrics: seedMetrics() } },
         };
       });
       return cfg;
@@ -193,19 +197,27 @@
     const ROW_H      = 77;
 
     /* ── Chrome ──────────────────────────────────────────────────────── */
-    function NavRail() {
+    function NavRail({ onHome }) {
       return (
         <Box sx={{
           width: RAIL_W, flex: 'none', color: '#fff',
           background: 'linear-gradient(160deg, #0c0d13 0%, #0c0d13 58%, #1c2130 100%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1.5,
         }}>
-          <Box sx={{
-            width: 36, height: 36, borderRadius: '50%', bgcolor: ACTIVE_NAV,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.25, flex: 'none',
-          }}>
-            <Typography sx={{ fontSize: 19, fontWeight: 700, color: '#fff', lineHeight: 1 }}>K</Typography>
-          </Box>
+          <Tooltip title="Back to prototype versions" placement="right">
+            <ButtonBase
+              onClick={onHome}
+              aria-label="Back to prototype versions"
+              sx={{ borderRadius: '50%', mb: 1.25, flex: 'none' }}
+            >
+              <Box
+                component="img"
+                src="kitman-logo.png"
+                alt="Kitman Labs"
+                sx={{ width: 36, height: 36, display: 'block', objectFit: 'contain' }}
+              />
+            </ButtonBase>
+          </Tooltip>
 
           {NAV_ITEMS.map((item) => (
             <Tooltip key={item.label} title={item.label} placement="right">
@@ -277,9 +289,18 @@
     /* ── Read-only view ──────────────────────────────────────────────── */
     function SquadTargetTable({ squad, cfg }) {
       const rows = [];
+      const filled = [];
       POSITIONS.forEach((position) => {
-        (cfg.byPosition[position] || []).forEach((row) => rows.push({ position, ...row }));
+        const combo = cfg.byPosition[position];
+        if (!combo || combo.metrics.length === 0) return;
+        filled.push({ position, imports: combo.imports });
+        combo.metrics.forEach((row) => rows.push({ position, ...row }));
       });
+
+      // The design states the window once beneath the table. Only name the positions
+      // when they have drifted apart.
+      const uniform = filled.length > 0 && filled.every((f) => f.imports === filled[0].imports);
+      const tableWidth = 220 + 165 + cfg.days.length * 150;
 
       const cell = { fontSize: 14, letterSpacing: 0.17, color: PRIMARY };
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
@@ -290,12 +311,31 @@
             {squad} targets by GD
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', height: 44, borderBottom: `1px solid ${DIVIDER}` }}>
-            <Box sx={{ width: 220, ...head }}>Metric</Box>
-            <Box sx={{ width: 165, ...head }}>Position</Box>
-            {cfg.days.map((day) => (
-              <Box key={day} sx={{ width: 150, ...head }}>{day}</Box>
-            ))}
+          <Box sx={{ overflowX: 'auto' }}>
+            <Box sx={{ minWidth: tableWidth }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', height: 44, borderBottom: `1px solid ${DIVIDER}` }}>
+                <Box sx={{ width: 220, flex: 'none', ...head }}>Metric</Box>
+                <Box sx={{ width: 165, flex: 'none', ...head }}>Position</Box>
+                {cfg.days.map((day) => (
+                  <Box key={day} sx={{ width: 150, flex: 'none', ...head }}>{day}</Box>
+                ))}
+              </Box>
+
+              {rows.map((row, i) => (
+                <Box
+                  key={`${row.position}-${row.metric}-${i}`}
+                  sx={{ display: 'flex', alignItems: 'center', height: 50, borderBottom: `1px solid ${DIVIDER}` }}
+                >
+                  <Box sx={{ width: 220, flex: 'none', ...cell }}>{row.metric}</Box>
+                  <Box sx={{ width: 165, flex: 'none', ...cell }}>{row.position}</Box>
+                  {cfg.days.map((day) => (
+                    <Box key={day} sx={{ width: 150, flex: 'none', ...cell }}>
+                      {row.targets[day] || <span style={{ color: DISABLED }}>&mdash;</span>}
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Box>
           </Box>
 
           {rows.length === 0 && (
@@ -306,24 +346,17 @@
             </Box>
           )}
 
-          {rows.map((row, i) => (
-            <Box
-              key={`${row.position}-${row.metric}-${i}`}
-              sx={{ display: 'flex', alignItems: 'center', height: 50, borderBottom: `1px solid ${DIVIDER}` }}
-            >
-              <Box sx={{ width: 220, ...cell }}>{row.metric}</Box>
-              <Box sx={{ width: 165, ...cell }}>{row.position}</Box>
-              {cfg.days.map((day) => (
-                <Box key={day} sx={{ width: 150, ...cell }}>
-                  {row.targets[day] || <span style={{ color: DISABLED }}>&mdash;</span>}
-                </Box>
-              ))}
-            </Box>
-          ))}
+          {uniform && (
+            <Typography sx={{ fontSize: 14, fontWeight: 600, mt: 2 }}>
+              Averages based on {filled[0].imports.toLowerCase()}
+            </Typography>
+          )}
 
-          <Typography sx={{ fontSize: 14, fontWeight: 600, mt: 2 }}>
-            Averages based on {cfg.imports.toLowerCase()}
-          </Typography>
+          {!uniform && filled.map((f) => (
+            <Typography key={f.position} sx={{ fontSize: 14, fontWeight: 600, mt: 1 }}>
+              {f.position}: averages based on {f.imports.toLowerCase()}
+            </Typography>
+          ))}
         </Box>
       );
     }
@@ -357,8 +390,8 @@
           onChange={(e) => onChange(e.target.value)}
           variant="filled"
           sx={{
-            width,
-            '& .MuiFilledInput-root': { height: 50, borderRadius: `${RADIUS}px` },
+            width, flex: 'none',
+            '& .MuiFilledInput-root': { height: 50 },
             '& .MuiSelect-select':    { pt: '24px', pb: '6px', fontSize: 15, color: PRIMARY, minHeight: 0 },
           }}
         >
@@ -374,20 +407,22 @@
     function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel }) {
       const [dayAnchor, setDayAnchor] = useState(null);
 
-      const cfg  = draft[squad];
-      const rows = cfg.byPosition[position] || [];
+      const cfg   = draft[squad];
+      const combo = cfg.byPosition[position] || emptyCombination();
+      const rows  = combo.metrics;
       const atMax = rows.length >= MAX_METRICS;
       const usedMetrics = rows.map((r) => r.metric);
       const unusedDays = GD_ALL.filter((d) => !cfg.days.includes(d));
 
       const mutate = (fn) => {
         const next = clone(draft);
+        if (!next[squad].byPosition[position]) next[squad].byPosition[position] = emptyCombination();
         fn(next);
         setDraft(next);
       };
 
       const setMetric = (index, metric) => mutate((next) => {
-        const list = next[squad].byPosition[position];
+        const list = next[squad].byPosition[position].metrics;
         if (index === list.length) {
           list.push({ metric, targets: {} });
         } else {
@@ -397,13 +432,13 @@
 
       const setTarget = (index, day, raw) => mutate((next) => {
         const value = raw.replace(/[^0-9.]/g, '');
-        const list = next[squad].byPosition[position];
+        const list = next[squad].byPosition[position].metrics;
         if (index === list.length) return;
         list[index].targets[day] = value;
       });
 
       const removeMetric = (index) => mutate((next) => {
-        next[squad].byPosition[position].splice(index, 1);
+        next[squad].byPosition[position].metrics.splice(index, 1);
       });
 
       const addDay = (day) => mutate((next) => {
@@ -415,16 +450,21 @@
       const removeDay = (day) => mutate((next) => {
         const cur = next[squad];
         cur.days = cur.days.filter((d) => d !== day);
-        Object.values(cur.byPosition).forEach((list) =>
-          list.forEach((row) => { delete row.targets[day]; })
+        Object.values(cur.byPosition).forEach((c) =>
+          c.metrics.forEach((row) => { delete row.targets[day]; })
         );
       });
 
-      const setImports = (value) => mutate((next) => { next[squad].imports = value; });
+      // Specific to this squad and position combination, not to the squad.
+      const setImports = (value) => mutate((next) => {
+        next[squad].byPosition[position].imports = value;
+      });
 
       const ensurePosition = (nextPosition) => {
         if (!draft[squad].byPosition[nextPosition]) {
-          mutate((next) => { next[squad].byPosition[nextPosition] = []; });
+          const next = clone(draft);
+          next[squad].byPosition[nextPosition] = emptyCombination();
+          setDraft(next);
         }
         setPosition(nextPosition);
       };
@@ -433,6 +473,7 @@
 
       // The trailing blank row is how a metric gets added, matching the design.
       const displayRows = atMax ? rows : [...rows, null];
+      const tableWidth = CONTENT_X + COL_METRIC + (cfg.days.length + 1) * COL_DAY;
 
       return (
         <Box sx={{ pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
@@ -446,20 +487,25 @@
             </Stack>
           </Stack>
 
+          {/* These two filter what the grid shows. */}
           <Stack direction="row" spacing={1.25} sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
-            <FilledSelect label="Squad"    value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
-            <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={250} />
-            <FilledSelect label="Imports used for averages" value={cfg.imports} options={IMPORT_WINDOWS} onChange={setImports} width={251} />
+            <FilledSelect label="Squad"       value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
+            <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={240} />
           </Stack>
 
           <Divider sx={{ mb: 0 }} />
 
+          {/* One scroll container so the header cells and the inputs below them
+              can never drift out of alignment at narrow widths. */}
+          <Box sx={{ overflowX: 'auto' }}>
+          <Box sx={{ minWidth: tableWidth }}>
+
           {/* Header row */}
           <Box sx={{ display: 'flex', alignItems: 'center', height: 56, borderBottom: `1px solid ${DIVIDER}` }}>
-            <Box sx={{ width: COL_METRIC, pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
+            <Box sx={{ width: COL_METRIC, flex: 'none', pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
             {cfg.days.map((day) => (
               <Box key={day} sx={{
-                width: COL_DAY, pl: '16px', ...head,
+                width: COL_DAY, flex: 'none', pl: '16px', ...head,
                 display: 'flex', alignItems: 'center', gap: 0.5,
                 '&:hover .day-remove': { opacity: 1 },
               }}>
@@ -475,7 +521,7 @@
                 </IconButton>
               </Box>
             ))}
-            <Box sx={{ width: COL_DAY, pl: '16px' }}>
+            <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
               <Button
                 onClick={(e) => setDayAnchor(e.currentTarget)}
                 disabled={unusedDays.length === 0}
@@ -501,7 +547,7 @@
                 '&:hover .row-remove': { opacity: row ? 1 : 0 },
               }}
             >
-              <Box sx={{ width: COL_METRIC, pl: '18px' }}>
+              <Box sx={{ width: COL_METRIC, flex: 'none', pl: '18px' }}>
                 <TextField
                   select
                   value={row ? row.metric : ''}
@@ -510,7 +556,7 @@
                   hiddenLabel
                   sx={{
                     width: IN_METRIC,
-                    '& .MuiFilledInput-root': { height: 52, borderRadius: `${RADIUS}px` },
+                    '& .MuiFilledInput-root': { height: 52 },
                     '& .MuiSelect-select': { py: 0, display: 'flex', alignItems: 'center', height: 52, fontSize: 15, color: PRIMARY },
                   }}
                 >
@@ -527,7 +573,7 @@
               </Box>
 
               {cfg.days.map((day) => (
-                <Box key={day} sx={{ width: COL_DAY, pl: '16px' }}>
+                <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
                   <TextField
                     value={row ? (row.targets[day] ?? '') : ''}
                     onChange={(e) => setTarget(index, day, e.target.value)}
@@ -537,14 +583,14 @@
                     inputProps={{ inputMode: 'numeric' }}
                     sx={{
                       width: IN_DAY,
-                      '& .MuiFilledInput-root': { height: 52, borderRadius: `${RADIUS}px` },
+                      '& .MuiFilledInput-root': { height: 52 },
                       '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
                     }}
                   />
                 </Box>
               ))}
 
-              <Box sx={{ width: COL_DAY, pl: '16px' }}>
+              <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
                 {row && (
                   <IconButton
                     className="row-remove"
@@ -558,6 +604,21 @@
               </Box>
             </Box>
           ))}
+
+          </Box>
+          </Box>
+
+          {/* Sits under the grid because it belongs to this squad and position
+              combination, unlike the two filters above. */}
+          <Box sx={{ pl: '18px', mt: 2.5 }}>
+            <FilledSelect
+              label="Imports used for averages"
+              value={combo.imports}
+              options={IMPORT_WINDOWS}
+              onChange={setImports}
+              width={499}
+            />
+          </Box>
 
           <Typography sx={{ fontSize: 13, color: atMax ? PRIMARY : GREY100, mt: 2, pl: `${CONTENT_X}px` }}>
             {rows.length} of {MAX_METRICS} metrics used for {squad} &middot; {position === 'All' ? 'all positions' : position.toLowerCase()}
@@ -581,8 +642,70 @@
       );
     }
 
-    /* ── App ─────────────────────────────────────────────────────────── */
-    function App() {
+    /* ── Prototype versions landing ──────────────────────────────────── */
+    const VERSIONS = [
+      {
+        hash: '#/v1',
+        title: 'Version 1 - Set targets in the system',
+        description: 'Org settings › Workload › Workload metrics and targets. A grid of metrics against gameday markers, edited a squad and position at a time.',
+      },
+    ];
+
+    const FIGMA_URL = 'https://www.figma.com/design/4PsNVzrjXX1NQNNRpq6xzM/Workload-management?node-id=7483-35751';
+
+    function VersionsLanding() {
+      return (
+        <Box sx={{
+          minHeight: '100%', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', px: 3, py: 8, bgcolor: '#fafafa',
+        }}>
+          <Box sx={{
+            width: 64, height: 64, mb: 3, borderRadius: '50%', bgcolor: '#0b1220',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Box component="img" src="kitman-logo.png" alt="Kitman Labs" sx={{ width: 44, height: 44, objectFit: 'contain' }} />
+          </Box>
+
+          <Typography sx={{ fontSize: 28, fontWeight: 600, mb: 1, textAlign: 'center' }}>
+            Workload targets prototype
+          </Typography>
+          <Typography sx={{ fontSize: 16, color: GREY100, mb: 4, textAlign: 'center', maxWidth: 520 }}>
+            Choose a version to preview.
+          </Typography>
+
+          <Stack spacing={2} sx={{ width: '100%', maxWidth: 560 }}>
+            {VERSIONS.map((version) => (
+              <ButtonBase
+                key={version.hash}
+                onClick={() => { window.location.hash = version.hash; }}
+                sx={{
+                  display: 'block', textAlign: 'left', p: 2.5, bgcolor: '#fff',
+                  border: `1px solid ${DIVIDER}`, borderRadius: 1.5,
+                  transition: 'border-color .15s, background-color .15s',
+                  '&:hover': { borderColor: PRIMARY, bgcolor: '#fafafa' },
+                }}
+              >
+                <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 0.5 }}>{version.title}</Typography>
+                <Typography sx={{ fontSize: 14, color: GREY100 }}>{version.description}</Typography>
+              </ButtonBase>
+            ))}
+          </Stack>
+
+          <Typography
+            component="a"
+            href={FIGMA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ fontSize: 14, color: PRIMARY, mt: 3, textDecoration: 'underline' }}
+          >
+            View the Figma design file
+          </Typography>
+        </Box>
+      );
+    }
+
+    /* ── Version 1 ───────────────────────────────────────────────────── */
+    function VersionOne({ onHome }) {
       const [tab, setTab]           = useState('Workload');
       const [section, setSection]   = useState('Participation and RPE');
       const [config, setConfig]     = useState(seedConfig);
@@ -600,7 +723,7 @@
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
-          <NavRail />
+          <NavRail onHome={onHome} />
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <TopBar contextLabel={contextLabel} />
@@ -646,6 +769,22 @@
           </Box>
         </Box>
       );
+    }
+
+    /* ── Hash router, so every version has a shareable link ──────────── */
+    function App() {
+      const [route, setRoute] = useState(() => window.location.hash || '#/');
+
+      React.useEffect(() => {
+        const onHashChange = () => setRoute(window.location.hash || '#/');
+        window.addEventListener('hashchange', onHashChange);
+        return () => window.removeEventListener('hashchange', onHashChange);
+      }, []);
+
+      const goHome = () => { window.location.hash = '#/'; };
+
+      if (route === '#/v1') return <VersionOne onHome={goHome} />;
+      return <VersionsLanding />;
     }
 
     createRoot(document.getElementById('root')).render(
