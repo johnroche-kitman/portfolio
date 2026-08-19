@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Org settings — Workload metrics and targets</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <style>
+    html, body, #root { height: 100%; margin: 0; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: #fff;
+      color: #3b4960;
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+
+    /* Force the filled-variant InputLabel to sit inside the grey box, as per the Playbook toolkit.
+       Same workaround as performance-settings/index.html — the variant class does not always
+       reach InputLabel through TextField, so pin it from CSS instead. */
+    .MuiFormControl-root:has(.MuiFilledInput-root) { position: relative !important; }
+    .MuiFormControl-root:has(.MuiFilledInput-root) .MuiInputLabel-root {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: 2 !important;
+      max-width: none !important;
+      pointer-events: none !important;
+      font-size: 12px !important;
+      line-height: 1 !important;
+      letter-spacing: 0.15px !important;
+      color: #5F7089 !important;
+      transform: translate(12px, 9px) !important;
+      transform-origin: left top !important;
+      transition: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.3.1",
+      "react/": "https://esm.sh/react@18.3.1/",
+      "react-dom": "https://esm.sh/react-dom@18.3.1",
+      "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+      "@mui/material": "https://esm.sh/@mui/material@5.16.7?external=react,react-dom,@emotion/react,@emotion/styled",
+      "@emotion/react": "https://esm.sh/@emotion/react@11.13.3?external=react",
+      "@emotion/styled": "https://esm.sh/@emotion/styled@11.13.0?external=react,@emotion/react"
+    }
+  }
+  </script>
+
+  <script type="text/babel" data-type="module" data-presets="react">
+    import React, { useState, useMemo } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import {
+      createTheme, ThemeProvider, CssBaseline,
+      Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
+      Tabs, Tab, List, ListItemButton, ListItemText,
+      TextField, MenuItem, Menu, Avatar,
+    } from '@mui/material';
+
+    /* ── Design tokens (Figma variables, Playbook toolkit) ───────────── */
+    const PRIMARY     = '#3b4960';   // primary/main, text/primary
+    const GREY100     = '#5F7089';   // Grey/100
+    const DISABLED    = '#AFB7C4';   // Grey/100 50%
+    const NEUTRAL_200 = '#F1F2F3';   // Neutral/200, secondary/main
+    const DIVIDER     = '#3b49601f';
+    const PRIMARY_SEL = '#3b496014'; // primary/selected
+    const ACTIVE_NAV  = '#0F28FF';
+    const RADIUS      = 4;
+
+    /* ── Material icon helper (Outlined only) ────────────────────────── */
+    const MI = ({ name, size = 20, color, style }) => (
+      <span className="material-icons-outlined" style={{ fontSize: size, lineHeight: 1, color, ...style }}>{name}</span>
+    );
+
+    /* ── Theme ───────────────────────────────────────────────────────── */
+    const theme = createTheme({
+      palette: {
+        primary:   { main: PRIMARY, contrastText: '#ffffff' },
+        secondary: { main: NEUTRAL_200, contrastText: PRIMARY },
+        text:      { primary: PRIMARY, secondary: GREY100 },
+        divider:   DIVIDER,
+      },
+      shape: { borderRadius: RADIUS },
+      typography: {
+        fontFamily: "'Open Sans', sans-serif",
+        body1: { fontSize: 16, lineHeight: 1.5, letterSpacing: 0.15 },
+        body2: { fontSize: 14, lineHeight: 1.43, letterSpacing: 0.17 },
+      },
+      components: {
+        MuiButton: { styleOverrides: { root: {
+          textTransform: 'none', fontFamily: "'Open Sans', sans-serif",
+          fontWeight: 600, fontSize: 14, lineHeight: '24px', letterSpacing: 0.4, boxShadow: 'none',
+          '&:hover': { boxShadow: 'none' },
+        }}},
+        MuiTab: { styleOverrides: { root: {
+          textTransform: 'none', fontFamily: "'Open Sans', sans-serif",
+          fontWeight: 600, fontSize: 14, minHeight: 46, color: GREY100,
+          '&.Mui-selected': { color: PRIMARY },
+        }}},
+        MuiInputBase:  { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+        MuiTypography: { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
+        MuiListItemText: { styleOverrides: { primary: { fontFamily: "'Open Sans', sans-serif", fontSize: 15 } } },
+        MuiFilledInput: { styleOverrides: { root: {
+          backgroundColor: NEUTRAL_200,
+          borderRadius: RADIUS,
+          '&:hover':        { backgroundColor: '#e8e9eb' },
+          '&.Mui-focused':  { backgroundColor: NEUTRAL_200 },
+          '&:before, &:after': { display: 'none' },
+        }}},
+        MuiInputLabel: { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif" } } },
+        MuiFormControl: { styleOverrides: { root: { position: 'relative' } } },
+        MuiMenuItem: { styleOverrides: { root: { fontFamily: "'Open Sans', sans-serif", fontSize: 14 } } },
+      },
+    });
+
+    /* ── Reference data ──────────────────────────────────────────────── */
+    const NAV_ITEMS = [
+      { icon: 'bar_chart',           label: 'Analysis' },
+      { icon: 'science',             label: 'My iP' },
+      { icon: 'groups',              label: 'Athletes' },
+      { icon: 'medical_services',    label: 'Medical' },
+      { icon: 'monitor_weight',      label: 'Performance' },
+      { icon: 'assignment',          label: 'Forms' },
+      { icon: 'calendar_today',      label: 'Calendar' },
+      { icon: 'file_copy',           label: 'Documents' },
+      { icon: 'chat_bubble_outline', label: 'Messaging' },
+      { icon: 'smart_display',       label: 'Media' },
+      { icon: 'assignment_ind',      label: 'Recruitment' },
+      { icon: 'settings',            label: 'Org settings', active: true },
+    ];
+
+    const ORG_TABS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'My iP', 'Calendar', 'Locations', 'Notifications'];
+    const SUB_SECTIONS = ['Participation and RPE', 'Workload metrics and targets'];
+
+    const SQUADS    = ['1st team', 'U21', 'U18'];
+    const POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+
+    const METRIC_LIBRARY = [
+      'Total distance', 'High speed running', 'Sprint distance',
+      'Accelerations (count)', 'Decelerations (count)', 'Player load',
+      'Max speed', 'Distance per minute', 'Dynamic stress load',
+    ];
+
+    const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
+
+    // Gameday markers, in training-week order. The minus sign matches the design (U+2212).
+    const GD_ALL = ['GD−5', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD', 'GD+1', 'GD+2', 'GD+3'];
+    const GD_DEFAULT = ['GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
+
+    const MAX_METRICS = 6;
+
+    const seedMetrics = () =>
+      ['Total distance', 'High speed running', 'Sprint distance', 'Accelerations (count)', 'Decelerations (count)']
+        .map((metric) => ({
+          metric,
+          targets: GD_DEFAULT.reduce((acc, day) => ({ ...acc, [day]: '4000' }), {}),
+        }));
+
+    const seedConfig = () => {
+      const cfg = {};
+      SQUADS.forEach((squad) => {
+        cfg[squad] = {
+          imports: 'Last 5 imports',
+          days: [...GD_DEFAULT],
+          // One independent metric set per squad + position combination.
+          byPosition: { All: seedMetrics() },
+        };
+      });
+      return cfg;
+    };
+
+    const clone = (o) => JSON.parse(JSON.stringify(o));
+
+    /* ── Layout constants (from the Figma frame) ─────────────────────── */
+    const RAIL_W    = 60;
+    const DRAWER_W  = 280;
+    const CONTENT_X = 26;   // content inset inside the pane
+    const COL_METRIC = 219;
+    const COL_DAY    = 145;
+    const IN_METRIC  = 193;
+    const IN_DAY     = 129;
+    const ROW_H      = 77;
+
+    /* ── Chrome ──────────────────────────────────────────────────────── */
+    function NavRail() {
+      return (
+        <Box sx={{
+          width: RAIL_W, flex: 'none', color: '#fff',
+          background: 'linear-gradient(160deg, #0c0d13 0%, #0c0d13 58%, #1c2130 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1.5,
+        }}>
+          <Box sx={{
+            width: 36, height: 36, borderRadius: '50%', bgcolor: ACTIVE_NAV,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.25, flex: 'none',
+          }}>
+            <Typography sx={{ fontSize: 19, fontWeight: 700, color: '#fff', lineHeight: 1 }}>K</Typography>
+          </Box>
+
+          {NAV_ITEMS.map((item) => (
+            <Tooltip key={item.label} title={item.label} placement="right">
+              <Box sx={{
+                width: RAIL_W, height: 40, flex: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: item.active ? ACTIVE_NAV : 'transparent',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: item.active ? ACTIVE_NAV : 'rgba(255,255,255,0.08)' },
+              }}>
+                <MI name={item.icon} size={22} color="#fff" />
+              </Box>
+            </Tooltip>
+          ))}
+
+          <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1.5, pb: 1 }}>
+            <Box sx={{ width: RAIL_W, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MI name="help_outline" size={22} color="#fff" />
+            </Box>
+            <Box sx={{ width: RAIL_W, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MI name="keyboard_double_arrow_left" size={22} color="#fff" />
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    function TopBar({ contextLabel }) {
+      return (
+        <Box sx={{
+          height: 50, flex: 'none', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', px: 3, borderBottom: `1px solid ${DIVIDER}`,
+        }}>
+          <Typography sx={{ fontSize: 14, color: GREY100 }}>Org settings</Typography>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }}>
+              <Typography sx={{ fontSize: 14, color: PRIMARY }}>{contextLabel}</Typography>
+              <MI name="expand_more" size={20} color={PRIMARY} />
+            </Stack>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: '#c9cfd9', fontSize: 13, color: PRIMARY }}>RP</Avatar>
+          </Stack>
+        </Box>
+      );
+    }
+
+    function SubNav({ value, onChange }) {
+      return (
+        <Box sx={{ width: DRAWER_W, flex: 'none', borderRight: `1px solid ${DIVIDER}`, bgcolor: '#fff' }}>
+          <List disablePadding sx={{ pt: 1 }}>
+            {SUB_SECTIONS.map((section) => (
+              <ListItemButton
+                key={section}
+                selected={value === section}
+                onClick={() => onChange(section)}
+                sx={{
+                  height: 48, px: 3,
+                  '&.Mui-selected':        { bgcolor: NEUTRAL_200 },
+                  '&.Mui-selected:hover':  { bgcolor: NEUTRAL_200 },
+                }}
+              >
+                <ListItemText primary={section} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      );
+    }
+
+    /* ── Read-only view ──────────────────────────────────────────────── */
+    function SquadTargetTable({ squad, cfg }) {
+      const rows = [];
+      POSITIONS.forEach((position) => {
+        (cfg.byPosition[position] || []).forEach((row) => rows.push({ position, ...row }));
+      });
+
+      const cell = { fontSize: 14, letterSpacing: 0.17, color: PRIMARY };
+      const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
+
+      return (
+        <Box sx={{ mb: 5 }}>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}>
+            {squad} targets by GD
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', height: 44, borderBottom: `1px solid ${DIVIDER}` }}>
+            <Box sx={{ width: 220, ...head }}>Metric</Box>
+            <Box sx={{ width: 165, ...head }}>Position</Box>
+            {cfg.days.map((day) => (
+              <Box key={day} sx={{ width: 150, ...head }}>{day}</Box>
+            ))}
+          </Box>
+
+          {rows.length === 0 && (
+            <Box sx={{ py: 3 }}>
+              <Typography sx={{ fontSize: 14, color: GREY100 }}>
+                No metrics set for this squad yet.
+              </Typography>
+            </Box>
+          )}
+
+          {rows.map((row, i) => (
+            <Box
+              key={`${row.position}-${row.metric}-${i}`}
+              sx={{ display: 'flex', alignItems: 'center', height: 50, borderBottom: `1px solid ${DIVIDER}` }}
+            >
+              <Box sx={{ width: 220, ...cell }}>{row.metric}</Box>
+              <Box sx={{ width: 165, ...cell }}>{row.position}</Box>
+              {cfg.days.map((day) => (
+                <Box key={day} sx={{ width: 150, ...cell }}>
+                  {row.targets[day] || <span style={{ color: DISABLED }}>&mdash;</span>}
+                </Box>
+              ))}
+            </Box>
+          ))}
+
+          <Typography sx={{ fontSize: 14, fontWeight: 600, mt: 2 }}>
+            Averages based on {cfg.imports.toLowerCase()}
+          </Typography>
+        </Box>
+      );
+    }
+
+    function ReadOnlyView({ config, onEdit }) {
+      return (
+        <Box sx={{ pl: `${CONTENT_X}px`, pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 3.5, pr: `${CONTENT_X}px` }}>
+            <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>
+              Workload metrics and targets
+            </Typography>
+            <Button variant="contained" color="primary" onClick={onEdit} sx={{ px: 2.5 }}>
+              Edit
+            </Button>
+          </Stack>
+
+          {SQUADS.map((squad) => (
+            <SquadTargetTable key={squad} squad={squad} cfg={config[squad]} />
+          ))}
+        </Box>
+      );
+    }
+
+    /* ── Edit view ───────────────────────────────────────────────────── */
+    function FilledSelect({ label, value, options, onChange, width, disabledOptions = [] }) {
+      return (
+        <TextField
+          select
+          label={label}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          variant="filled"
+          sx={{
+            width,
+            '& .MuiFilledInput-root': { height: 50, borderRadius: `${RADIUS}px` },
+            '& .MuiSelect-select':    { pt: '24px', pb: '6px', fontSize: 15, color: PRIMARY, minHeight: 0 },
+          }}
+        >
+          {options.map((option) => (
+            <MenuItem key={option} value={option} disabled={disabledOptions.includes(option)}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      );
+    }
+
+    function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel }) {
+      const [dayAnchor, setDayAnchor] = useState(null);
+
+      const cfg  = draft[squad];
+      const rows = cfg.byPosition[position] || [];
+      const atMax = rows.length >= MAX_METRICS;
+      const usedMetrics = rows.map((r) => r.metric);
+      const unusedDays = GD_ALL.filter((d) => !cfg.days.includes(d));
+
+      const mutate = (fn) => {
+        const next = clone(draft);
+        fn(next);
+        setDraft(next);
+      };
+
+      const setMetric = (index, metric) => mutate((next) => {
+        const list = next[squad].byPosition[position];
+        if (index === list.length) {
+          list.push({ metric, targets: {} });
+        } else {
+          list[index].metric = metric;
+        }
+      });
+
+      const setTarget = (index, day, raw) => mutate((next) => {
+        const value = raw.replace(/[^0-9.]/g, '');
+        const list = next[squad].byPosition[position];
+        if (index === list.length) return;
+        list[index].targets[day] = value;
+      });
+
+      const removeMetric = (index) => mutate((next) => {
+        next[squad].byPosition[position].splice(index, 1);
+      });
+
+      const addDay = (day) => mutate((next) => {
+        const days = next[squad].days;
+        days.push(day);
+        days.sort((a, b) => GD_ALL.indexOf(a) - GD_ALL.indexOf(b));
+      });
+
+      const removeDay = (day) => mutate((next) => {
+        const cur = next[squad];
+        cur.days = cur.days.filter((d) => d !== day);
+        Object.values(cur.byPosition).forEach((list) =>
+          list.forEach((row) => { delete row.targets[day]; })
+        );
+      });
+
+      const setImports = (value) => mutate((next) => { next[squad].imports = value; });
+
+      const ensurePosition = (nextPosition) => {
+        if (!draft[squad].byPosition[nextPosition]) {
+          mutate((next) => { next[squad].byPosition[nextPosition] = []; });
+        }
+        setPosition(nextPosition);
+      };
+
+      const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
+
+      // The trailing blank row is how a metric gets added, matching the design.
+      const displayRows = atMax ? rows : [...rows, null];
+
+      return (
+        <Box sx={{ pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 3, px: `${CONTENT_X}px` }}>
+            <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>
+              Workload metrics and targets
+            </Typography>
+            <Stack direction="row" spacing={1}>
+              <Button variant="contained" color="primary" onClick={onSave} sx={{ px: 3 }}>Save</Button>
+              <Button variant="contained" color="secondary" onClick={onCancel} sx={{ px: 3 }}>Cancel</Button>
+            </Stack>
+          </Stack>
+
+          <Stack direction="row" spacing={1.25} sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
+            <FilledSelect label="Squad"    value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
+            <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={250} />
+            <FilledSelect label="Imports used for averages" value={cfg.imports} options={IMPORT_WINDOWS} onChange={setImports} width={251} />
+          </Stack>
+
+          <Divider sx={{ mb: 0 }} />
+
+          {/* Header row */}
+          <Box sx={{ display: 'flex', alignItems: 'center', height: 56, borderBottom: `1px solid ${DIVIDER}` }}>
+            <Box sx={{ width: COL_METRIC, pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
+            {cfg.days.map((day) => (
+              <Box key={day} sx={{
+                width: COL_DAY, pl: '16px', ...head,
+                display: 'flex', alignItems: 'center', gap: 0.5,
+                '&:hover .day-remove': { opacity: 1 },
+              }}>
+                {day}
+                <IconButton
+                  className="day-remove"
+                  size="small"
+                  onClick={() => removeDay(day)}
+                  sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25 }}
+                  aria-label={`Remove ${day}`}
+                >
+                  <MI name="close" size={14} color={GREY100} />
+                </IconButton>
+              </Box>
+            ))}
+            <Box sx={{ width: COL_DAY, pl: '16px' }}>
+              <Button
+                onClick={(e) => setDayAnchor(e.currentTarget)}
+                disabled={unusedDays.length === 0}
+                sx={{ ...head, minWidth: 0, p: 0, '&:hover': { bgcolor: 'transparent', opacity: 0.7 } }}
+              >
+                + day
+              </Button>
+              <Menu anchorEl={dayAnchor} open={Boolean(dayAnchor)} onClose={() => setDayAnchor(null)}>
+                {unusedDays.map((day) => (
+                  <MenuItem key={day} onClick={() => { addDay(day); setDayAnchor(null); }}>{day}</MenuItem>
+                ))}
+              </Menu>
+            </Box>
+          </Box>
+
+          {/* Metric rows */}
+          {displayRows.map((row, index) => (
+            <Box
+              key={row ? `${row.metric}-${index}` : 'new-row'}
+              sx={{
+                display: 'flex', alignItems: 'center', height: ROW_H,
+                borderBottom: `1px solid ${DIVIDER}`,
+                '&:hover .row-remove': { opacity: row ? 1 : 0 },
+              }}
+            >
+              <Box sx={{ width: COL_METRIC, pl: '18px' }}>
+                <TextField
+                  select
+                  value={row ? row.metric : ''}
+                  onChange={(e) => setMetric(index, e.target.value)}
+                  variant="filled"
+                  hiddenLabel
+                  sx={{
+                    width: IN_METRIC,
+                    '& .MuiFilledInput-root': { height: 52, borderRadius: `${RADIUS}px` },
+                    '& .MuiSelect-select': { py: 0, display: 'flex', alignItems: 'center', height: 52, fontSize: 15, color: PRIMARY },
+                  }}
+                >
+                  {METRIC_LIBRARY.map((metric) => (
+                    <MenuItem
+                      key={metric}
+                      value={metric}
+                      disabled={usedMetrics.includes(metric) && (!row || row.metric !== metric)}
+                    >
+                      {metric}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+
+              {cfg.days.map((day) => (
+                <Box key={day} sx={{ width: COL_DAY, pl: '16px' }}>
+                  <TextField
+                    value={row ? (row.targets[day] ?? '') : ''}
+                    onChange={(e) => setTarget(index, day, e.target.value)}
+                    disabled={!row}
+                    variant="filled"
+                    hiddenLabel
+                    inputProps={{ inputMode: 'numeric' }}
+                    sx={{
+                      width: IN_DAY,
+                      '& .MuiFilledInput-root': { height: 52, borderRadius: `${RADIUS}px` },
+                      '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
+                    }}
+                  />
+                </Box>
+              ))}
+
+              <Box sx={{ width: COL_DAY, pl: '16px' }}>
+                {row && (
+                  <IconButton
+                    className="row-remove"
+                    onClick={() => removeMetric(index)}
+                    sx={{ opacity: 0, transition: 'opacity .12s' }}
+                    aria-label={`Remove ${row.metric}`}
+                  >
+                    <MI name="delete_outline" size={20} color={GREY100} />
+                  </IconButton>
+                )}
+              </Box>
+            </Box>
+          ))}
+
+          <Typography sx={{ fontSize: 13, color: atMax ? PRIMARY : GREY100, mt: 2, pl: `${CONTENT_X}px` }}>
+            {rows.length} of {MAX_METRICS} metrics used for {squad} &middot; {position === 'All' ? 'all positions' : position.toLowerCase()}
+            {atMax && '. Remove one to add a different metric.'}
+          </Typography>
+        </Box>
+      );
+    }
+
+    /* ── Participation and RPE (static placeholder) ──────────────────── */
+    function ParticipationView() {
+      return (
+        <Box sx={{ px: `${CONTENT_X}px`, py: 4, overflowY: 'auto', flex: 1, bgcolor: '#fafafa' }}>
+          <Box
+            component="img"
+            src="old-interface.png"
+            alt="Participation and RPE settings, existing interface"
+            sx={{ display: 'block', width: '100%', maxWidth: 900, border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px` }}
+          />
+        </Box>
+      );
+    }
+
+    /* ── App ─────────────────────────────────────────────────────────── */
+    function App() {
+      const [tab, setTab]           = useState('Workload');
+      const [section, setSection]   = useState('Participation and RPE');
+      const [config, setConfig]     = useState(seedConfig);
+      const [draft, setDraft]       = useState(null);
+      const [squad, setSquad]       = useState(SQUADS[0]);
+      const [position, setPosition] = useState('All');
+
+      const editing = draft !== null;
+
+      const startEdit = () => { setDraft(clone(config)); setSquad(SQUADS[0]); setPosition('All'); };
+      const save      = () => { setConfig(draft); setDraft(null); };
+      const cancel    = () => setDraft(null);
+
+      const contextLabel = section === SUB_SECTIONS[1] ? squad : 'Kitman Labs';
+
+      return (
+        <Box sx={{ height: '100%', display: 'flex' }}>
+          <NavRail />
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <TopBar contextLabel={contextLabel} />
+
+            <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
+              <Tabs
+                value={tab}
+                onChange={(_, v) => setTab(v)}
+                sx={{ minHeight: 46, px: 1, '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 } }}
+              >
+                {ORG_TABS.map((label) => <Tab key={label} label={label} value={label} />)}
+              </Tabs>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              <SubNav value={section} onChange={setSection} />
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {tab !== 'Workload' ? (
+                  <Box sx={{ p: 6 }}>
+                    <Typography sx={{ fontSize: 14, color: GREY100 }}>
+                      {tab} is outside the scope of this prototype. Select Workload to continue.
+                    </Typography>
+                  </Box>
+                ) : section === SUB_SECTIONS[0] ? (
+                  <ParticipationView />
+                ) : editing ? (
+                  <EditView
+                    draft={draft}
+                    setDraft={setDraft}
+                    squad={squad}
+                    setSquad={setSquad}
+                    position={position}
+                    setPosition={setPosition}
+                    onSave={save}
+                    onCancel={cancel}
+                  />
+                ) : (
+                  <ReadOnlyView config={config} onEdit={startEdit} />
+                )}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    createRoot(document.getElementById('root')).render(
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    );
+  </script>
+</body>
+</html>

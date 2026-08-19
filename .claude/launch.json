@@ -42,6 +42,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "my-ip-ai-chat"],
       "port": 5191
+    },
+    {
+      "name": "workload-targets",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "serve", "-l", "5183", "workload-targets"],
+      "port": 5183
     }
   ]
 }
