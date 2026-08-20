@@ -1782,6 +1782,14 @@
         pointerEvents: showWorkload ? 'auto' : 'none',
         transition: 'opacity .22s ease',
       };
+      // Fades and gives its height back, so the targets bar shrinks to the
+      // duration line and the column headings leave no gap behind.
+      const collapseSx = {
+        ...fadeSx,
+        maxHeight: showWorkload ? 120 : 0,
+        overflow: 'hidden',
+        transition: 'opacity .22s ease, max-height .3s cubic-bezier(.4,0,.2,1)',
+      };
 
       // Flex owns this rather than a measured width: the panel grows into
       // whatever the divider leaves it, stops at a floor that keeps six columns
@@ -1866,7 +1874,7 @@
 
                 <Box ref={areaRef} sx={{ px: 3, pt: 2, pb: 4 }}>
 
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{ display: 'flex', mb: 1, ...collapseSx }}>
                     <Box sx={{ width: cardWidth, flex: 'none', ...growSx }} />
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
                     <Box sx={{ ...valuesSx, display: 'flex', ...fadeSx }}>
@@ -2062,16 +2070,16 @@
                     Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
                   </Typography>
 
-                  <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...fadeSx }}>
+                  <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...collapseSx }}>
                     <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
-                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Session target:</Typography>
-                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Remaining:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Remaining:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
                   </Box>
                 </Box>
 
                 <React.Fragment>
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                    <Box sx={{ ...valuesSx, ...fadeSx }}>
+                    <Box sx={{ ...valuesSx, ...collapseSx }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
@@ -2093,7 +2101,40 @@
                           );
                         })}
                       </Box>
+                      {/* What is still available to spend on this session */}
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        {metrics.map((m) => {
+                          const target = targetFor(m);
+                          const total = totals[m.key];
+                          const left = target == null || total == null ? null : target - total;
+                          const over = left != null && left < 0;
+                          return (
+                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              <Tooltip
+                                title={left == null
+                                  ? `${m.name} — no target to measure against`
+                                  : over
+                                    ? `${m.name} — ${Math.abs(left)}${m.unit ? ' ' + m.unit : ''} over target`
+                                    : `${m.name} — ${left}${m.unit ? ' ' + m.unit : ''} still available`}
+                                placement="top"
+                              >
+                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+                                  <Box component="span" sx={{
+                                    fontSize: 14,
+                                    color: left == null ? DISABLED : over ? ERROR : PRIMARY,
+                                    fontWeight: over ? 700 : 400,
+                                  }}>
+                                    {left == null ? '—' : over ? `\u2212${Math.abs(left)}` : left}
+                                  </Box>
+                                  {over && <MI name="error" size={15} color={ERROR} />}
+                                </Stack>
+                              </Tooltip>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
@@ -2149,39 +2190,6 @@
                                   <MI name="edit" size={13} color={GREY100} />
                                 </Box>
                               </ButtonBase>
-                            </Box>
-                          );
-                        })}
-                      </Box>
-
-                      {/* What is still available to spend on this session */}
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {metrics.map((m) => {
-                          const target = targetFor(m);
-                          const total = totals[m.key];
-                          const left = target == null || total == null ? null : target - total;
-                          const over = left != null && left < 0;
-                          return (
-                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                              <Tooltip
-                                title={left == null
-                                  ? `${m.name} — no target to measure against`
-                                  : over
-                                    ? `${m.name} — ${Math.abs(left)}${m.unit ? ' ' + m.unit : ''} over target`
-                                    : `${m.name} — ${left}${m.unit ? ' ' + m.unit : ''} still available`}
-                                placement="top"
-                              >
-                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
-                                  <Box component="span" sx={{
-                                    fontSize: 14,
-                                    color: left == null ? DISABLED : over ? ERROR : PRIMARY,
-                                    fontWeight: over ? 700 : 400,
-                                  }}>
-                                    {left == null ? '—' : over ? `\u2212${Math.abs(left)}` : left}
-                                  </Box>
-                                  {over && <MI name="error" size={15} color={ERROR} />}
-                                </Stack>
-                              </Tooltip>
                             </Box>
                           );
                         })}
