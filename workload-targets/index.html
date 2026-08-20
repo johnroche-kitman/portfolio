@@ -291,7 +291,6 @@
     const DRAWER_W  = 280;
     const CONTENT_X = 26;   // content inset inside the pane
     const COL_METRIC = 219;
-    const COL_GDMAX  = 110;  // reference column, only shown in % of GD max mode
     const COL_DAY    = 145;
     const IN_METRIC  = 193;
     const IN_DAY     = 129;
@@ -416,7 +415,7 @@
       return (
         <Box sx={{ mb: 5 }}>
           <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}>
-            {squad} targets by GD
+            {squad} targets by GD +/&#8722;
           </Typography>
 
           <Box sx={{ overflowX: 'auto' }}>
@@ -627,7 +626,7 @@
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
 
       // Always six rows. An empty one is how a metric gets added.
-      const tableWidth = CONTENT_X + COL_METRIC + (percentMode ? COL_GDMAX : 0) + (cfg.days.length + 1) * COL_DAY;
+      const tableWidth = CONTENT_X + COL_METRIC + (cfg.days.length + 1) * COL_DAY;
 
       return (
         <Box sx={{ pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
@@ -660,6 +659,10 @@
                     borderColor: DIVIDER,
                     '&.Mui-selected': { bgcolor: '#E9EAEC', color: PRIMARY, '&:hover': { bgcolor: '#E9EAEC' } },
                   },
+                  // The group does not style its children in this build, so the two
+                  // halves are squared off and their borders merged by hand.
+                  '& .MuiToggleButton-root:first-of-type': { borderRadius: `${RADIUS}px 0 0 ${RADIUS}px` },
+                  '& .MuiToggleButton-root:last-of-type':  { borderRadius: `0 ${RADIUS}px ${RADIUS}px 0`, ml: '-1px' },
                 }}
               >
                 <ToggleButton
@@ -690,7 +693,6 @@
           {/* Header row */}
           <Box sx={{ display: 'flex', alignItems: 'center', height: 56, borderBottom: `1px solid ${DIVIDER}` }}>
             <Box sx={{ width: COL_METRIC, flex: 'none', pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
-            {percentMode && <Box sx={{ width: COL_GDMAX, flex: 'none', ...head }}>GD max</Box>}
             {cfg.days.map((day) => (
               <Box key={day} sx={{
                 width: COL_DAY, flex: 'none', pl: '16px', ...head,
@@ -735,7 +737,6 @@
                 <Typography sx={{ fontSize: 14, fontWeight: 700 }}>% of GD max</Typography>
                 <Typography sx={{ fontSize: 11, color: GREY100, mt: '2px' }}>Applies to every metric</Typography>
               </Box>
-              <Box sx={{ width: COL_GDMAX, flex: 'none' }} />
               {cfg.days.map((day) => (
                 <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
                   <TextField
@@ -793,12 +794,6 @@
                     ))}
                   </TextField>
                 </Box>
-
-                {percentMode && (
-                  <Box sx={{ width: COL_GDMAX, flex: 'none', fontSize: 15, color: GREY100 }}>
-                    {filledRow ? (gdMaxFor(squad, slot.metric) ?? '—') : ''}
-                  </Box>
-                )}
 
                 {cfg.days.map((day) => (
                   <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
