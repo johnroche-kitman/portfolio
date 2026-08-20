@@ -2321,8 +2321,82 @@
       );
     }
 
+    /* ── Gate ────────────────────────────────────────────────────────
+       Worth being clear about what this is: the page is a static file on
+       GitHub Pages, so there is no server to check anything. This keeps the
+       prototype away from anyone who wanders onto the URL, and nothing more.
+       Anyone who opens dev tools can walk straight past it, so do not put
+       anything genuinely sensitive in here. Only the hash is stored, so the
+       password itself is not sitting in the source. */
+    const GATE_HASH = '59fd8c84fb1a3564f0b2ec8ea4f56fb34e16a0a59b9b1fb26ab08687a057c11f';
+
+    const sha256Hex = async (text) => {
+      const bytes = new TextEncoder().encode(text);
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    function PasswordGate({ onUnlock }) {
+      const [value, setValue] = useState('');
+      const [error, setError] = useState(false);
+      const [checking, setChecking] = useState(false);
+
+      const submit = async (e) => {
+        e.preventDefault();
+        if (!value || checking) return;
+        setChecking(true);
+        const ok = (await sha256Hex(value.trim())) === GATE_HASH;
+        setChecking(false);
+        if (ok) {
+          try { sessionStorage.setItem('wt-unlocked', '1'); } catch (err) { /* private mode */ }
+          onUnlock();
+        } else {
+          setError(true);
+          setValue('');
+        }
+      };
+
+      return (
+        <Box sx={{
+          minHeight: '100%', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', px: 3, bgcolor: '#fafafa',
+        }}>
+          <Box sx={{
+            width: 64, height: 64, mb: 3, borderRadius: '50%', bgcolor: '#0b1220',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Box component="img" src="kitman-logo.png" alt="Kitman Labs" sx={{ width: 44, height: 44, objectFit: 'contain' }} />
+          </Box>
+
+          <Typography sx={{ fontSize: 22, fontWeight: 600, mb: 0.5 }}>Workload targets prototype</Typography>
+          <Typography sx={{ fontSize: 14, color: GREY100, mb: 3 }}>Enter the password to continue.</Typography>
+
+          <Box component="form" onSubmit={submit} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, width: '100%', maxWidth: 320 }}>
+            <TextField
+              type="password"
+              value={value}
+              autoFocus
+              onChange={(e) => { setValue(e.target.value); setError(false); }}
+              error={error}
+              helperText={error ? 'That password is not right.' : ' '}
+              variant="filled"
+              hiddenLabel
+              placeholder="Password"
+              sx={{ '& .MuiFilledInput-root': { height: 50, bgcolor: '#fff' } }}
+            />
+            <Button type="submit" variant="contained" color="primary" disabled={!value || checking} sx={{ height: 44 }}>
+              Continue
+            </Button>
+          </Box>
+        </Box>
+      );
+    }
+
     /* ── Hash router, so every version has a shareable link ──────────── */
     function App() {
+      const [unlocked, setUnlocked] = useState(() => {
+        try { return sessionStorage.getItem('wt-unlocked') === '1'; } catch (e) { return false; }
+      });
       const [route, setRoute] = useState(() => window.location.hash || '#/');
 
       React.useEffect(() => {
@@ -2332,6 +2406,8 @@
       }, []);
 
       const goHome = () => { window.location.hash = '#/'; };
+
+      if (!unlocked) return <PasswordGate onUnlock={() => setUnlocked(true)} />;
 
       if (route === '#/v1') return <VersionOne onHome={goHome} />;
       if (route === '#/v2') return <VersionTwo onHome={goHome} />;
