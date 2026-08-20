@@ -920,13 +920,8 @@
           },
           {
             hash: '#/planning-v3',
-            title: 'Version 3 - Stacked bar at the foot',
-            description: 'No bars on the rows, just clean numbers. One segmented bar per metric in the targets bar instead, each segment a drill, with a tick marking the target.',
-          },
-          {
-            hash: '#/planning-v4',
-            title: 'Version 4 - Drills against each other',
-            description: 'Bars scaled to the biggest drill rather than the target, so the rows compare with each other. Progress against target is left to the targets bar.',
+            title: 'Version 3 - Cumulative rows and a total bar',
+            description: 'Version 2 plus one plain bar per metric in the targets bar, the session total against its target. The rows carry the drill by drill detail, so the total bar stays undivided.',
           },
         ],
       },
@@ -1683,20 +1678,10 @@
     const metricTitle = (metric, over) =>
       `${metric.name}${metric.unit ? ` (${metric.unit})` : ''}${over ? ' — over target' : ''}`;
 
-    function MetricBar({ metric, mode, value, target, before, scaleMax }) {
+    function MetricBar({ metric, mode, value, target, before }) {
       const track = { height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' };
 
       if (mode === 'none') return <Box sx={{ height: 5 }} />;
-
-      // Each drill against the biggest drill, so the rows compare with each other
-      if (mode === 'share') {
-        if (!scaleMax || value == null) return <Box sx={{ height: 5 }} />;
-        return (
-          <Box sx={track}>
-            <Box sx={{ width: `${Math.min(100, (value / scaleMax) * 100)}%`, bgcolor: metric.color }} />
-          </Box>
-        );
-      }
 
       // The running total through this drill: the budget filling up as you read down
       if (mode === 'cumulative' && metric.agg === 'sum' && target && value != null) {
@@ -1720,7 +1705,7 @@
       );
     }
 
-    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, scaleMax = null }) {
+    function MetricCell({ metric, value, target, width, mode = 'target', before = 0 }) {
       const over = target != null && value != null && value > target;
       return (
         <Box sx={{ width, flex: 'none', pr: 2 }}>
@@ -1733,44 +1718,27 @@
               {over && <MI name="error" size={15} color={ERROR} />}
             </Stack>
           </Tooltip>
-          <MetricBar metric={metric} mode={mode} value={value} target={target} before={before} scaleMax={scaleMax} />
+          <MetricBar metric={metric} mode={mode} value={value} target={target} before={before} />
         </Box>
       );
     }
 
-    // One bar per metric, segmented by drill, against a tick marking the target.
-    function StackedFooterBar({ metric, drills, target, width }) {
-      const values = drills.map((d) => drillValue(d, metric) ?? 0);
-      const total = values.reduce((a, b) => a + b, 0);
-      if (!target) return <Box sx={{ width, flex: 'none', pr: 2 }}><Box sx={{ height: 8 }} /></Box>;
-      // Scale to whichever is larger so an overshoot is visible past the tick
-      const scale = Math.max(total, target);
-      const targetPct = (target / scale) * 100;
+    // Just the session total against its target. No drill segments: version 4
+    // already carries that in each row, so repeating it here only adds noise.
+    function TotalFooterBar({ metric, total, target, width }) {
+      if (!target || total == null) return <Box sx={{ width, flex: 'none', pr: 2 }}><Box sx={{ height: 8 }} /></Box>;
+      const over = total > target;
       return (
         <Box sx={{ width, flex: 'none', pr: 2 }}>
-          <Box sx={{ position: 'relative', height: 8, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' }}>
-            {values.map((v, i) => (
-              <Box
-                key={i}
-                sx={{
-                  width: `${(v / scale) * 100}%`,
-                  bgcolor: total > target ? ERROR : metric.color,
-                  opacity: 1 - (i % 4) * 0.22,
-                  borderRight: i < values.length - 1 ? '1px solid #fff' : 'none',
-                }}
-              />
-            ))}
-            <Box sx={{
-              position: 'absolute', left: `${targetPct}%`, top: -1, bottom: -1,
-              width: '2px', bgcolor: PRIMARY,
-            }} />
+          <Box sx={{ height: 8, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' }}>
+            <Box sx={{ width: `${Math.min(100, (total / target) * 100)}%`, bgcolor: over ? ERROR : metric.color }} />
           </Box>
         </Box>
       );
     }
 
     /* ── Session planning, version 1 ─────────────────────────────────── */
-    function SessionPlanning({ onHome, barMode = 'target' }) {
+    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none' }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
@@ -1843,12 +1811,6 @@
 
       const totals = metrics.reduce((acc, m) => {
         acc[m.key] = totalFor(drills, m);
-        return acc;
-      }, {});
-
-      // Largest single drill per metric, for the share-of-session bars
-      const scaleMaxes = metrics.reduce((acc, m) => {
-        acc[m.key] = Math.max(0, ...drills.map((d) => drillValue(d, m) ?? 0));
         return acc;
       }, {});
 
@@ -2101,9 +2063,8 @@
                             value={drillValue(drill, m)}
                             target={targetFor(m)}
                             width={colWidth}
-                            mode={barMode === 'footer' ? 'none' : barMode}
+                            mode={rowBars}
                             before={runningBefore[drillIndex]?.[m.key] ?? 0}
-                            scaleMax={scaleMaxes[m.key]}
                           />
                         ))}
                       </Box>
@@ -2299,13 +2260,13 @@
                         })}
                       </Box>
 
-                      {barMode === 'footer' && (
+                      {footerBar === 'total' && (
                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                           {metrics.map((m) => (
-                            <StackedFooterBar
+                            <TotalFooterBar
                               key={m.key}
                               metric={m}
-                              drills={drills}
+                              total={totals[m.key]}
                               target={targetFor(m)}
                               width={colWidth}
                             />
@@ -2413,9 +2374,11 @@
       if (route === '#/v2') return <VersionTwo onHome={goHome} />;
       if (route === '#/v3') return <VersionOne onHome={goHome} allowPercent key="v3" />;
       if (route === '#/planning-v1') return <SessionPlanning onHome={goHome} key="p1" />;
-      if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} barMode="cumulative" key="p2" />;
-      if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} barMode="footer" key="p3" />;
-      if (route === '#/planning-v4') return <SessionPlanning onHome={goHome} barMode="share" key="p4" />;
+      if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
+      // planning-v4 kept as an alias, so a link handed out before the renumber still lands
+      if (route === '#/planning-v3' || route === '#/planning-v4') {
+        return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
+      }
       return <VersionsLanding />;
     }
 
