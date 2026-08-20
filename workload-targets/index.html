@@ -1854,6 +1854,41 @@
       const valuesSx = { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` };
       const colWidth = `${100 / metrics.length}%`;
 
+      // Sits inside the first drill's row rather than in a band of its own,
+      // which is where the space above the drills was going.
+      const MetricHeaders = () => (
+        <Box sx={{ display: 'flex', mb: 0.25 }}>
+          {metrics.map((m, i) => (
+            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+              {/* The whole label is the hit area, not just the icon */}
+              <ButtonBase
+                onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
+                aria-label={`Change the ${m.name} column`}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.25,
+                  px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
+                  maxWidth: '100%', justifyContent: 'flex-start',
+                  '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
+                  '&:hover .col-edit': { opacity: 1 },
+                }}
+              >
+                <Tooltip title={metricTitle(m, false)} placement="top">
+                  <Box component="span" sx={{
+                    fontSize: 12, color: GREY100,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    {m.label}
+                  </Box>
+                </Tooltip>
+                <Box className="col-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
+                  <MI name="edit" size={13} color={GREY100} />
+                </Box>
+              </ButtonBase>
+            </Box>
+          ))}
+        </Box>
+      );
+
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
           <NavRail onHome={onHome} activeLabel="Calendar" />
@@ -1931,43 +1966,8 @@
 
                 <Box ref={areaRef} sx={{ px: 3, pt: 2, pb: 4 }}>
 
-                  <Box sx={{ display: 'flex', mb: 1, ...collapseSx }}>
-                    <Box sx={{ width: cardWidth, flex: 'none', ...growSx }} />
-                    <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                    <Box sx={{ ...valuesSx, display: 'flex', ...fadeSx }}>
-                      {metrics.map((m, i) => (
-                        <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                          {/* The whole label is the hit area, not just the icon */}
-                          <ButtonBase
-                            onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
-                            aria-label={`Change the ${m.name} column`}
-                            sx={{
-                              display: 'flex', alignItems: 'center', gap: 0.25,
-                              px: 0.75, py: 0.75, ml: -0.75, borderRadius: `${RADIUS}px`,
-                              maxWidth: '100%', justifyContent: 'flex-start',
-                              '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
-                              '&:hover .col-edit': { opacity: 1 },
-                            }}
-                          >
-                            <Tooltip title={metricTitle(m, false)} placement="top">
-                              <Box component="span" sx={{
-                                fontSize: 12, color: GREY100,
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                              }}>
-                                {m.label}
-                              </Box>
-                            </Tooltip>
-                            <Box className="col-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
-                              <MI name="edit" size={13} color={GREY100} />
-                            </Box>
-                          </ButtonBase>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-
                   {drills.map((drill, drillIndex) => (
-                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'stretch', mb: 1.5 }}>
+                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
 
                       {/* Fixed width and clipped, so dragging the divider left slides
                           the values over the card rather than reflowing it. */}
@@ -2045,7 +2045,7 @@
                         onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
                         title="Drag to resize"
                         sx={{
-                          width: SPLIT_HANDLE, flex: 'none',
+                          width: SPLIT_HANDLE, flex: 'none', alignSelf: 'stretch',
                           cursor: showWorkload ? 'col-resize' : 'default',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           '&:hover .grip': { bgcolor: PRIMARY },
@@ -2058,18 +2058,21 @@
                         }} />
                       </Box>
 
-                      <Box sx={{ ...valuesSx, display: 'flex', alignItems: 'center', pt: 0.5, ...fadeSx }}>
-                        {metrics.map((m) => (
-                          <MetricCell
-                            key={m.key}
-                            metric={m}
-                            value={drillValue(drill, m)}
-                            target={targetFor(m)}
-                            width={colWidth}
-                            mode={rowBars}
-                            before={runningBefore[drillIndex]?.[m.key] ?? 0}
-                          />
-                        ))}
+                      <Box sx={{ ...valuesSx, display: 'flex', flexDirection: 'column', pt: '10px', ...fadeSx }}>
+                        {drillIndex === 0 && <MetricHeaders />}
+                        <Box sx={{ display: 'flex' }}>
+                          {metrics.map((m) => (
+                            <MetricCell
+                              key={m.key}
+                              metric={m}
+                              value={drillValue(drill, m)}
+                              target={targetFor(m)}
+                              width={colWidth}
+                              mode={rowBars}
+                              before={runningBefore[drillIndex]?.[m.key] ?? 0}
+                            />
+                          ))}
+                        </Box>
                       </Box>
                     </Box>
                   ))}
