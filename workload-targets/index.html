@@ -1577,9 +1577,34 @@
       },
     ];
 
-    // Set just above where the session currently lands, so going over budget is
-    // one duration change away.
-    const SESSION_TARGETS = { td: 3000, hsr: 540, sd: 360, accels: 34, decels: 28, load: 700 };
+    // The session targets are not their own numbers: this is a GD−1 session for
+    // the first team, so they are read straight off that squad's GD−1 column on
+    // the targets pages. Metrics that squad has not configured get no target,
+    // which is why Player load shows a dash.
+    const CONFIG_METRIC_TO_SESSION = {
+      'Total distance': 'td',
+      'High speed running': 'hsr',
+      'Sprint distance': 'sd',
+      'Accelerations (count)': 'accels',
+      'Decelerations (count)': 'decels',
+      'Player load': 'load',
+      'Dynamic stress load': 'dsl',
+      'Max speed': 'maxspeed',
+      'Distance per minute': 'dpm',
+    };
+
+    const SESSION_SQUAD = '1st team';
+    const SESSION_GD = 'GD−1';
+
+    const SESSION_TARGETS = (() => {
+      const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
+      const out = {};
+      Object.entries(SQUAD_TARGETS[SESSION_SQUAD]).forEach(([configName, values]) => {
+        const key = CONFIG_METRIC_TO_SESSION[configName];
+        if (key && values[dayIndex] != null) out[key] = values[dayIndex];
+      });
+      return out;
+    })();
 
     const drillValue = (drill, metric) => {
       const base = drill.base[metric.key];
@@ -2039,7 +2064,8 @@
 
                   <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...fadeSx }}>
                     <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
-                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Session target:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Remaining:</Typography>
                   </Box>
                 </Box>
 
@@ -2067,7 +2093,7 @@
                           );
                         })}
                       </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
@@ -2123,6 +2149,39 @@
                                   <MI name="edit" size={13} color={GREY100} />
                                 </Box>
                               </ButtonBase>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+
+                      {/* What is still available to spend on this session */}
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {metrics.map((m) => {
+                          const target = targetFor(m);
+                          const total = totals[m.key];
+                          const left = target == null || total == null ? null : target - total;
+                          const over = left != null && left < 0;
+                          return (
+                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              <Tooltip
+                                title={left == null
+                                  ? `${m.name} — no target to measure against`
+                                  : over
+                                    ? `${m.name} — ${Math.abs(left)}${m.unit ? ' ' + m.unit : ''} over target`
+                                    : `${m.name} — ${left}${m.unit ? ' ' + m.unit : ''} still available`}
+                                placement="top"
+                              >
+                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+                                  <Box component="span" sx={{
+                                    fontSize: 14,
+                                    color: left == null ? DISABLED : over ? ERROR : PRIMARY,
+                                    fontWeight: over ? 700 : 400,
+                                  }}>
+                                    {left == null ? '—' : over ? `\u2212${Math.abs(left)}` : left}
+                                  </Box>
+                                  {over && <MI name="error" size={15} color={ERROR} />}
+                                </Stack>
+                              </Tooltip>
                             </Box>
                           );
                         })}
