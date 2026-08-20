@@ -296,7 +296,8 @@
       );
     }
 
-    function TopBar({ contextLabel }) {
+    // The squad identifier is app chrome, not part of this feature. It stays put.
+    function TopBar({ contextLabel = '1st team' }) {
       return (
         <Box sx={{
           height: 50, flex: 'none', display: 'flex', alignItems: 'center',
@@ -773,14 +774,12 @@
       const save      = () => { setConfig(draft); setDraft(null); };
       const cancel    = () => setDraft(null);
 
-      const contextLabel = section === SUB_SECTIONS[1] ? squad : 'Kitman Labs';
-
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
           <NavRail onHome={onHome} />
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <TopBar contextLabel={contextLabel} />
+            <TopBar />
 
             {/* Display only — Workload is the only tab in scope for this prototype. */}
             <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
@@ -827,9 +826,10 @@
 
     const V2_SUB_SECTIONS = ['Participation and RPE', 'Workload metrics targets'];
 
-    const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports used', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
+    // Raw csv headers, so they read exactly as the instructions panel lists them.
+    const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports_used', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
 
-    // Squad, Position, metric, Imports used, then GD−4 … GD+2.
+    // Squad, Position, metric, Imports_used, then GD−4 … GD+2.
     const CSV_ROWS = [
       { valid: true,  cells: ['1st team', 'All',      'Total distance',        '5',   '4800', '5600', '4200', '3100', '2200', '4400'] },
       { valid: true,  cells: ['1st team', 'All',      'High speed running',    '5',   '420',  '610',  '480',  '260',  '90',   '380'] },
@@ -1197,7 +1197,7 @@
           <NavRail onHome={onHome} />
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <TopBar contextLabel="Primary Squad" />
+            <TopBar />
 
             <ImportStepper
               step={step}
@@ -1248,7 +1248,7 @@
           <NavRail onHome={onHome} />
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <TopBar contextLabel={section === V2_SUB_SECTIONS[1] ? '1st team' : 'Kitman Labs'} />
+            <TopBar />
 
             <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
               <Tabs
