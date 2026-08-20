@@ -1879,9 +1879,13 @@
       // whatever the divider leaves it, stops at a floor that keeps six columns
       // legible, and past that overflows and is clipped, so it slides off right.
       const valuesSx = { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` };
-      // Fixed share rather than a share of however many are showing, so columns
-      // keep their width as you add and remove, and the empty slot is where + goes.
-      const colWidth = `${100 / MAX_SESSION_COLUMNS}%`;
+      // Reserve exactly one slot for the + button and divide the rest between the
+      // columns, so five metrics sit at the same width as six, four at the width
+      // of five, and so on.
+      const columnSlots = metrics.length < MAX_SESSION_COLUMNS
+        ? metrics.length + 1
+        : MAX_SESSION_COLUMNS;
+      const colWidth = `${100 / columnSlots}%`;
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
@@ -1924,16 +1928,17 @@
               </ButtonBase>
 
               {/* Sits outside the button: nesting it would fire the menu too */}
-              <IconButton
-                className="col-tool"
-                size="small"
-                disabled={metrics.length <= 1}
-                onClick={() => setColumns((prev) => prev.filter((_, idx) => idx !== i))}
-                aria-label={`Remove the ${m.name} column`}
-                sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25, flex: 'none' }}
-              >
-                <MI name="close" size={13} color={GREY100} />
-              </IconButton>
+              {metrics.length > 1 && (
+                <IconButton
+                  className="col-tool"
+                  size="small"
+                  onClick={() => setColumns((prev) => prev.filter((_, idx) => idx !== i))}
+                  aria-label={`Remove the ${m.name} column`}
+                  sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25, flex: 'none' }}
+                >
+                  <MI name="close" size={13} color={GREY100} />
+                </IconButton>
+              )}
             </Box>
           ))}
 
