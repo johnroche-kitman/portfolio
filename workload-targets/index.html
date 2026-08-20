@@ -305,7 +305,7 @@
     const ROW_H      = 77;
 
     /* ── Chrome ──────────────────────────────────────────────────────── */
-    function NavRail({ onHome }) {
+    function NavRail({ onHome, activeLabel = 'Org settings' }) {
       return (
         <Box sx={{
           width: RAIL_W, flex: 'none', color: '#fff',
@@ -327,19 +327,22 @@
             </ButtonBase>
           </Tooltip>
 
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const active = item.label === activeLabel;
+            return (
             <Tooltip key={item.label} title={item.label} placement="right">
               <Box sx={{
                 width: RAIL_W, height: 40, flex: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                bgcolor: item.active ? ACTIVE_NAV : 'transparent',
+                bgcolor: active ? ACTIVE_NAV : 'transparent',
                 cursor: 'pointer',
-                '&:hover': { bgcolor: item.active ? ACTIVE_NAV : 'rgba(255,255,255,0.08)' },
+                '&:hover': { bgcolor: active ? ACTIVE_NAV : 'rgba(255,255,255,0.08)' },
               }}>
                 <MI name={item.icon} size={22} color="#fff" />
               </Box>
             </Tooltip>
-          ))}
+            );
+          })}
 
           <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 1.5, pb: 1 }}>
             <Box sx={{ width: RAIL_W, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -354,13 +357,13 @@
     }
 
     // The squad identifier is app chrome, not part of this feature. It stays put.
-    function TopBar({ contextLabel = '1st team' }) {
+    function TopBar({ contextLabel = '1st team', breadcrumb = 'Org settings' }) {
       return (
         <Box sx={{
           height: 50, flex: 'none', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', px: 3, borderBottom: `1px solid ${DIVIDER}`,
         }}>
-          <Typography sx={{ fontSize: 14, color: GREY100 }}>Org settings</Typography>
+          <Typography sx={{ fontSize: 14, color: GREY100 }}>{breadcrumb}</Typography>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'pointer' }}>
               <Typography sx={{ fontSize: 14, color: PRIMARY }}>{contextLabel}</Typography>
@@ -1526,14 +1529,25 @@
 
     // Up to six, matching the cap on the targets pages. Six is why the split
     // between the drills and the values needs to be draggable.
-    const SESSION_METRICS = [
-      { key: 'td',     label: 'TD (m)',     name: 'Total distance',       unit: 'm',  color: '#00968F' },
-      { key: 'hsr',    label: 'HSR (m)',    name: 'High speed running',   unit: 'm',  color: '#2E7D32' },
-      { key: 'sd',     label: 'SD (m)',     name: 'Sprint distance',      unit: 'm',  color: '#1565C0' },
-      { key: 'accels', label: 'Accels (#)', name: 'Accelerations',        unit: '',   color: '#E8590C' },
-      { key: 'decels', label: 'Decels (#)', name: 'Decelerations',        unit: '',   color: '#7C3AED' },
-      { key: 'load',   label: 'Load (AU)',  name: 'Player load',          unit: 'AU', color: '#AD1457' },
+    // agg says how a metric behaves over time. sum scales with the drill
+    // duration and adds up across the session; max and avg do neither, because a
+    // top speed or a per minute rate does not double when a drill runs twice as
+    // long. The last three carry no target, which is the point: not every metric
+    // has one, and the bar simply shows none.
+    const METRIC_LIBRARY_SESSION = [
+      { key: 'td',       label: 'TD (m)',        name: 'Total distance',       unit: 'm',     agg: 'sum', color: '#00968F' },
+      { key: 'hsr',      label: 'HSR (m)',       name: 'High speed running',   unit: 'm',     agg: 'sum', color: '#2E7D32' },
+      { key: 'sd',       label: 'SD (m)',        name: 'Sprint distance',      unit: 'm',     agg: 'sum', color: '#1565C0' },
+      { key: 'accels',   label: 'Accels (#)',    name: 'Accelerations',        unit: '',      agg: 'sum', color: '#E8590C' },
+      { key: 'decels',   label: 'Decels (#)',    name: 'Decelerations',        unit: '',      agg: 'sum', color: '#7C3AED' },
+      { key: 'load',     label: 'Load (AU)',     name: 'Player load',          unit: 'AU',    agg: 'sum', color: '#AD1457' },
+      { key: 'dsl',      label: 'DSL (AU)',      name: 'Dynamic stress load',  unit: 'AU',    agg: 'sum', color: '#546E7A' },
+      { key: 'maxspeed', label: 'Max spd',       name: 'Max speed',            unit: 'km/h',  agg: 'max', color: '#00838F' },
+      { key: 'dpm',      label: 'DPM (m/min)',   name: 'Distance per minute',  unit: 'm/min', agg: 'avg', color: '#5D4037' },
     ];
+
+    const metricByKey = (key) => METRIC_LIBRARY_SESSION.find((m) => m.key === key);
+    const DEFAULT_COLUMNS = ['td', 'hsr', 'sd', 'accels', 'decels', 'load'];
 
     // base values hold at baseDuration; a drill scales linearly from there.
     const SESSION_DRILLS = [
@@ -1541,25 +1555,25 @@
         id: 'd1', name: 'Rondo 5v1 3reps x 3mins', tag: 'Warm up',
         desc: 'Rondo 6v2 interspersed with mobility and dynamic flexibility.',
         duration: 15, baseDuration: 15,
-        base: { td: 280, hsr: 40, sd: 85, accels: 12, decels: 3, load: 65 },
+        base: { td: 280, hsr: 40, sd: 85, accels: 12, decels: 3, load: 65, dsl: 45, maxspeed: 24.5, dpm: 19 },
       },
       {
         id: 'd2', name: '1v1 SDP', tag: 'Game play',
         desc: 'Activity begins with shot from side players into mini-goal. After pass play continues to the wide areas.',
         duration: 30, baseDuration: 30,
-        base: { td: 1100, hsr: 210, sd: 45, accels: 6, decels: 11, load: 260 },
+        base: { td: 1100, hsr: 210, sd: 45, accels: 6, decels: 11, load: 260, dsl: 180, maxspeed: 31.2, dpm: 37 },
       },
       {
         id: 'd3', name: 'Goalkeeper catching and holding', tag: 'Goalkeepers',
         desc: 'The GK should keep their eyes on the ball using their hand eye coordination to catch and hold.',
         duration: 15, baseDuration: 15,
-        base: { td: 520, hsr: 95, sd: 170, accels: 3, decels: 8, load: 120 },
+        base: { td: 520, hsr: 95, sd: 170, accels: 3, decels: 8, load: 120, dsl: 90, maxspeed: 22.0, dpm: 35 },
       },
       {
         id: 'd4', name: '7v6 build out game', tag: 'Medium games',
         desc: 'GK throws out. Team in possession attempts to score on any of the 2 mini goals.',
         duration: 15, baseDuration: 15,
-        base: { td: 750, hsr: 140, sd: 20, accels: 9, decels: 2, load: 175 },
+        base: { td: 750, hsr: 140, sd: 20, accels: 9, decels: 2, load: 175, dsl: 130, maxspeed: 28.4, dpm: 50 },
       },
     ];
 
@@ -1567,8 +1581,21 @@
     // one duration change away.
     const SESSION_TARGETS = { td: 3000, hsr: 540, sd: 360, accels: 34, decels: 28, load: 700 };
 
-    const drillValue = (drill, key) =>
-      Math.round((drill.base[key] * drill.duration) / drill.baseDuration);
+    const drillValue = (drill, metric) => {
+      const base = drill.base[metric.key];
+      if (base == null) return null;
+      // Only accumulating metrics scale with how long the drill runs.
+      if (metric.agg !== 'sum') return base;
+      return Math.round((base * drill.duration) / drill.baseDuration);
+    };
+
+    const totalFor = (drills, metric) => {
+      const vals = drills.map((d) => drillValue(d, metric)).filter((v) => v != null);
+      if (!vals.length) return null;
+      if (metric.agg === 'max') return Math.max(...vals);
+      if (metric.agg === 'avg') return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+      return vals.reduce((a, b) => a + b, 0);
+    };
 
     const formatDuration = (mins) => {
       const h = Math.floor(mins / 60);
@@ -1584,7 +1611,8 @@
     // The values flex with the divider down to this width, which is the point
     // where six columns still read cleanly. Past it they stop shrinking and
     // slide off the right edge instead.
-    const VALUES_MIN = 492;
+    const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
+    const VALUES_MIN = 492 + VALUES_GUTTER;
     const SPLIT_HANDLE = 13;
 
     /* ── Drill diagram placeholder ───────────────────────────────────── */
@@ -1623,15 +1651,20 @@
           <Tooltip title={metricTitle(metric, over)} placement="top" followCursor>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75, cursor: 'default', width: 'fit-content' }}>
               <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
-                {value}
+                {value == null ? '—' : value}
               </Typography>
               {/* Colour on its own is not enough of a signal */}
               {over && <MI name="error" size={15} color={ERROR} />}
             </Stack>
           </Tooltip>
-          <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden' }}>
-            <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: over ? ERROR : metric.color }} />
-          </Box>
+          {/* No target, no bar: there is nothing to show progress against */}
+          {target ? (
+            <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden' }}>
+              <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: over ? ERROR : metric.color }} />
+            </Box>
+          ) : (
+            <Box sx={{ height: 5 }} />
+          )}
         </Box>
       );
     }
@@ -1645,12 +1678,32 @@
       const [splitWidth, setSplitWidth] = useState(640);
       const [dragging, setDragging] = useState(false);
       const [areaWidth, setAreaWidth] = useState(0);
+      const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+      const [colAnchor, setColAnchor] = useState(null);   // { el, index }
+      const [targetOverrides, setTargetOverrides] = useState({});
+      const [editingTarget, setEditingTarget] = useState(null);
       const areaRef = React.useRef(null);
+
+      const metrics = columns.map(metricByKey);
+      const targetFor = (metric) => {
+        const custom = targetOverrides[metric.key];
+        if (custom != null && custom !== '') return Number(custom);
+        return SESSION_TARGETS[metric.key] ?? null;
+      };
+
+      // Inside the padding, since that is where the columns actually start.
+      const contentBox = (el) => {
+        const cs = getComputedStyle(el);
+        const padL = parseFloat(cs.paddingLeft) || 0;
+        const padR = parseFloat(cs.paddingRight) || 0;
+        const box = el.getBoundingClientRect();
+        return { left: box.left + padL, width: box.width - padL - padR };
+      };
 
       React.useEffect(() => {
         const el = areaRef.current;
         if (!el) return;
-        const measure = () => setAreaWidth(el.getBoundingClientRect().width);
+        const measure = () => setAreaWidth(contentBox(el).width);
         measure();
         const ro = new ResizeObserver(measure);
         ro.observe(el);
@@ -1662,8 +1715,9 @@
       React.useEffect(() => {
         if (!dragging) return;
         const onMove = (e) => {
-          const box = areaRef.current?.getBoundingClientRect();
-          if (!box) return;
+          const el = areaRef.current;
+          if (!el) return;
+          const box = contentBox(el);
           // Dragging right pushes the values off the edge rather than squeezing
           // them, so the only ceiling is the width of the area itself.
           const max = Math.max(SPLIT_MIN_DRILL, box.width);
@@ -1687,25 +1741,35 @@
         setDrills((prev) => prev.map((d) => (d.id === id ? { ...d, duration: mins } : d)));
       };
 
-      const totals = SESSION_METRICS.reduce((acc, m) => {
-        acc[m.key] = drills.reduce((sum, d) => sum + drillValue(d, m.key), 0);
+      const totals = metrics.reduce((acc, m) => {
+        acc[m.key] = totalFor(drills, m);
         return acc;
       }, {});
       const totalMinutes = drills.reduce((sum, d) => sum + d.duration, 0);
 
-      // Flex with the divider, but never below the point where the columns
-      // start running into each other. Past that the panel keeps its width and
-      // the overflow is clipped, so it slides off to the right.
-      const valuesWidth = Math.max(VALUES_MIN, areaWidth - splitWidth - SPLIT_HANDLE);
-      const colWidth = valuesWidth / SESSION_METRICS.length;
-      const cardWidth = showWorkload ? splitWidth : '100%';
+      // Both ends of the toggle are pixel widths so the card can animate between
+      // them; hiding the workload widens the card, which pushes the values off
+      // the right edge while they fade.
+      const cardWidth = showWorkload ? splitWidth : (areaWidth || '100%');
+      const growSx = { transition: dragging ? 'none' : 'width .3s cubic-bezier(.4,0,.2,1)' };
+      const fadeSx = {
+        opacity: showWorkload ? 1 : 0,
+        pointerEvents: showWorkload ? 'auto' : 'none',
+        transition: 'opacity .22s ease',
+      };
+
+      // Flex owns this rather than a measured width: the panel grows into
+      // whatever the divider leaves it, stops at a floor that keeps six columns
+      // legible, and past that overflows and is clipped, so it slides off right.
+      const valuesSx = { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` };
+      const colWidth = `${100 / metrics.length}%`;
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
-          <NavRail onHome={onHome} />
+          <NavRail onHome={onHome} activeLabel="Calendar" />
 
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <TopBar />
+            <TopBar breadcrumb="Calendar" />
 
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
 
@@ -1777,23 +1841,34 @@
 
                 <Box ref={areaRef} sx={{ px: 3, pt: 2, pb: 4 }}>
 
-                  {showWorkload && (
-                    <Box sx={{ display: 'flex', mb: 1 }}>
-                      <Box sx={{ width: splitWidth, flex: 'none' }} />
-                      <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                      <Box sx={{ width: valuesWidth, flex: 'none', display: 'flex' }}>
-                        {SESSION_METRICS.map((m) => (
-                          <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                            <Tooltip title={metricTitle(m, false)} placement="top">
-                              <Box component="span" sx={{ fontSize: 12, color: GREY100, cursor: 'default' }}>
-                                {m.label}
-                              </Box>
-                            </Tooltip>
-                          </Box>
-                        ))}
-                      </Box>
+                  <Box sx={{ display: 'flex', mb: 1 }}>
+                    <Box sx={{ width: cardWidth, flex: 'none', ...growSx }} />
+                    <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
+                    <Box sx={{ ...valuesSx, display: 'flex', ...fadeSx }}>
+                      {metrics.map((m, i) => (
+                        <Box key={m.key} sx={{
+                          width: colWidth, flex: 'none', pr: 2,
+                          display: 'flex', alignItems: 'center', gap: 0.25,
+                          '&:hover .col-edit': { opacity: 1 },
+                        }}>
+                          <Tooltip title={metricTitle(m, false)} placement="top">
+                            <Box component="span" sx={{ fontSize: 12, color: GREY100, cursor: 'default' }}>
+                              {m.label}
+                            </Box>
+                          </Tooltip>
+                          <IconButton
+                            className="col-edit"
+                            size="small"
+                            onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
+                            aria-label={`Change the ${m.name} column`}
+                            sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25 }}
+                          >
+                            <MI name="edit" size={13} color={GREY100} />
+                          </IconButton>
+                        </Box>
+                      ))}
                     </Box>
-                  )}
+                  </Box>
 
                   {drills.map((drill) => (
                     <Box key={drill.id} sx={{ display: 'flex', alignItems: 'stretch', mb: 1.5 }}>
@@ -1801,7 +1876,7 @@
                       {/* Fixed width and clipped, so dragging the divider left slides
                           the values over the card rather than reflowing it. */}
                       <Box sx={{
-                        width: cardWidth, flex: 'none',
+                        width: cardWidth, flex: 'none', ...growSx,
                         minWidth: 0, overflow: 'hidden', position: 'relative',
                         border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, bgcolor: '#fff',
                         display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5,
@@ -1870,36 +1945,34 @@
                         </Box>
                       </Box>
 
-                      {showWorkload && (
-                        <React.Fragment>
-                          <Box
-                            onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
-                            title="Drag to resize"
-                            sx={{
-                              width: SPLIT_HANDLE, flex: 'none', cursor: 'col-resize',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              '&:hover .grip': { bgcolor: PRIMARY },
-                            }}
-                          >
-                            <Box className="grip" sx={{
-                              width: 3, height: 26, borderRadius: 2,
-                              bgcolor: dragging ? PRIMARY : '#D6DAE2', transition: 'background-color .12s',
-                            }} />
-                          </Box>
+                      <Box
+                        onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
+                        title="Drag to resize"
+                        sx={{
+                          width: SPLIT_HANDLE, flex: 'none',
+                          cursor: showWorkload ? 'col-resize' : 'default',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          '&:hover .grip': { bgcolor: PRIMARY },
+                          ...fadeSx,
+                        }}
+                      >
+                        <Box className="grip" sx={{
+                          width: 3, height: 26, borderRadius: 2,
+                          bgcolor: dragging ? PRIMARY : '#D6DAE2', transition: 'background-color .12s',
+                        }} />
+                      </Box>
 
-                          <Box sx={{ width: valuesWidth, flex: 'none', display: 'flex', alignItems: 'center', pt: 0.5 }}>
-                            {SESSION_METRICS.map((m) => (
-                              <MetricCell
-                                key={m.key}
-                                metric={m}
-                                value={drillValue(drill, m.key)}
-                                target={SESSION_TARGETS[m.key]}
-                                width={colWidth}
-                              />
-                            ))}
-                          </Box>
-                        </React.Fragment>
-                      )}
+                      <Box sx={{ ...valuesSx, display: 'flex', alignItems: 'center', pt: 0.5, ...fadeSx }}>
+                        {metrics.map((m) => (
+                          <MetricCell
+                            key={m.key}
+                            metric={m}
+                            value={drillValue(drill, m)}
+                            target={targetFor(m)}
+                            width={colWidth}
+                          />
+                        ))}
+                      </Box>
                     </Box>
                   ))}
 
@@ -1911,6 +1984,34 @@
                       Create drill
                     </Button>
                   </Stack>
+
+                  <Menu
+                    anchorEl={colAnchor?.el}
+                    open={Boolean(colAnchor)}
+                    onClose={() => setColAnchor(null)}
+                  >
+                    {METRIC_LIBRARY_SESSION.map((m) => {
+                      const usedElsewhere = columns.includes(m.key) && columns[colAnchor?.index] !== m.key;
+                      return (
+                        <MenuItem
+                          key={m.key}
+                          disabled={usedElsewhere}
+                          selected={columns[colAnchor?.index] === m.key}
+                          onClick={() => {
+                            setColumns((prev) => prev.map((k, i) => (i === colAnchor.index ? m.key : k)));
+                            setColAnchor(null);
+                          }}
+                        >
+                          <Stack direction="row" alignItems="baseline" spacing={1}>
+                            <span>{m.name}</span>
+                            {SESSION_TARGETS[m.key] == null && (
+                              <Box component="span" sx={{ fontSize: 12, color: GREY100 }}>no target</Box>
+                            )}
+                          </Stack>
+                        </MenuItem>
+                      );
+                    })}
+                  </Menu>
                 </Box>
               </Box>
 
@@ -1920,7 +2021,7 @@
                 px: 3, py: 1.5, display: 'flex', alignItems: 'center', overflow: 'hidden', zIndex: 1,
               }}>
                 <Box sx={{
-                  width: cardWidth, flex: 'none', minWidth: 0,
+                  width: cardWidth, flex: 'none', minWidth: 0, ...growSx,
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2,
                 }}>
                   <Typography sx={{
@@ -1930,21 +2031,19 @@
                     Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
                   </Typography>
 
-                  {showWorkload && (
-                    <Box sx={{ textAlign: 'right', flex: 'none', pr: 2 }}>
-                      <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
-                      <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
-                    </Box>
-                  )}
+                  <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...fadeSx }}>
+                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
+                  </Box>
                 </Box>
 
-                {showWorkload && (
-                  <React.Fragment>
+                <React.Fragment>
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                    <Box sx={{ width: valuesWidth, flex: 'none' }}>
+                    <Box sx={{ ...valuesSx, ...fadeSx }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        {SESSION_METRICS.map((m) => {
-                          const over = totals[m.key] > SESSION_TARGETS[m.key];
+                        {metrics.map((m) => {
+                          const target = targetFor(m);
+                          const over = target != null && totals[m.key] > target;
                           return (
                             <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
                               <Tooltip title={metricTitle(m, over)} placement="top">
@@ -1953,7 +2052,7 @@
                                     fontSize: 14,
                                     color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
                                   }}>
-                                    {totals[m.key]}
+                                    {totals[m.key] == null ? '—' : totals[m.key]}
                                   </Box>
                                   {over && <MI name="error" size={15} color={ERROR} />}
                                 </Stack>
@@ -1963,19 +2062,64 @@
                         })}
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {SESSION_METRICS.map((m) => (
-                          <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                            <Tooltip title={metricTitle(m, false)} placement="top">
-                              <Box component="span" sx={{ fontSize: 14, color: PRIMARY, cursor: 'default' }}>
-                                {SESSION_TARGETS[m.key]}
+                        {metrics.map((m) => {
+                          const target = targetFor(m);
+                          const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
+                          if (editingTarget === m.key) {
+                            return (
+                              <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                                <TextField
+                                  value={targetOverrides[m.key] ?? (target ?? '')}
+                                  autoFocus
+                                  onFocus={(e) => e.target.select()}
+                                  onChange={(e) => setTargetOverrides((prev) => ({
+                                    ...prev, [m.key]: e.target.value.replace(/[^0-9.]/g, ''),
+                                  }))}
+                                  onBlur={() => setEditingTarget(null)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') setEditingTarget(null); }}
+                                  variant="outlined"
+                                  size="small"
+                                  inputProps={{ inputMode: 'numeric', style: { padding: '2px 6px', fontSize: 13, width: 52 } }}
+                                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px`, bgcolor: '#fff' } }}
+                                />
                               </Box>
-                            </Tooltip>
-                          </Box>
-                        ))}
+                            );
+                          }
+                          return (
+                            <Box key={m.key} sx={{
+                              width: colWidth, flex: 'none', pr: 2,
+                              display: 'flex', alignItems: 'center', gap: 0.25,
+                              '&:hover .tgt-edit': { opacity: 1 },
+                            }}>
+                              <Tooltip
+                                title={target == null
+                                  ? `${m.name} — no target set`
+                                  : `${metricTitle(m, false)}${custom ? ' — custom target' : ''}`}
+                                placement="top"
+                              >
+                                <Box component="span" sx={{
+                                  fontSize: 14, cursor: 'default',
+                                  color: target == null ? DISABLED : PRIMARY,
+                                  fontWeight: custom ? 700 : 400,
+                                }}>
+                                  {target == null ? '—' : target}
+                                </Box>
+                              </Tooltip>
+                              <IconButton
+                                className="tgt-edit"
+                                size="small"
+                                onClick={() => setEditingTarget(m.key)}
+                                aria-label={`Set a custom ${m.name} target`}
+                                sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25 }}
+                              >
+                                <MI name="edit" size={13} color={GREY100} />
+                              </IconButton>
+                            </Box>
+                          );
+                        })}
                       </Box>
                     </Box>
                   </React.Fragment>
-                )}
               </Box>
             </Box>
           </Box>
