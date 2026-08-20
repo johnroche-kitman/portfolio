@@ -1594,7 +1594,7 @@
     };
 
     const SESSION_SQUAD = '1st team';
-    const SESSION_GD = 'GD−1';
+    const SESSION_GD = 'GD−3';
 
     const SESSION_TARGETS = (() => {
       const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
@@ -1840,7 +1840,7 @@
                     {[
                       ['Date:', '4 Apr 2025 10:00'],
                       ['Gameweek:', 'IS6 - Arsenal FC (Away)'],
-                      ['GD:', '−1'],
+                      ['GD:', SESSION_GD.replace('GD', '')],
                       ['Surface type:', 'Grass'],
                     ].map(([k, v]) => (
                       <Typography key={k} sx={{ fontSize: 14, color: GREY100 }}>
