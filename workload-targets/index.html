@@ -37,6 +37,13 @@
       transform-origin: left top !important;
       transition: none !important;
     }
+
+    /* A target driven by a GD max percentage: white rather than filled, so it
+       reads as derived rather than as something you can type into. */
+    .derived-value .MuiFilledInput-root,
+    .derived-value .MuiFilledInput-root.Mui-disabled {
+      background-color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -804,10 +811,15 @@
                       variant="filled"
                       hiddenLabel
                       inputProps={{ inputMode: 'numeric', disabled: !slot.metric || percentMode }}
+                      className={percentMode ? 'derived-value' : undefined}
                       sx={{
                         width: IN_DAY,
                         '& .MuiFilledInput-root': { height: 52 },
-                        '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
+                        '& .MuiFilledInput-input': {
+                          py: 0, height: 52, fontSize: 15, color: PRIMARY,
+                          // Keep the calculated number readable, it is the target.
+                          WebkitTextFillColor: PRIMARY,
+                        },
                       }}
                     />
                   </Box>
@@ -1364,7 +1376,8 @@
       const takeFile = (f) => setFile(f);
 
       const next = () => {
-        if (step === 1) { setStep(2); setInstructionsOpen(false); }
+        // The panel stays as the user left it; only they close it.
+        if (step === 1) setStep(2);
         else onExit(true); // Import — the targets page confirms it
       };
 
