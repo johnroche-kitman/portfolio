@@ -199,6 +199,7 @@
         'Sprint distance':      [120, 210, 180, 70, 20, 110],
         'Accelerations (count)': [28, 38, 32, 18, 8, 26],
         'Decelerations (count)': [30, 41, 34, 19, 9, 28],
+        'Max speed':            [27, 32, 29, 24, 20, 26],
       },
       'U21': {
         'Total distance':       [4300, 5000, 3800, 2800, 2000, 3900],
@@ -206,6 +207,7 @@
         'Sprint distance':      [95, 170, 145, 55, 15, 90],
         'Accelerations (count)': [24, 33, 28, 16, 7, 22],
         'Decelerations (count)': [26, 35, 30, 17, 8, 24],
+        'Max speed':            [26, 31, 28, 23, 19, 25],
       },
       'U18': {
         'Total distance':       [3800, 4500, 3400, 2500, 1800, 3500],
@@ -213,6 +215,7 @@
         'Sprint distance':      [75, 135, 115, 45, 12, 70],
         'Accelerations (count)': [20, 28, 24, 13, 6, 19],
         'Decelerations (count)': [22, 30, 26, 14, 7, 20],
+        'Max speed':            [25, 30, 27, 22, 18, 24],
       },
     };
 
@@ -1562,7 +1565,7 @@
     ];
 
     const metricByKey = (key) => METRIC_LIBRARY_SESSION.find((m) => m.key === key);
-    const DEFAULT_COLUMNS = ['td', 'hsr', 'sd', 'accels', 'decels', 'load'];
+    const DEFAULT_COLUMNS = ['td', 'hsr', 'sd', 'accels', 'decels', 'maxspeed'];
 
     // base values hold at baseDuration; a drill scales linearly from there.
     const SESSION_DRILLS = [
@@ -2187,7 +2190,9 @@
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const total = totals[m.key];
-                          const left = target == null || total == null ? null : target - total;
+                          // Round: 32 - 31.2 lands at 0.7999999999999972 otherwise
+                          const raw = target == null || total == null ? null : target - total;
+                          const left = raw == null ? null : Math.round(raw * 10) / 10;
                           const over = left != null && left < 0;
                           return (
                             <Box key={m.key} sx={{
