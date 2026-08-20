@@ -1846,25 +1846,31 @@
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
                     <Box sx={{ ...valuesSx, display: 'flex', ...fadeSx }}>
                       {metrics.map((m, i) => (
-                        <Box key={m.key} sx={{
-                          width: colWidth, flex: 'none', pr: 2,
-                          display: 'flex', alignItems: 'center', gap: 0.25,
-                          '&:hover .col-edit': { opacity: 1 },
-                        }}>
-                          <Tooltip title={metricTitle(m, false)} placement="top">
-                            <Box component="span" sx={{ fontSize: 12, color: GREY100, cursor: 'default' }}>
-                              {m.label}
-                            </Box>
-                          </Tooltip>
-                          <IconButton
-                            className="col-edit"
-                            size="small"
+                        <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                          {/* The whole label is the hit area, not just the icon */}
+                          <ButtonBase
                             onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
                             aria-label={`Change the ${m.name} column`}
-                            sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25 }}
+                            sx={{
+                              display: 'flex', alignItems: 'center', gap: 0.25,
+                              px: 0.75, py: 0.75, ml: -0.75, borderRadius: `${RADIUS}px`,
+                              maxWidth: '100%', justifyContent: 'flex-start',
+                              '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
+                              '&:hover .col-edit': { opacity: 1 },
+                            }}
                           >
-                            <MI name="edit" size={13} color={GREY100} />
-                          </IconButton>
+                            <Tooltip title={metricTitle(m, false)} placement="top">
+                              <Box component="span" sx={{
+                                fontSize: 12, color: GREY100,
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                              }}>
+                                {m.label}
+                              </Box>
+                            </Tooltip>
+                            <Box className="col-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
+                              <MI name="edit" size={13} color={GREY100} />
+                            </Box>
+                          </ButtonBase>
                         </Box>
                       ))}
                     </Box>
@@ -2086,34 +2092,37 @@
                             );
                           }
                           return (
-                            <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', pr: 2,
-                              display: 'flex', alignItems: 'center', gap: 0.25,
-                              '&:hover .tgt-edit': { opacity: 1 },
-                            }}>
-                              <Tooltip
-                                title={target == null
-                                  ? `${m.name} — no target set`
-                                  : `${metricTitle(m, false)}${custom ? ' — custom target' : ''}`}
-                                placement="top"
-                              >
-                                <Box component="span" sx={{
-                                  fontSize: 14, cursor: 'default',
-                                  color: target == null ? DISABLED : PRIMARY,
-                                  fontWeight: custom ? 700 : 400,
-                                }}>
-                                  {target == null ? '—' : target}
-                                </Box>
-                              </Tooltip>
-                              <IconButton
-                                className="tgt-edit"
-                                size="small"
+                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              {/* Value and icon together are the hit area */}
+                              <ButtonBase
                                 onClick={() => setEditingTarget(m.key)}
                                 aria-label={`Set a custom ${m.name} target`}
-                                sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25 }}
+                                sx={{
+                                  display: 'flex', alignItems: 'center', gap: 0.25,
+                                  px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
+                                  maxWidth: '100%', justifyContent: 'flex-start',
+                                  '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
+                                  '&:hover .tgt-edit': { opacity: 1 },
+                                }}
                               >
-                                <MI name="edit" size={13} color={GREY100} />
-                              </IconButton>
+                                <Tooltip
+                                  title={target == null
+                                    ? `${m.name} — no target set`
+                                    : `${metricTitle(m, false)}${custom ? ' — custom target' : ''}`}
+                                  placement="top"
+                                >
+                                  <Box component="span" sx={{
+                                    fontSize: 14,
+                                    color: target == null ? DISABLED : PRIMARY,
+                                    fontWeight: custom ? 700 : 400,
+                                  }}>
+                                    {target == null ? '—' : target}
+                                  </Box>
+                                </Tooltip>
+                                <Box className="tgt-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
+                                  <MI name="edit" size={13} color={GREY100} />
+                                </Box>
+                              </ButtonBase>
                             </Box>
                           );
                         })}
