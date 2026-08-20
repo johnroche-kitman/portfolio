@@ -1711,17 +1711,17 @@
       );
     }
 
-    // The gap between drill rows is a margin, so a tinted cell has to bleed
-    // down through it or the column reads as a dashed stripe.
+    // The gap between drill rows lives on the card, not the row, so the value
+    // panels stack flush and a tinted column runs unbroken. Each cell owns its
+    // own top padding for the same reason.
     const COLUMN_TINT = 'rgba(195, 29, 43, 0.08)';
-    const ROW_GAP = 12;
 
-    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false }) {
+    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false, padTop = 0 }) {
       const over = target != null && value != null && value > target;
       return (
         <Box sx={{
-          width, flex: 'none', pr: 2,
-          ...(highlight && { bgcolor: COLUMN_TINT, pb: `${ROW_GAP}px`, mb: `-${ROW_GAP}px` }),
+          width, flex: 'none', pr: 2, pt: padTop,
+          ...(highlight && { bgcolor: COLUMN_TINT }),
         }}>
           <Tooltip title={metricTitle(metric, over)} placement="top" followCursor>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75, cursor: 'default', width: 'fit-content' }}>
@@ -1883,10 +1883,10 @@
       // it would be a new type every render, remounting the headings and leaving
       // the menu's anchor detached, which parked it in the top left corner.
       const renderMetricHeaders = () => (
-        <Box sx={{ display: 'flex', mb: 0.25 }}>
+        <Box sx={{ display: 'flex' }}>
           {metrics.map((m, i) => (
             <Box key={m.key} sx={{
-              width: colWidth, flex: 'none', pr: 2,
+              width: colWidth, flex: 'none', pr: 2, pt: '10px',
               ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
             }}>
               {/* The whole label is the hit area, not just the icon */}
@@ -1996,12 +1996,12 @@
                 <Box ref={areaRef} sx={{ px: 3, pt: 2, pb: 4 }}>
 
                   {drills.map((drill, drillIndex) => (
-                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start' }}>
 
                       {/* Fixed width and clipped, so dragging the divider left slides
                           the values over the card rather than reflowing it. */}
                       <Box sx={{
-                        width: cardWidth, flex: 'none', ...growSx,
+                        width: cardWidth, flex: 'none', ...growSx, mb: 1.5,
                         minWidth: 0, overflow: 'hidden', position: 'relative',
                         border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, bgcolor: '#fff',
                         display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5,
@@ -2087,7 +2087,7 @@
                         }} />
                       </Box>
 
-                      <Box sx={{ ...valuesSx, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', pt: '10px', ...fadeSx }}>
+                      <Box sx={{ ...valuesSx, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', ...fadeSx }}>
                         {drillIndex === 0 && renderMetricHeaders()}
                         <Box sx={{ display: 'flex', flex: 1 }}>
                           {metrics.map((m) => (
@@ -2100,6 +2100,7 @@
                               mode={rowBars}
                               before={runningBefore[drillIndex]?.[m.key] ?? 0}
                               highlight={overColumns.has(m.key)}
+                              padTop={drillIndex === 0 ? 0 : '10px'}
                             />
                           ))}
                         </Box>
@@ -2189,7 +2190,6 @@
                           return (
                             <Box key={m.key} sx={{
                               width: colWidth, flex: 'none', pr: 2,
-                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
                             }}>
                               <Tooltip
                                 title={left == null
@@ -2231,7 +2231,6 @@
                           return (
                             <Box key={m.key} sx={{
                               width: colWidth, flex: 'none', pr: 2,
-                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
                             }}>
                               <Tooltip title={metricTitle(m, over)} placement="top">
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
@@ -2275,7 +2274,6 @@
                           return (
                             <Box key={m.key} sx={{
                               width: colWidth, flex: 'none', pr: 2,
-                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
                             }}>
                               {/* Value and icon together are the hit area */}
                               <ButtonBase
