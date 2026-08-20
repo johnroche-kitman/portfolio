@@ -761,7 +761,7 @@
 
     /* ── Version 1 ───────────────────────────────────────────────────── */
     function VersionOne({ onHome }) {
-      const [section, setSection]   = useState('Participation and RPE');
+      const [section, setSection]   = useState(SUB_SECTIONS[1]);
       const [config, setConfig]     = useState(seedConfig);
       const [draft, setDraft]       = useState(null);
       const [squad, setSquad]       = useState(SQUADS[0]);
@@ -1231,7 +1231,7 @@
 
     /* ── Version 2 ───────────────────────────────────────────────────── */
     function VersionTwo({ onHome }) {
-      const [section, setSection] = useState(V2_SUB_SECTIONS[0]);
+      const [section, setSection] = useState(V2_SUB_SECTIONS[1]);
       const [config] = useState(seedConfig);
       const [importing, setImporting] = useState(false);
       const [imported, setImported] = useState(false);
