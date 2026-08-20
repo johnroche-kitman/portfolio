@@ -66,6 +66,7 @@
       Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
       Tabs, Tab, List, ListItemButton, ListItemText,
       TextField, MenuItem, Menu, Avatar, ButtonBase,
+      Snackbar, Alert, AlertTitle,
     } from '@mui/material';
 
     /* ── Design tokens (Figma variables, Playbook toolkit) ───────────── */
@@ -166,7 +167,8 @@
     const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
 
     // Gameday markers, in training-week order. The minus sign matches the design (U+2212).
-    const GD_ALL = ['GD−5', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD', 'GD+1', 'GD+2', 'GD+3'];
+    // Match day itself is deliberately absent: the game cannot carry a target.
+    const GD_ALL = ['GD−5', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2', 'GD+3'];
     const GD_DEFAULT = ['GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
 
     const MAX_METRICS = 6;
@@ -1182,12 +1184,12 @@
 
       const next = () => {
         if (step === 1) { setStep(2); setInstructionsOpen(false); }
-        else onExit();
+        else onExit(true); // Import — the targets page confirms it
       };
 
       const previous = () => {
         if (step === 2) setStep(1);
-        else onExit();
+        else onExit(false); // backing out of the flow, nothing imported
       };
 
       return (
@@ -1232,8 +1234,14 @@
       const [section, setSection] = useState(V2_SUB_SECTIONS[0]);
       const [config] = useState(seedConfig);
       const [importing, setImporting] = useState(false);
+      const [imported, setImported] = useState(false);
 
-      if (importing) return <ImportFlow onExit={() => setImporting(false)} onHome={onHome} />;
+      const leaveImport = (didImport) => {
+        setImporting(false);
+        if (didImport) setImported(true);
+      };
+
+      if (importing) return <ImportFlow onExit={leaveImport} onHome={onHome} />;
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
@@ -1272,6 +1280,22 @@
               </Box>
             </Box>
           </Box>
+
+          {/* Stays until dismissed, so it is still there when you look back. */}
+          <Snackbar
+            open={imported}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            sx={{ right: '28px !important', bottom: '32px !important' }}
+          >
+            <Alert
+              severity="success"
+              onClose={() => setImported(false)}
+              sx={{ width: 324, alignItems: 'flex-start' }}
+            >
+              <AlertTitle sx={{ fontWeight: 600, mb: 0.25 }}>Import successful</AlertTitle>
+              Targets will update shortly
+            </Alert>
+          </Snackbar>
         </Box>
       );
     }
