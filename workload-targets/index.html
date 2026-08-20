@@ -1566,6 +1566,7 @@
 
     const metricByKey = (key) => METRIC_LIBRARY_SESSION.find((m) => m.key === key);
     const DEFAULT_COLUMNS = ['td', 'hsr', 'sd', 'accels', 'decels', 'maxspeed'];
+    const MAX_SESSION_COLUMNS = 6;
 
     // base values hold at baseDuration; a drill scales linearly from there.
     const SESSION_DRILLS = [
@@ -1878,7 +1879,9 @@
       // whatever the divider leaves it, stops at a floor that keeps six columns
       // legible, and past that overflows and is clipped, so it slides off right.
       const valuesSx = { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` };
-      const colWidth = `${100 / metrics.length}%`;
+      // Fixed share rather than a share of however many are showing, so columns
+      // keep their width as you add and remove, and the empty slot is where + goes.
+      const colWidth = `${100 / MAX_SESSION_COLUMNS}%`;
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
@@ -1890,18 +1893,19 @@
           {metrics.map((m, i) => (
             <Box key={m.key} sx={{
               width: colWidth, flex: 'none', pr: 2, pt: '10px',
+              display: 'flex', alignItems: 'center',
               ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
+              '&:hover .col-tool': { opacity: 1 },
             }}>
               {/* The whole label is the hit area, not just the icon */}
               <ButtonBase
                 onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
                 aria-label={`Change the ${m.name} column`}
                 sx={{
-                  display: 'flex', alignItems: 'center', gap: 0.25,
+                  display: 'flex', alignItems: 'center', gap: 0.25, minWidth: 0,
                   px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
-                  maxWidth: '100%', justifyContent: 'flex-start',
+                  justifyContent: 'flex-start',
                   '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
-                  '&:hover .col-edit': { opacity: 1 },
                 }}
               >
                 <Tooltip title={metricTitle(m, overMetrics.has(m.key))} placement="top">
@@ -1914,12 +1918,42 @@
                     {m.label}
                   </Box>
                 </Tooltip>
-                <Box className="col-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
+                <Box className="col-tool" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
                   <MI name="edit" size={13} color={GREY100} />
                 </Box>
               </ButtonBase>
+
+              {/* Sits outside the button: nesting it would fire the menu too */}
+              <IconButton
+                className="col-tool"
+                size="small"
+                disabled={metrics.length <= 1}
+                onClick={() => setColumns((prev) => prev.filter((_, idx) => idx !== i))}
+                aria-label={`Remove the ${m.name} column`}
+                sx={{ opacity: 0, transition: 'opacity .12s', p: 0.25, flex: 'none' }}
+              >
+                <MI name="close" size={13} color={GREY100} />
+              </IconButton>
             </Box>
           ))}
+
+          {metrics.length < MAX_SESSION_COLUMNS && (
+            <Box sx={{ width: colWidth, flex: 'none', pr: 2, pt: '10px', display: 'flex', alignItems: 'center' }}>
+              <ButtonBase
+                onClick={(e) => setColAnchor({ el: e.currentTarget, index: null })}
+                aria-label="Add a metric column"
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.25,
+                  px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
+                  color: GREY100, fontSize: 12,
+                  '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
+                }}
+              >
+                <MI name="add" size={14} color={GREY100} />
+                Metric
+              </ButtonBase>
+            </Box>
+          )}
         </Box>
       );
 
@@ -2128,14 +2162,17 @@
                     onClose={() => setColAnchor(null)}
                   >
                     {METRIC_LIBRARY_SESSION.map((m) => {
-                      const usedElsewhere = columns.includes(m.key) && columns[colAnchor?.index] !== m.key;
+                      const adding = colAnchor?.index == null;
+                      const usedElsewhere = columns.includes(m.key) && (adding || columns[colAnchor?.index] !== m.key);
                       return (
                         <MenuItem
                           key={m.key}
                           disabled={usedElsewhere}
-                          selected={columns[colAnchor?.index] === m.key}
+                          selected={!adding && columns[colAnchor?.index] === m.key}
                           onClick={() => {
-                            setColumns((prev) => prev.map((k, i) => (i === colAnchor.index ? m.key : k)));
+                            setColumns((prev) => adding
+                              ? [...prev, m.key]
+                              : prev.map((k, i) => (i === colAnchor.index ? m.key : k)));
                             setColAnchor(null);
                           }}
                         >
