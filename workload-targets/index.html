@@ -1856,7 +1856,10 @@
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
-      const MetricHeaders = () => (
+      // A plain function, not a component declared in the render: as a component
+      // it would be a new type every render, remounting the headings and leaving
+      // the menu's anchor detached, which parked it in the top left corner.
+      const renderMetricHeaders = () => (
         <Box sx={{ display: 'flex', mb: 0.25 }}>
           {metrics.map((m, i) => (
             <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
@@ -2059,7 +2062,7 @@
                       </Box>
 
                       <Box sx={{ ...valuesSx, display: 'flex', flexDirection: 'column', pt: '10px', ...fadeSx }}>
-                        {drillIndex === 0 && <MetricHeaders />}
+                        {drillIndex === 0 && renderMetricHeaders()}
                         <Box sx={{ display: 'flex' }}>
                           {metrics.map((m) => (
                             <MetricCell
