@@ -923,6 +923,11 @@
             title: 'Version 3 - Cumulative rows and a total bar',
             description: 'Version 2 plus one plain bar per metric in the targets bar, the session total against its target. The rows carry the drill by drill detail, so the total bar stays undivided.',
           },
+          {
+            hash: '#/planning-v4',
+            title: 'Version 4 - Highlight the column that is over',
+            description: 'Version 1, but any metric whose session total has passed its target tints its whole column, heading down to the targets bar, so the problem is visible without reading a number.',
+          },
         ],
       },
     ];
@@ -1706,10 +1711,18 @@
       );
     }
 
-    function MetricCell({ metric, value, target, width, mode = 'target', before = 0 }) {
+    // The gap between drill rows is a margin, so a tinted cell has to bleed
+    // down through it or the column reads as a dashed stripe.
+    const COLUMN_TINT = 'rgba(195, 29, 43, 0.08)';
+    const ROW_GAP = 12;
+
+    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false }) {
       const over = target != null && value != null && value > target;
       return (
-        <Box sx={{ width, flex: 'none', pr: 2 }}>
+        <Box sx={{
+          width, flex: 'none', pr: 2,
+          ...(highlight && { bgcolor: COLUMN_TINT, pb: `${ROW_GAP}px`, mb: `-${ROW_GAP}px` }),
+        }}>
           <Tooltip title={metricTitle(metric, over)} placement="top" followCursor>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75, cursor: 'default', width: 'fit-content' }}>
               <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
@@ -1741,7 +1754,7 @@
     }
 
     /* ── Session planning, version 1 ─────────────────────────────────── */
-    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none' }) {
+    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
@@ -1817,6 +1830,16 @@
         return acc;
       }, {});
 
+      // Columns whose session total has passed its target
+      const overColumns = new Set(
+        highlightOver
+          ? metrics.filter((m) => {
+              const t = targetFor(m);
+              return t != null && totals[m.key] != null && totals[m.key] > t;
+            }).map((m) => m.key)
+          : []
+      );
+
       // Running total ahead of each drill, for the cumulative bars
       const runningBefore = (() => {
         const out = [];
@@ -1862,7 +1885,10 @@
       const renderMetricHeaders = () => (
         <Box sx={{ display: 'flex', mb: 0.25 }}>
           {metrics.map((m, i) => (
-            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+            <Box key={m.key} sx={{
+              width: colWidth, flex: 'none', pr: 2,
+              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
+            }}>
               {/* The whole label is the hit area, not just the icon */}
               <ButtonBase
                 onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
@@ -2061,9 +2087,9 @@
                         }} />
                       </Box>
 
-                      <Box sx={{ ...valuesSx, display: 'flex', flexDirection: 'column', pt: '10px', ...fadeSx }}>
+                      <Box sx={{ ...valuesSx, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', pt: '10px', ...fadeSx }}>
                         {drillIndex === 0 && renderMetricHeaders()}
-                        <Box sx={{ display: 'flex' }}>
+                        <Box sx={{ display: 'flex', flex: 1 }}>
                           {metrics.map((m) => (
                             <MetricCell
                               key={m.key}
@@ -2073,6 +2099,7 @@
                               width={colWidth}
                               mode={rowBars}
                               before={runningBefore[drillIndex]?.[m.key] ?? 0}
+                              highlight={overColumns.has(m.key)}
                             />
                           ))}
                         </Box>
@@ -2160,7 +2187,10 @@
                           const left = target == null || total == null ? null : target - total;
                           const over = left != null && left < 0;
                           return (
-                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                            <Box key={m.key} sx={{
+                              width: colWidth, flex: 'none', pr: 2,
+                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
+                            }}>
                               <Tooltip
                                 title={left == null
                                   ? `${m.name} — no target to measure against`
@@ -2199,7 +2229,10 @@
                           const target = targetFor(m);
                           const over = target != null && totals[m.key] > target;
                           return (
-                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                            <Box key={m.key} sx={{
+                              width: colWidth, flex: 'none', pr: 2,
+                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
+                            }}>
                               <Tooltip title={metricTitle(m, over)} placement="top">
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
                                   <Box component="span" sx={{
@@ -2240,7 +2273,10 @@
                             );
                           }
                           return (
-                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                            <Box key={m.key} sx={{
+                              width: colWidth, flex: 'none', pr: 2,
+                              ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
+                            }}>
                               {/* Value and icon together are the hit area */}
                               <ButtonBase
                                 onClick={() => setEditingTarget(m.key)}
@@ -2390,10 +2426,8 @@
       if (route === '#/v3') return <VersionOne onHome={goHome} allowPercent key="v3" />;
       if (route === '#/planning-v1') return <SessionPlanning onHome={goHome} key="p1" />;
       if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
-      // planning-v4 kept as an alias, so a link handed out before the renumber still lands
-      if (route === '#/planning-v3' || route === '#/planning-v4') {
-        return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
-      }
+      if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
+      if (route === '#/planning-v4') return <SessionPlanning onHome={goHome} highlightOver key="p4" />;
       return <VersionsLanding />;
     }
 
