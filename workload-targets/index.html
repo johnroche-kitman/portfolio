@@ -1726,11 +1726,13 @@
     // Just the session total against its target. No drill segments: version 4
     // already carries that in each row, so repeating it here only adds noise.
     function TotalFooterBar({ metric, total, target, width }) {
-      if (!target || total == null) return <Box sx={{ width, flex: 'none', pr: 2 }}><Box sx={{ height: 8 }} /></Box>;
+      if (!target || total == null) return <Box sx={{ width, flex: 'none', pr: 2 }}><Box sx={{ height: 5 }} /></Box>;
       const over = total > target;
       return (
         <Box sx={{ width, flex: 'none', pr: 2 }}>
-          <Box sx={{ height: 8, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' }}>
+          {/* Same weight as the row bars, but a white track: the grey one
+              disappeared into the grey of the bar itself */}
+          <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#ffffff', overflow: 'hidden', display: 'flex' }}>
             <Box sx={{ width: `${Math.min(100, (total / target) * 100)}%`, bgcolor: over ? ERROR : metric.color }} />
           </Box>
         </Box>
