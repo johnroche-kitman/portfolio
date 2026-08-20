@@ -2071,8 +2071,8 @@
                   </Typography>
 
                   <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...collapseSx }}>
-                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
                     <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Remaining:</Typography>
+                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
                     <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
                   </Box>
                 </Box>
@@ -2080,27 +2080,6 @@
                 <React.Fragment>
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
                     <Box sx={{ ...valuesSx, ...collapseSx }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        {metrics.map((m) => {
-                          const target = targetFor(m);
-                          const over = target != null && totals[m.key] > target;
-                          return (
-                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                              <Tooltip title={metricTitle(m, over)} placement="top">
-                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
-                                  <Box component="span" sx={{
-                                    fontSize: 14,
-                                    color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
-                                  }}>
-                                    {totals[m.key] == null ? '—' : totals[m.key]}
-                                  </Box>
-                                  {over && <MI name="error" size={15} color={ERROR} />}
-                                </Stack>
-                              </Tooltip>
-                            </Box>
-                          );
-                        })}
-                      </Box>
                       {/* What is still available to spend on this session */}
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {metrics.map((m) => {
@@ -2125,6 +2104,28 @@
                                     fontWeight: over ? 700 : 400,
                                   }}>
                                     {left == null ? '—' : over ? `\u2212${Math.abs(left)}` : left}
+                                  </Box>
+                                  {over && <MI name="error" size={15} color={ERROR} />}
+                                </Stack>
+                              </Tooltip>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        {metrics.map((m) => {
+                          const target = targetFor(m);
+                          const over = target != null && totals[m.key] > target;
+                          return (
+                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              <Tooltip title={metricTitle(m, over)} placement="top">
+                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+                                  <Box component="span" sx={{
+                                    fontSize: 14,
+                                    color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
+                                  }}>
+                                    {totals[m.key] == null ? '—' : totals[m.key]}
                                   </Box>
                                   {over && <MI name="error" size={15} color={ERROR} />}
                                 </Stack>
