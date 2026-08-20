@@ -2103,9 +2103,18 @@
                                     color: left == null ? DISABLED : over ? ERROR : PRIMARY,
                                     fontWeight: over ? 700 : 400,
                                   }}>
-                                    {left == null ? '—' : over ? `\u2212${Math.abs(left)}` : left}
+                                    {left == null ? '—' : Math.abs(left)}
                                   </Box>
-                                  {over && <MI name="error" size={15} color={ERROR} />}
+                                  {/* The word carries it. A minus sign read as
+                                      "minus 110 left", which is not what it means. */}
+                                  {over && (
+                                    <Box component="span" sx={{
+                                      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
+                                      color: ERROR, lineHeight: 1,
+                                    }}>
+                                      OVER
+                                    </Box>
+                                  )}
                                 </Stack>
                               </Tooltip>
                             </Box>
