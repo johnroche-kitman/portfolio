@@ -178,12 +178,44 @@
     const emptySlots = () => Array.from({ length: MAX_METRICS }, emptySlot);
     const isFilled = (slot) => Boolean(slot && slot.metric);
 
-    const seedMetrics = () => {
+    // Session totals for a soccer training week. GD−3 is the heaviest day, GD−1 is
+    // activation and GD+1 is recovery. Younger squads carry less volume.
+    // Order of values matches GD_DEFAULT: GD−4, GD−3, GD−2, GD−1, GD+1, GD+2.
+    const SQUAD_TARGETS = {
+      '1st team': {
+        'Total distance':       [4800, 5600, 4200, 3100, 2200, 4400],
+        'High speed running':   [420, 610, 480, 260, 90, 380],
+        'Sprint distance':      [120, 210, 180, 70, 20, 110],
+        'Accelerations (count)': [28, 38, 32, 18, 8, 26],
+        'Decelerations (count)': [30, 41, 34, 19, 9, 28],
+      },
+      'U21': {
+        'Total distance':       [4300, 5000, 3800, 2800, 2000, 3900],
+        'High speed running':   [360, 520, 410, 220, 80, 320],
+        'Sprint distance':      [95, 170, 145, 55, 15, 90],
+        'Accelerations (count)': [24, 33, 28, 16, 7, 22],
+        'Decelerations (count)': [26, 35, 30, 17, 8, 24],
+      },
+      'U18': {
+        'Total distance':       [3800, 4500, 3400, 2500, 1800, 3500],
+        'High speed running':   [300, 430, 340, 180, 65, 270],
+        'Sprint distance':      [75, 135, 115, 45, 12, 70],
+        'Accelerations (count)': [20, 28, 24, 13, 6, 19],
+        'Decelerations (count)': [22, 30, 26, 14, 7, 20],
+      },
+    };
+
+    // U18 sessions are less frequent, so the average leans on a longer window.
+    const SQUAD_IMPORTS = { '1st team': 'Last 5 imports', 'U21': 'Last 5 imports', 'U18': 'Last 10 imports' };
+
+    const seedMetrics = (squad) => {
       const slots = emptySlots();
-      ['Total distance', 'High speed running', 'Sprint distance', 'Accelerations (count)', 'Decelerations (count)']
-        .forEach((metric, i) => {
-          slots[i] = { metric, targets: GD_DEFAULT.reduce((acc, day) => ({ ...acc, [day]: '4000' }), {}) };
-        });
+      Object.entries(SQUAD_TARGETS[squad]).forEach(([metric, values], i) => {
+        slots[i] = {
+          metric,
+          targets: GD_DEFAULT.reduce((acc, day, d) => ({ ...acc, [day]: String(values[d]) }), {}),
+        };
+      });
       return slots;
     };
 
@@ -195,7 +227,7 @@
       SQUADS.forEach((squad) => {
         cfg[squad] = {
           days: [...GD_DEFAULT],
-          byPosition: { All: { imports: 'Last 5 imports', metrics: seedMetrics() } },
+          byPosition: { All: { imports: SQUAD_IMPORTS[squad], metrics: seedMetrics(squad) } },
         };
       });
       return cfg;
@@ -793,13 +825,22 @@
 
     const V2_SUB_SECTIONS = ['Participation and RPE', 'Workload metrics targets'];
 
-    const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports used', 'GD−4', 'GD−3', 'GD−2', 'GD−1'];
+    const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports used', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
 
+    // Squad, Position, metric, Imports used, then GD−4 … GD+2.
     const CSV_ROWS = [
-      { valid: true,  cells: ['1st team', 'All', 'Total distance', '5', '0', '4000', '4000', '4000'] },
-      { valid: true,  cells: ['1st team', 'All', 'HSR', '5', '0', '4000', '4000', '4000'] },
+      { valid: true,  cells: ['1st team', 'All',      'Total distance',        '5',   '4800', '5600', '4200', '3100', '2200', '4400'] },
+      { valid: true,  cells: ['1st team', 'All',      'High speed running',    '5',   '420',  '610',  '480',  '260',  '90',   '380'] },
+      { valid: true,  cells: ['1st team', 'All',      'Sprint distance',       '5',   '120',  '210',  '180',  '70',   '20',   '110'] },
+      { valid: true,  cells: ['1st team', 'All',      'Accelerations (count)', '10',  '28',   '38',   '32',   '18',   '8',    '26'] },
+      { valid: true,  cells: ['1st team', 'All',      'Decelerations (count)', '10',  '30',   '41',   '34',   '19',   '9',    '28'] },
+      { valid: true,  cells: ['1st team', 'All',      'Player load',           'All', '420',  '520',  '390',  '250',  '160',  '400'] },
+      { valid: true,  cells: ['1st team', 'Midfield', 'Total distance',        '5',   '5200', '6100', '4600', '3400', '2400', '4800'] },
+      { valid: true,  cells: ['1st team', 'Striker',  'Sprint distance',       '5',   '150',  '260',  '220',  '90',   '25',   '140'] },
+      { valid: true,  cells: ['U21',      'All',      'Total distance',        '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
+      { valid: true,  cells: ['U21',      'All',      'High speed running',    '5',   '360',  '520',  '410',  '220',  '80',   '320'] },
       { valid: false, errorAt: 2, errorText: 'Not a metric in your library',
-        cells: ['U21', 'Midfield', 'Total Distance (m)', '5', '4000', '4000', '4000', '4000'] },
+        cells: ['U21',      'All',      'Total Distance (m)',    '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
     ];
 
     const INSTRUCTIONS_W = 340;
@@ -1034,7 +1075,7 @@
       };
 
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
-      const cols = '44px 1.1fr 1fr 1.2fr 1fr 1fr 1fr 1fr 1fr';
+      const cols = `44px 1.1fr 1fr 1.4fr 1fr repeat(6, 0.85fr)`;
 
       return (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
@@ -1078,7 +1119,7 @@
           </Stack>
 
           <Box sx={{ flex: 1, overflow: 'auto', px: 3 }}>
-            <Box sx={{ minWidth: 1000 }}>
+            <Box sx={{ minWidth: 1280 }}>
               <Box sx={{
                 display: 'grid', gridTemplateColumns: cols, alignItems: 'center',
                 height: 44, borderBottom: `1px solid #E0E2E6`,
@@ -1135,8 +1176,9 @@
       const [instructionsOpen, setInstructionsOpen] = useState(true);
       const [rows, setRows] = useState(() => CSV_ROWS.map((r) => ({ ...r, cells: [...r.cells] })));
 
-      // Picking a file closes the instructions, as in the design.
-      const takeFile = (f) => { setFile(f); setInstructionsOpen(false); };
+      // Instructions stay open through the whole upload step; they only close
+      // when the preview appears and the table needs the width.
+      const takeFile = (f) => setFile(f);
 
       const next = () => {
         if (step === 1) { setStep(2); setInstructionsOpen(false); }
