@@ -1646,6 +1646,7 @@
     // The values flex with the divider down to this width, which is the point
     // where six columns still read cleanly. Past it they stop shrinking and
     // slide off the right edge instead.
+    const FOOTER_ROW_H = 24;               // labels and values share this
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     const SPLIT_HANDLE = 13;
@@ -2115,7 +2116,7 @@
               {/* Targets bar, held at the foot of the page */}
               <Box sx={{
                 flex: 'none', bgcolor: NEUTRAL_200, boxShadow: '0 -2px 6px rgba(59,73,96,0.12)',
-                px: 3, py: 1.5, display: 'flex', alignItems: 'center', overflow: 'hidden', zIndex: 1,
+                px: 3, py: 1.5, display: 'flex', alignItems: 'flex-start', overflow: 'hidden', zIndex: 1,
               }}>
                 <Box sx={{
                   width: cardWidth, flex: 'none', minWidth: 0, ...growSx,
@@ -2128,10 +2129,17 @@
                     Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
                   </Typography>
 
-                  <Box sx={{ textAlign: 'right', flex: 'none', pr: 2, ...collapseSx }}>
-                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Remaining:</Typography>
-                    <Typography sx={{ fontSize: 13, color: GREY100, mb: 0.5, whiteSpace: 'nowrap' }}>Total workload:</Typography>
-                    <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>Session target:</Typography>
+                  {/* Labels and values are separate columns, so both are pinned to
+                      the same row height or they drift out of line */}
+                  <Box sx={{ flex: 'none', pr: 2, ...collapseSx }}>
+                    {['Remaining:', 'Total workload:', 'Session target:'].map((label) => (
+                      <Box key={label} sx={{
+                        height: FOOTER_ROW_H, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                        fontSize: 13, color: GREY100, whiteSpace: 'nowrap',
+                      }}>
+                        {label}
+                      </Box>
+                    ))}
                   </Box>
                 </Box>
 
@@ -2139,7 +2147,7 @@
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
                     <Box sx={{ ...valuesSx, ...collapseSx }}>
                       {/* What is still available to spend on this session */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', height: FOOTER_ROW_H }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const total = totals[m.key];
@@ -2180,7 +2188,7 @@
                         })}
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', height: FOOTER_ROW_H }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const over = target != null && totals[m.key] > target;
@@ -2202,7 +2210,7 @@
                         })}
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', height: FOOTER_ROW_H }}>
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
