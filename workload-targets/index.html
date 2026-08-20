@@ -1830,15 +1830,15 @@
         return acc;
       }, {});
 
-      // Columns whose session total has passed its target
-      const overColumns = new Set(
-        highlightOver
-          ? metrics.filter((m) => {
-              const t = targetFor(m);
-              return t != null && totals[m.key] != null && totals[m.key] > t;
-            }).map((m) => m.key)
-          : []
+      // Metrics whose session total has passed its target. Every version colours
+      // the heading with this; only version 4 also tints the column.
+      const overMetrics = new Set(
+        metrics.filter((m) => {
+          const t = targetFor(m);
+          return t != null && totals[m.key] != null && totals[m.key] > t;
+        }).map((m) => m.key)
       );
+      const overColumns = new Set(highlightOver ? [...overMetrics] : []);
 
       // Running total ahead of each drill, for the cumulative bars
       const runningBefore = (() => {
@@ -1901,9 +1901,11 @@
                   '&:hover .col-edit': { opacity: 1 },
                 }}
               >
-                <Tooltip title={metricTitle(m, false)} placement="top">
+                <Tooltip title={metricTitle(m, overMetrics.has(m.key))} placement="top">
                   <Box component="span" sx={{
-                    fontSize: 12, color: GREY100,
+                    fontSize: 12,
+                    color: overMetrics.has(m.key) ? ERROR : GREY100,
+                    fontWeight: overMetrics.has(m.key) ? 700 : 400,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
                     {m.label}
