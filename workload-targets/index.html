@@ -1581,9 +1581,10 @@
     // Below this the card content wraps and the rows grow unevenly, so the drag
     // stops here rather than letting the layout fall apart.
     const SPLIT_MIN_DRILL = 360;
-    // The values keep a fixed width and slide off the right rather than
-    // compressing, so the columns stay readable at every split.
-    const VALUES_WIDTH = 620;
+    // The values flex with the divider down to this width, which is the point
+    // where six columns still read cleanly. Past it they stop shrinking and
+    // slide off the right edge instead.
+    const VALUES_MIN = 492;
     const SPLIT_HANDLE = 13;
 
     /* ── Drill diagram placeholder ───────────────────────────────────── */
@@ -1611,17 +1612,22 @@
     }
 
     /* ── One metric cell: value over a bar showing its share of target ── */
+    const metricTitle = (metric, over) =>
+      `${metric.name}${metric.unit ? ` (${metric.unit})` : ''}${over ? ' — over target' : ''}`;
+
     function MetricCell({ metric, value, target, width }) {
       const pct = target ? Math.min(100, (value / target) * 100) : 0;
       const over = target ? value > target : false;
       return (
         <Box sx={{ width, flex: 'none', pr: 2 }}>
-          <Tooltip title={`${metric.name}${metric.unit ? ` (${metric.unit})` : ''}`} placement="top" followCursor>
-            <Box sx={{ display: 'inline-block', cursor: 'default' }}>
-              <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400, mb: 0.75 }}>
+          <Tooltip title={metricTitle(metric, over)} placement="top" followCursor>
+            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75, cursor: 'default', width: 'fit-content' }}>
+              <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
                 {value}
               </Typography>
-            </Box>
+              {/* Colour on its own is not enough of a signal */}
+              {over && <MI name="error" size={15} color={ERROR} />}
+            </Stack>
           </Tooltip>
           <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden' }}>
             <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: over ? ERROR : metric.color }} />
@@ -1638,7 +1644,18 @@
       const [editingId, setEditingId] = useState(null);
       const [splitWidth, setSplitWidth] = useState(640);
       const [dragging, setDragging] = useState(false);
+      const [areaWidth, setAreaWidth] = useState(0);
       const areaRef = React.useRef(null);
+
+      React.useEffect(() => {
+        const el = areaRef.current;
+        if (!el) return;
+        const measure = () => setAreaWidth(el.getBoundingClientRect().width);
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, []);
 
       // One number drives the drill column, the value columns, the totals and the
       // targets, so the four can never fall out of line.
@@ -1676,7 +1693,11 @@
       }, {});
       const totalMinutes = drills.reduce((sum, d) => sum + d.duration, 0);
 
-      const colWidth = VALUES_WIDTH / SESSION_METRICS.length;
+      // Flex with the divider, but never below the point where the columns
+      // start running into each other. Past that the panel keeps its width and
+      // the overflow is clipped, so it slides off to the right.
+      const valuesWidth = Math.max(VALUES_MIN, areaWidth - splitWidth - SPLIT_HANDLE);
+      const colWidth = valuesWidth / SESSION_METRICS.length;
       const cardWidth = showWorkload ? splitWidth : '100%';
 
       return (
@@ -1690,7 +1711,9 @@
 
               {/* Everything above the targets bar scrolls, including the heading */}
               <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', bgcolor: '#FAFAFA' }}>
-                <Box ref={areaRef} sx={{ px: 3, pt: 2.5, pb: 4 }}>
+
+                {/* Heading band stays white down to and including the tabs */}
+                <Box sx={{ bgcolor: '#fff', px: 3, pt: 2.5 }}>
 
                   <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: GREY100, mb: 0.5 }}>
                     <MI name="chevron_left" size={18} color={GREY100} />
@@ -1728,7 +1751,7 @@
                     {[
                       ['Date:', '4 Apr 2025 10:00'],
                       ['Gameweek:', 'IS6 - Arsenal FC (Away)'],
-                      ['GD:', '+3 / -1'],
+                      ['GD:', '−1'],
                       ['Surface type:', 'Grass'],
                     ].map(([k, v]) => (
                       <Typography key={k} sx={{ fontSize: 14, color: GREY100 }}>
@@ -1737,7 +1760,7 @@
                     ))}
                   </Stack>
 
-                  <Box sx={{ borderBottom: `1px solid ${DIVIDER}`, mb: 2 }}>
+                  <Box sx={{ borderBottom: `1px solid ${DIVIDER}` }}>
                     <Tabs
                       value="Planning"
                       sx={{
@@ -1750,15 +1773,18 @@
                         .map((l) => <Tab key={l} label={l} value={l} />)}
                     </Tabs>
                   </Box>
+                </Box>
+
+                <Box ref={areaRef} sx={{ px: 3, pt: 2, pb: 4 }}>
 
                   {showWorkload && (
                     <Box sx={{ display: 'flex', mb: 1 }}>
                       <Box sx={{ width: splitWidth, flex: 'none' }} />
                       <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                      <Box sx={{ width: VALUES_WIDTH, flex: 'none', display: 'flex' }}>
+                      <Box sx={{ width: valuesWidth, flex: 'none', display: 'flex' }}>
                         {SESSION_METRICS.map((m) => (
                           <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                            <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
+                            <Tooltip title={metricTitle(m, false)} placement="top">
                               <Box component="span" sx={{ fontSize: 12, color: GREY100, cursor: 'default' }}>
                                 {m.label}
                               </Box>
@@ -1861,7 +1887,7 @@
                             }} />
                           </Box>
 
-                          <Box sx={{ width: VALUES_WIDTH, flex: 'none', display: 'flex', alignItems: 'center', pt: 0.5 }}>
+                          <Box sx={{ width: valuesWidth, flex: 'none', display: 'flex', alignItems: 'center', pt: 0.5 }}>
                             {SESSION_METRICS.map((m) => (
                               <MetricCell
                                 key={m.key}
@@ -1915,19 +1941,22 @@
                 {showWorkload && (
                   <React.Fragment>
                     <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
-                    <Box sx={{ width: VALUES_WIDTH, flex: 'none' }}>
+                    <Box sx={{ width: valuesWidth, flex: 'none' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {SESSION_METRICS.map((m) => {
                           const over = totals[m.key] > SESSION_TARGETS[m.key];
                           return (
                             <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                              <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
-                                <Box component="span" sx={{
-                                  fontSize: 14, cursor: 'default',
-                                  color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
-                                }}>
-                                  {totals[m.key]}
-                                </Box>
+                              <Tooltip title={metricTitle(m, over)} placement="top">
+                                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+                                  <Box component="span" sx={{
+                                    fontSize: 14,
+                                    color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
+                                  }}>
+                                    {totals[m.key]}
+                                  </Box>
+                                  {over && <MI name="error" size={15} color={ERROR} />}
+                                </Stack>
                               </Tooltip>
                             </Box>
                           );
@@ -1936,7 +1965,7 @@
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {SESSION_METRICS.map((m) => (
                           <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
-                            <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
+                            <Tooltip title={metricTitle(m, false)} placement="top">
                               <Box component="span" sx={{ fontSize: 14, color: PRIMARY, cursor: 'default' }}>
                                 {SESSION_TARGETS[m.key]}
                               </Box>
