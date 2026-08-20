@@ -67,6 +67,7 @@
       Tabs, Tab, List, ListItemButton, ListItemText,
       TextField, MenuItem, Menu, Avatar, ButtonBase,
       Snackbar, Alert, AlertTitle,
+      ToggleButton, ToggleButtonGroup, InputAdornment,
     } from '@mui/material';
 
     /* ── Design tokens (Figma variables, Playbook toolkit) ───────────── */
@@ -210,6 +211,44 @@
     // U18 sessions are less frequent, so the average leans on a longer window.
     const SQUAD_IMPORTS = { '1st team': 'Last 5 imports', 'U21': 'Last 5 imports', 'U18': 'Last 10 imports' };
 
+    // What the squad hits on a match day, taken from game data. Targets set as a
+    // percentage are a share of these, which is what makes one percentage produce a
+    // different number for every metric.
+    const GD_MAX = {
+      '1st team': {
+        'Total distance': 10500, 'High speed running': 900, 'Sprint distance': 300,
+        'Accelerations (count)': 45, 'Decelerations (count)': 48, 'Player load': 980,
+        'Max speed': 33, 'Distance per minute': 115, 'Dynamic stress load': 420,
+      },
+      'U21': {
+        'Total distance': 9800, 'High speed running': 780, 'Sprint distance': 260,
+        'Accelerations (count)': 40, 'Decelerations (count)': 43, 'Player load': 880,
+        'Max speed': 32, 'Distance per minute': 108, 'Dynamic stress load': 380,
+      },
+      'U18': {
+        'Total distance': 9000, 'High speed running': 680, 'Sprint distance': 220,
+        'Accelerations (count)': 35, 'Decelerations (count)': 38, 'Player load': 790,
+        'Max speed': 31, 'Distance per minute': 100, 'Dynamic stress load': 340,
+      },
+    };
+
+    const gdMaxFor = (squad, metric) => (GD_MAX[squad] || {})[metric];
+
+    // A percentage over 100 is allowed, so a day can deliberately overload.
+    const valueFromPercent = (squad, metric, percent) => {
+      const max = gdMaxFor(squad, metric);
+      const n = parseFloat(percent);
+      if (max == null || percent === '' || percent == null || !isFinite(n)) return '';
+      return String(Math.round((max * n) / 100));
+    };
+
+    const percentFromValue = (squad, metric, value) => {
+      const max = gdMaxFor(squad, metric);
+      const n = parseFloat(value);
+      if (!max || !isFinite(n)) return '';
+      return String(Math.round((n / max) * 100));
+    };
+
     const seedMetrics = (squad) => {
       const slots = emptySlots();
       Object.entries(SQUAD_TARGETS[squad]).forEach(([metric, values], i) => {
@@ -221,15 +260,25 @@
       return slots;
     };
 
-    // A squad + position combination holds its own metrics and its own import window.
-    const emptyCombination = () => ({ imports: 'Last 5 imports', metrics: emptySlots() });
+    // A squad + position combination holds its own metrics, import window, and
+    // whether its targets are typed as exact values or as a share of GD max.
+    const emptyCombination = () => ({
+      imports: 'Last 5 imports', metrics: emptySlots(), mode: 'exact', percents: {},
+    });
 
     const seedConfig = () => {
       const cfg = {};
       SQUADS.forEach((squad) => {
         cfg[squad] = {
           days: [...GD_DEFAULT],
-          byPosition: { All: { imports: SQUAD_IMPORTS[squad], metrics: seedMetrics(squad) } },
+          byPosition: {
+            All: {
+              imports: SQUAD_IMPORTS[squad],
+              metrics: seedMetrics(squad),
+              mode: 'exact',
+              percents: {},
+            },
+          },
         };
       });
       return cfg;
@@ -242,6 +291,7 @@
     const DRAWER_W  = 280;
     const CONTENT_X = 26;   // content inset inside the pane
     const COL_METRIC = 219;
+    const COL_GDMAX  = 110;  // reference column, only shown in % of GD max mode
     const COL_DAY    = 145;
     const IN_METRIC  = 193;
     const IN_DAY     = 129;
@@ -348,6 +398,10 @@
         const set = combo.metrics.filter(isFilled);
         if (set.length === 0) return;
         filled.push({ position, imports: combo.imports });
+        // A combination set as a share of GD max shows that share above its metrics.
+        if (combo.mode === 'percent') {
+          rows.push({ position, percentRow: true, percents: combo.percents });
+        }
         set.forEach((row) => rows.push({ position, ...row }));
       });
 
@@ -375,7 +429,23 @@
                 ))}
               </Box>
 
-              {rows.map((row, i) => (
+              {rows.map((row, i) => row.percentRow ? (
+                <Box
+                  key={`${row.position}-percent-${i}`}
+                  sx={{
+                    display: 'flex', alignItems: 'center', height: 50,
+                    borderBottom: `1px solid ${DIVIDER}`, bgcolor: '#FAFBFC',
+                  }}
+                >
+                  <Box sx={{ width: 220, flex: 'none', ...cell, fontWeight: 700 }}>% of GD max</Box>
+                  <Box sx={{ width: 165, flex: 'none', ...cell }}>{row.position}</Box>
+                  {cfg.days.map((day) => (
+                    <Box key={day} sx={{ width: 150, flex: 'none', ...cell, fontWeight: 700 }}>
+                      {row.percents[day] ? `${row.percents[day]}%` : <span style={{ color: DISABLED }}>&mdash;</span>}
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
                 <Box
                   key={`${row.position}-${row.metric}-${i}`}
                   sx={{ display: 'flex', alignItems: 'center', height: 50, borderBottom: `1px solid ${DIVIDER}` }}
@@ -458,7 +528,7 @@
       );
     }
 
-    function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel }) {
+    function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel, allowPercent = false }) {
       const [dayAnchor, setDayAnchor] = useState(null);
 
       const cfg   = draft[squad];
@@ -467,6 +537,7 @@
       const usedCount = rows.filter(isFilled).length;
       const usedMetrics = rows.filter(isFilled).map((r) => r.metric);
       const unusedDays = GD_ALL.filter((d) => !cfg.days.includes(d));
+      const percentMode = allowPercent && combo.mode === 'percent';
 
       const mutate = (fn) => {
         const next = clone(draft);
@@ -475,13 +546,49 @@
         setDraft(next);
       };
 
+      // Percentages own the values while the mode is on, so every filled metric is
+      // rewritten from its own GD max whenever a percentage or a metric changes.
+      const applyPercents = (c) => {
+        c.metrics.forEach((slot) => {
+          if (!isFilled(slot)) return;
+          cfg.days.forEach((day) => {
+            slot.targets[day] = valueFromPercent(squad, slot.metric, c.percents[day]);
+          });
+        });
+      };
+
       const setMetric = (index, metric) => mutate((next) => {
-        next[squad].byPosition[position].metrics[index].metric = metric;
+        const c = next[squad].byPosition[position];
+        c.metrics[index].metric = metric;
+        if (c.mode === 'percent') applyPercents(c);
       });
 
       const setTarget = (index, day, raw) => mutate((next) => {
         const value = raw.replace(/[^0-9.]/g, '');
         next[squad].byPosition[position].metrics[index].targets[day] = value;
+      });
+
+      const setPercent = (day, raw) => mutate((next) => {
+        const c = next[squad].byPosition[position];
+        c.percents[day] = raw.replace(/[^0-9.]/g, '');
+        applyPercents(c);
+      });
+
+      const setMode = (mode) => mutate((next) => {
+        const c = next[squad].byPosition[position];
+        if (!mode || mode === c.mode) return;
+        c.mode = mode;
+        if (mode === 'percent') {
+          // Seed each percentage from what the day already asks of GD max, so
+          // switching mode reframes the targets rather than wiping them.
+          const first = c.metrics.find(isFilled);
+          cfg.days.forEach((day) => {
+            if (c.percents[day] == null || c.percents[day] === '') {
+              c.percents[day] = first ? percentFromValue(squad, first.metric, first.targets[day]) : '';
+            }
+          });
+          applyPercents(c);
+        }
       });
 
       // Empties the row in place. The six rows are fixed, so nothing shifts up.
@@ -520,7 +627,7 @@
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
 
       // Always six rows. An empty one is how a metric gets added.
-      const tableWidth = CONTENT_X + COL_METRIC + (cfg.days.length + 1) * COL_DAY;
+      const tableWidth = CONTENT_X + COL_METRIC + (percentMode ? COL_GDMAX : 0) + (cfg.days.length + 1) * COL_DAY;
 
       return (
         <Box sx={{ pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
@@ -535,9 +642,42 @@
           </Stack>
 
           {/* These two filter what the grid shows. */}
-          <Stack direction="row" spacing={1.25} sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
+          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
             <FilledSelect label="Squad"       value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
             <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={240} />
+
+            {/* selected and onClick are set per button rather than left to the
+                group, which does not inject them through in this build. */}
+            {allowPercent && (
+              <ToggleButtonGroup
+                exclusive
+                value={combo.mode}
+                sx={{
+                  height: 50,
+                  '& .MuiToggleButton-root': {
+                    textTransform: 'none', fontFamily: "'Open Sans', sans-serif",
+                    fontSize: 14, fontWeight: 600, color: PRIMARY, px: 2.25,
+                    borderColor: DIVIDER,
+                    '&.Mui-selected': { bgcolor: '#E9EAEC', color: PRIMARY, '&:hover': { bgcolor: '#E9EAEC' } },
+                  },
+                }}
+              >
+                <ToggleButton
+                  value="exact"
+                  selected={combo.mode === 'exact'}
+                  onClick={() => setMode('exact')}
+                >
+                  Exact values
+                </ToggleButton>
+                <ToggleButton
+                  value="percent"
+                  selected={combo.mode === 'percent'}
+                  onClick={() => setMode('percent')}
+                >
+                  % of GD max
+                </ToggleButton>
+              </ToggleButtonGroup>
+            )}
           </Stack>
 
           <Divider sx={{ mb: 0 }} />
@@ -550,6 +690,7 @@
           {/* Header row */}
           <Box sx={{ display: 'flex', alignItems: 'center', height: 56, borderBottom: `1px solid ${DIVIDER}` }}>
             <Box sx={{ width: COL_METRIC, flex: 'none', pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
+            {percentMode && <Box sx={{ width: COL_GDMAX, flex: 'none', ...head }}>GD max</Box>}
             {cfg.days.map((day) => (
               <Box key={day} sx={{
                 width: COL_DAY, flex: 'none', pl: '16px', ...head,
@@ -583,6 +724,38 @@
               </Menu>
             </Box>
           </Box>
+
+          {/* One percentage per gameday, shared by every metric below it. */}
+          {percentMode && (
+            <Box sx={{
+              display: 'flex', alignItems: 'center', height: ROW_H,
+              borderBottom: `1px solid ${DIVIDER}`, bgcolor: '#FAFBFC',
+            }}>
+              <Box sx={{ width: COL_METRIC, flex: 'none', pl: '18px' }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 700 }}>% of GD max</Typography>
+                <Typography sx={{ fontSize: 11, color: GREY100, mt: '2px' }}>Applies to every metric</Typography>
+              </Box>
+              <Box sx={{ width: COL_GDMAX, flex: 'none' }} />
+              {cfg.days.map((day) => (
+                <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+                  <TextField
+                    value={combo.percents[day] ?? ''}
+                    onChange={(e) => setPercent(day, e.target.value)}
+                    variant="filled"
+                    hiddenLabel
+                    inputProps={{ inputMode: 'numeric' }}
+                    InputProps={{ endAdornment: <InputAdornment position="end" sx={{ mt: '0 !important' }}>%</InputAdornment> }}
+                    sx={{
+                      width: IN_DAY,
+                      '& .MuiFilledInput-root': { height: 52, pr: 1 },
+                      '& .MuiFilledInput-input': { py: 0, height: 52, fontSize: 15, color: PRIMARY },
+                    }}
+                  />
+                </Box>
+              ))}
+              <Box sx={{ width: COL_DAY, flex: 'none' }} />
+            </Box>
+          )}
 
           {/* Six fixed rows */}
           {rows.map((slot, index) => {
@@ -621,15 +794,21 @@
                   </TextField>
                 </Box>
 
+                {percentMode && (
+                  <Box sx={{ width: COL_GDMAX, flex: 'none', fontSize: 15, color: GREY100 }}>
+                    {filledRow ? (gdMaxFor(squad, slot.metric) ?? '—') : ''}
+                  </Box>
+                )}
+
                 {cfg.days.map((day) => (
                   <Box key={day} sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
                     <TextField
                       value={slot.targets[day] ?? ''}
                       onChange={(e) => setTarget(index, day, e.target.value)}
-                      disabled={!slot.metric}
+                      disabled={!slot.metric || percentMode}
                       variant="filled"
                       hiddenLabel
-                      inputProps={{ inputMode: 'numeric', disabled: !slot.metric }}
+                      inputProps={{ inputMode: 'numeric', disabled: !slot.metric || percentMode }}
                       sx={{
                         width: IN_DAY,
                         '& .MuiFilledInput-root': { height: 52 },
@@ -705,6 +884,11 @@
         title: 'Version 2 - Import targets from a CSV',
         description: 'The same targets page, but set up by uploading a csv. Upload, review the rows and correct any of them inline, then import.',
       },
+      {
+        hash: '#/v3',
+        title: 'Version 3 - Set targets as a share of GD max',
+        description: 'Version 1 plus a switch in the edit header. Type one percentage per gameday and every metric takes that share of its own match day maximum.',
+      },
     ];
 
     const FIGMA_URL = 'https://www.figma.com/design/4PsNVzrjXX1NQNNRpq6xzM/Workload-management?node-id=7483-35751&t=qZYsXCfVngp6ECfL-1';
@@ -760,8 +944,9 @@
       );
     }
 
-    /* ── Version 1 ───────────────────────────────────────────────────── */
-    function VersionOne({ onHome }) {
+    /* ── Version 1, and version 3 which is the same screen with the
+         percentage mode switched on ─────────────────────────────────── */
+    function VersionOne({ onHome, allowPercent = false }) {
       const [section, setSection]   = useState(SUB_SECTIONS[1]);
       const [config, setConfig]     = useState(seedConfig);
       const [draft, setDraft]       = useState(null);
@@ -811,6 +996,7 @@
                     setPosition={setPosition}
                     onSave={save}
                     onCancel={cancel}
+                    allowPercent={allowPercent}
                   />
                 ) : (
                   <ReadOnlyView config={config} onAction={startEdit} />
@@ -1314,6 +1500,7 @@
 
       if (route === '#/v1') return <VersionOne onHome={goHome} />;
       if (route === '#/v2') return <VersionTwo onHome={goHome} />;
+      if (route === '#/v3') return <VersionOne onHome={goHome} allowPercent key="v3" />;
       return <VersionsLanding />;
     }
 
