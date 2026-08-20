@@ -74,7 +74,7 @@
       Tabs, Tab, List, ListItemButton, ListItemText,
       TextField, MenuItem, Menu, Avatar, ButtonBase,
       Snackbar, Alert, AlertTitle,
-      ToggleButton, ToggleButtonGroup, InputAdornment,
+      ToggleButton, ToggleButtonGroup, InputAdornment, Switch,
     } from '@mui/material';
 
     /* ── Design tokens (Figma variables, Playbook toolkit) ───────────── */
@@ -1527,12 +1527,12 @@
     // Up to six, matching the cap on the targets pages. Six is why the split
     // between the drills and the values needs to be draggable.
     const SESSION_METRICS = [
-      { key: 'td',     label: 'TD (m)',     color: '#00968F' },
-      { key: 'hsr',    label: 'HSR (m)',    color: '#2E7D32' },
-      { key: 'sd',     label: 'SD (m)',     color: '#1565C0' },
-      { key: 'accels', label: 'Accels (#)', color: '#E8590C' },
-      { key: 'decels', label: 'Decels (#)', color: '#7C3AED' },
-      { key: 'load',   label: 'Load (AU)',  color: '#AD1457' },
+      { key: 'td',     label: 'TD (m)',     name: 'Total distance',       unit: 'm',  color: '#00968F' },
+      { key: 'hsr',    label: 'HSR (m)',    name: 'High speed running',   unit: 'm',  color: '#2E7D32' },
+      { key: 'sd',     label: 'SD (m)',     name: 'Sprint distance',      unit: 'm',  color: '#1565C0' },
+      { key: 'accels', label: 'Accels (#)', name: 'Accelerations',        unit: '',   color: '#E8590C' },
+      { key: 'decels', label: 'Decels (#)', name: 'Decelerations',        unit: '',   color: '#7C3AED' },
+      { key: 'load',   label: 'Load (AU)',  name: 'Player load',          unit: 'AU', color: '#AD1457' },
     ];
 
     // base values hold at baseDuration; a drill scales linearly from there.
@@ -1581,7 +1581,10 @@
     // Below this the card content wraps and the rows grow unevenly, so the drag
     // stops here rather than letting the layout fall apart.
     const SPLIT_MIN_DRILL = 360;
-    const SPLIT_MIN_VALUES = 250;
+    // The values keep a fixed width and slide off the right rather than
+    // compressing, so the columns stay readable at every split.
+    const VALUES_WIDTH = 620;
+    const SPLIT_HANDLE = 13;
 
     /* ── Drill diagram placeholder ───────────────────────────────────── */
     function PitchThumb() {
@@ -1608,16 +1611,20 @@
     }
 
     /* ── One metric cell: value over a bar showing its share of target ── */
-    function MetricCell({ value, target, color, width }) {
+    function MetricCell({ metric, value, target, width }) {
       const pct = target ? Math.min(100, (value / target) * 100) : 0;
       const over = target ? value > target : false;
       return (
         <Box sx={{ width, flex: 'none', pr: 2 }}>
-          <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400, mb: 0.75 }}>
-            {value}
-          </Typography>
-          <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#EDEFF2', overflow: 'hidden' }}>
-            <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: over ? ERROR : color }} />
+          <Tooltip title={`${metric.name}${metric.unit ? ` (${metric.unit})` : ''}`} placement="top" followCursor>
+            <Box sx={{ display: 'inline-block', cursor: 'default' }}>
+              <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400, mb: 0.75 }}>
+                {value}
+              </Typography>
+            </Box>
+          </Tooltip>
+          <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden' }}>
+            <Box sx={{ width: `${pct}%`, height: '100%', bgcolor: over ? ERROR : metric.color }} />
           </Box>
         </Box>
       );
@@ -1640,9 +1647,10 @@
         const onMove = (e) => {
           const box = areaRef.current?.getBoundingClientRect();
           if (!box) return;
-          const raw = e.clientX - box.left;
-          const max = box.width - SPLIT_MIN_VALUES;
-          setSplitWidth(Math.max(SPLIT_MIN_DRILL, Math.min(raw, Math.max(SPLIT_MIN_DRILL, max))));
+          // Dragging right pushes the values off the edge rather than squeezing
+          // them, so the only ceiling is the width of the area itself.
+          const max = Math.max(SPLIT_MIN_DRILL, box.width);
+          setSplitWidth(Math.max(SPLIT_MIN_DRILL, Math.min(e.clientX - box.left, max)));
         };
         const onUp = () => setDragging(false);
         window.addEventListener('mousemove', onMove);
@@ -1668,16 +1676,8 @@
       }, {});
       const totalMinutes = drills.reduce((sum, d) => sum + d.duration, 0);
 
-      const colWidth = `${100 / SESSION_METRICS.length}%`;
-      const head = { fontSize: 12, color: GREY100, letterSpacing: 0.1 };
-
-      const ValuesHeader = () => (
-        <Box sx={{ display: 'flex', width: '100%' }}>
-          {SESSION_METRICS.map((m) => (
-            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2, ...head }}>{m.label}</Box>
-          ))}
-        </Box>
-      );
+      const colWidth = VALUES_WIDTH / SESSION_METRICS.length;
+      const cardWidth = showWorkload ? splitWidth : '100%';
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
@@ -1688,227 +1688,221 @@
 
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
 
-              {/* Session header */}
-              <Box sx={{ px: 3, pt: 2.5, flex: 'none' }}>
-                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: GREY100, mb: 0.5 }}>
-                  <MI name="chevron_left" size={18} color={GREY100} />
-                  <Typography sx={{ fontSize: 14, color: GREY100 }}>Gameweek</Typography>
-                </Stack>
+              {/* Everything above the targets bar scrolls, including the heading */}
+              <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', bgcolor: '#FAFAFA' }}>
+                <Box ref={areaRef} sx={{ px: 3, pt: 2.5, pb: 4 }}>
 
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>Training</Typography>
-
-                  <Stack direction="row" alignItems="center" spacing={2}>
-                    <Stack
-                      direction="row" alignItems="center" spacing={0.75}
-                      onClick={() => setShowWorkload((v) => !v)}
-                      sx={{ cursor: 'pointer', userSelect: 'none' }}
-                    >
-                      <Typography sx={{ fontSize: 14 }}>Workload</Typography>
-                      <MI name={showWorkload ? 'visibility' : 'visibility_off'} size={20} color={PRIMARY} />
-                    </Stack>
-
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography sx={{ fontSize: 14 }}>Complete</Typography>
-                      <Box
-                        onClick={() => setComplete((v) => !v)}
-                        sx={{
-                          width: 34, height: 18, borderRadius: 9, cursor: 'pointer', position: 'relative',
-                          bgcolor: complete ? PRIMARY : '#C9CFD9', transition: 'background-color .15s',
-                        }}
-                      >
-                        <Box sx={{
-                          width: 14, height: 14, borderRadius: '50%', bgcolor: '#fff',
-                          position: 'absolute', top: 2, left: complete ? 18 : 2, transition: 'left .15s',
-                        }} />
-                      </Box>
-                    </Stack>
-
-                    <Button variant="contained" color="secondary" sx={{ px: 2.25 }}>Edit details</Button>
-                    <MI name="more_vert" size={22} color={PRIMARY} />
+                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: GREY100, mb: 0.5 }}>
+                    <MI name="chevron_left" size={18} color={GREY100} />
+                    <Typography sx={{ fontSize: 14, color: GREY100 }}>Gameweek</Typography>
                   </Stack>
-                </Stack>
 
-                <Stack direction="row" spacing={3} sx={{ mt: 1, mb: 2, flexWrap: 'wrap' }}>
-                  {[
-                    ['Date:', '4 Apr 2025 10:00'],
-                    ['Gameweek:', 'IS6 - Arsenal FC (Away)'],
-                    ['GD:', '+3 / -1'],
-                    ['Surface type:', 'Grass'],
-                  ].map(([k, v]) => (
-                    <Typography key={k} sx={{ fontSize: 14, color: GREY100 }}>
-                      {k} <Box component="span" sx={{ color: PRIMARY, fontWeight: 600 }}>{v}</Box>
-                    </Typography>
-                  ))}
-                </Stack>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>Training</Typography>
 
-                <Box sx={{ borderBottom: `1px solid ${DIVIDER}` }}>
-                  <Tabs
-                    value="Planning"
-                    sx={{
-                      minHeight: 44,
-                      '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
-                      '& .MuiTab-root': { pointerEvents: 'none', px: 0, mr: 3.5, minWidth: 0 },
-                    }}
-                  >
-                    {['Planning', 'Athlete selection', 'Staff selection', 'Development goals', 'Collection', 'Imported data']
-                      .map((l) => <Tab key={l} label={l} value={l} />)}
-                  </Tabs>
-                </Box>
-              </Box>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                      <Stack
+                        direction="row" alignItems="center" spacing={0.75}
+                        onClick={() => setShowWorkload((v) => !v)}
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                      >
+                        <Typography sx={{ fontSize: 14 }}>Workload</Typography>
+                        <MI name={showWorkload ? 'visibility' : 'visibility_off'} size={20} color={PRIMARY} />
+                      </Stack>
 
-              {/* Drills and values */}
-              <Box ref={areaRef} sx={{ flex: 1, overflowY: 'auto', px: 3, pt: 2, position: 'relative' }}>
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Typography sx={{ fontSize: 14 }}>Complete</Typography>
+                        <Switch
+                          checked={complete}
+                          onChange={(e) => setComplete(e.target.checked)}
+                          inputProps={{ 'aria-label': 'Mark session complete' }}
+                        />
+                      </Stack>
 
-                {showWorkload && (
-                  <Box sx={{ display: 'flex', mb: 1 }}>
-                    <Box sx={{ width: splitWidth, flex: 'none' }} />
-                    <Box sx={{ width: 13, flex: 'none' }} />
-                    <Box sx={{ flex: 1, minWidth: 0 }}><ValuesHeader /></Box>
+                      <Button variant="contained" color="secondary" sx={{ px: 2.25 }}>Edit details</Button>
+                      <MI name="more_vert" size={22} color={PRIMARY} />
+                    </Stack>
+                  </Stack>
+
+                  <Stack direction="row" spacing={3} sx={{ mt: 1, mb: 2, flexWrap: 'wrap' }}>
+                    {[
+                      ['Date:', '4 Apr 2025 10:00'],
+                      ['Gameweek:', 'IS6 - Arsenal FC (Away)'],
+                      ['GD:', '+3 / -1'],
+                      ['Surface type:', 'Grass'],
+                    ].map(([k, v]) => (
+                      <Typography key={k} sx={{ fontSize: 14, color: GREY100 }}>
+                        {k} <Box component="span" sx={{ color: PRIMARY, fontWeight: 600 }}>{v}</Box>
+                      </Typography>
+                    ))}
+                  </Stack>
+
+                  <Box sx={{ borderBottom: `1px solid ${DIVIDER}`, mb: 2 }}>
+                    <Tabs
+                      value="Planning"
+                      sx={{
+                        minHeight: 44,
+                        '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+                        '& .MuiTab-root': { pointerEvents: 'none', px: 0, mr: 3.5, minWidth: 0 },
+                      }}
+                    >
+                      {['Planning', 'Athlete selection', 'Staff selection', 'Development goals', 'Collection', 'Imported data']
+                        .map((l) => <Tab key={l} label={l} value={l} />)}
+                    </Tabs>
                   </Box>
-                )}
 
-                {drills.map((drill) => (
-                  <Box key={drill.id} sx={{ display: 'flex', alignItems: 'stretch', mb: 1.5 }}>
-
-                    {/* Drill card. Fixed width and clipped, so dragging the divider
-                        left slides the values over it rather than reflowing it. */}
-                    <Box sx={{
-                      width: showWorkload ? splitWidth : '100%', flex: 'none',
-                      minWidth: 0, overflow: 'hidden', position: 'relative',
-                      border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, bgcolor: '#fff',
-                      display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5,
-                    }}>
-                      <Box sx={{ pt: 1.5, color: '#C3C9D4', flex: 'none' }}>
-                        <MI name="drag_indicator" size={18} color="#C3C9D4" />
-                      </Box>
-
-                      <PitchThumb />
-
-                      <Box sx={{ flex: 1, minWidth: 0, pr: 5 }}>
-                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5, minWidth: 0 }}>
-                          <Typography sx={{
-                            fontSize: 15, fontWeight: 700, minWidth: 0,
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}>{drill.name}</Typography>
-                          <Box sx={{
-                            bgcolor: NEUTRAL_200, borderRadius: '3px', px: 1, py: '2px', flex: 'none',
-                            fontSize: 12, color: PRIMARY, whiteSpace: 'nowrap',
-                          }}>{drill.tag}</Box>
-                        </Stack>
-
-                        <Typography sx={{
-                          fontSize: 14, color: PRIMARY, mb: 0.75,
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>{drill.desc}</Typography>
-
-                        {editingId === drill.id ? (
-                          <Stack direction="row" alignItems="center" spacing={0.75}>
-                            <TextField
-                              value={drill.duration}
-                              autoFocus
-                              onFocus={(e) => e.target.select()}
-                              onChange={(e) => setDuration(drill.id, e.target.value)}
-                              onBlur={() => setEditingId(null)}
-                              onKeyDown={(e) => { if (e.key === 'Enter') setEditingId(null); }}
-                              variant="outlined"
-                              size="small"
-                              inputProps={{ inputMode: 'numeric', style: { padding: '4px 8px', fontSize: 13, width: 34 } }}
-                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px` } }}
-                            />
-                            <Typography sx={{ fontSize: 13, color: GREY100 }}>mins</Typography>
-                          </Stack>
-                        ) : (
-                          <Stack
-                            direction="row" alignItems="center" spacing={0.75}
-                            onClick={() => setEditingId(drill.id)}
-                            sx={{ cursor: 'pointer', width: 'fit-content' }}
-                          >
-                            <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>{drill.duration} mins</Typography>
-                            <MI name="edit" size={13} color={GREY100} />
-                          </Stack>
-                        )}
-
-                        <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
-                          Add: <Box component="span" sx={{ color: PRIMARY }}>Note</Box>
-                        </Typography>
-                      </Box>
-
-                      {/* Pinned to the card edge, so it rides the divider and stays
-                          visible however far the values are dragged over. */}
-                      <Box sx={{ position: 'absolute', top: 8, right: 4, zIndex: 2, bgcolor: '#fff', borderRadius: '50%' }}>
-                        <IconButton size="small" aria-label={`Options for ${drill.name}`}>
-                          <MI name="more_vert" size={20} color={PRIMARY} />
-                        </IconButton>
+                  {showWorkload && (
+                    <Box sx={{ display: 'flex', mb: 1 }}>
+                      <Box sx={{ width: splitWidth, flex: 'none' }} />
+                      <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
+                      <Box sx={{ width: VALUES_WIDTH, flex: 'none', display: 'flex' }}>
+                        {SESSION_METRICS.map((m) => (
+                          <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                            <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
+                              <Box component="span" sx={{ fontSize: 12, color: GREY100, cursor: 'default' }}>
+                                {m.label}
+                              </Box>
+                            </Tooltip>
+                          </Box>
+                        ))}
                       </Box>
                     </Box>
+                  )}
 
-                    {showWorkload && (
-                      <React.Fragment>
-                        <Box
-                          onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
-                          title="Drag to resize"
-                          sx={{
-                            width: 13, flex: 'none', cursor: 'col-resize',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            '&:hover .grip': { bgcolor: PRIMARY },
-                          }}
-                        >
-                          <Box className="grip" sx={{
-                            width: 3, height: 26, borderRadius: 2,
-                            bgcolor: dragging ? PRIMARY : '#D6DAE2', transition: 'background-color .12s',
-                          }} />
+                  {drills.map((drill) => (
+                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'stretch', mb: 1.5 }}>
+
+                      {/* Fixed width and clipped, so dragging the divider left slides
+                          the values over the card rather than reflowing it. */}
+                      <Box sx={{
+                        width: cardWidth, flex: 'none',
+                        minWidth: 0, overflow: 'hidden', position: 'relative',
+                        border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, bgcolor: '#fff',
+                        display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5,
+                      }}>
+                        <Box sx={{ pt: 1.5, flex: 'none' }}>
+                          <MI name="drag_indicator" size={18} color="#C3C9D4" />
                         </Box>
 
-                        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', pt: 0.5 }}>
-                          <Box sx={{ display: 'flex', width: '100%' }}>
+                        <PitchThumb />
+
+                        <Box sx={{ flex: 1, minWidth: 0, pr: 5 }}>
+                          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5, minWidth: 0 }}>
+                            <Typography sx={{
+                              fontSize: 15, fontWeight: 700, minWidth: 0,
+                              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            }}>{drill.name}</Typography>
+                            <Box sx={{
+                              bgcolor: NEUTRAL_200, borderRadius: '3px', px: 1, py: '2px', flex: 'none',
+                              fontSize: 12, color: PRIMARY, whiteSpace: 'nowrap',
+                            }}>{drill.tag}</Box>
+                          </Stack>
+
+                          <Typography sx={{
+                            fontSize: 14, color: PRIMARY, mb: 0.75,
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>{drill.desc}</Typography>
+
+                          {editingId === drill.id ? (
+                            <Stack direction="row" alignItems="center" spacing={0.75}>
+                              <TextField
+                                value={drill.duration}
+                                autoFocus
+                                onFocus={(e) => e.target.select()}
+                                onChange={(e) => setDuration(drill.id, e.target.value)}
+                                onBlur={() => setEditingId(null)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') setEditingId(null); }}
+                                variant="outlined"
+                                size="small"
+                                inputProps={{ inputMode: 'numeric', style: { padding: '4px 8px', fontSize: 13, width: 34 } }}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px` } }}
+                              />
+                              <Typography sx={{ fontSize: 13, color: GREY100 }}>mins</Typography>
+                            </Stack>
+                          ) : (
+                            <Stack
+                              direction="row" alignItems="center" spacing={0.75}
+                              onClick={() => setEditingId(drill.id)}
+                              sx={{ cursor: 'pointer', width: 'fit-content' }}
+                            >
+                              <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>{drill.duration} mins</Typography>
+                              <MI name="edit" size={13} color={GREY100} />
+                            </Stack>
+                          )}
+
+                          <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
+                            Add: <Box component="span" sx={{ color: PRIMARY }}>Note</Box>
+                          </Typography>
+                        </Box>
+
+                        {/* Pinned to the card edge, so it rides the divider and stays
+                            visible however far the values are dragged over. */}
+                        <Box sx={{ position: 'absolute', top: 8, right: 4, zIndex: 2, bgcolor: '#fff', borderRadius: '50%' }}>
+                          <IconButton size="small" aria-label={`Options for ${drill.name}`}>
+                            <MI name="more_vert" size={20} color={PRIMARY} />
+                          </IconButton>
+                        </Box>
+                      </Box>
+
+                      {showWorkload && (
+                        <React.Fragment>
+                          <Box
+                            onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
+                            title="Drag to resize"
+                            sx={{
+                              width: SPLIT_HANDLE, flex: 'none', cursor: 'col-resize',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              '&:hover .grip': { bgcolor: PRIMARY },
+                            }}
+                          >
+                            <Box className="grip" sx={{
+                              width: 3, height: 26, borderRadius: 2,
+                              bgcolor: dragging ? PRIMARY : '#D6DAE2', transition: 'background-color .12s',
+                            }} />
+                          </Box>
+
+                          <Box sx={{ width: VALUES_WIDTH, flex: 'none', display: 'flex', alignItems: 'center', pt: 0.5 }}>
                             {SESSION_METRICS.map((m) => (
                               <MetricCell
                                 key={m.key}
+                                metric={m}
                                 value={drillValue(drill, m.key)}
                                 target={SESSION_TARGETS[m.key]}
-                                color={m.color}
                                 width={colWidth}
                               />
                             ))}
                           </Box>
-                        </Box>
-                      </React.Fragment>
-                    )}
-                  </Box>
-                ))}
+                        </React.Fragment>
+                      )}
+                    </Box>
+                  ))}
 
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2.5, mb: 4 }}>
-                  <Button variant="contained" color="primary" startIcon={<MI name="add" size={18} color="#fff" />} sx={{ px: 2 }}>
-                    Add drill from library
-                  </Button>
-                  <Button sx={{ color: PRIMARY, px: 0, '&:hover': { bgcolor: 'transparent', opacity: 0.7 } }} startIcon={<MI name="add" size={18} color={PRIMARY} />}>
-                    Create drill
-                  </Button>
-                </Stack>
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2.5 }}>
+                    <Button variant="contained" color="primary" startIcon={<MI name="add" size={18} color="#fff" />} sx={{ px: 2 }}>
+                      Add drill from library
+                    </Button>
+                    <Button sx={{ color: PRIMARY, px: 0, '&:hover': { bgcolor: 'transparent', opacity: 0.7 } }} startIcon={<MI name="add" size={18} color={PRIMARY} />}>
+                      Create drill
+                    </Button>
+                  </Stack>
+                </Box>
               </Box>
 
               {/* Targets bar, held at the foot of the page */}
               <Box sx={{
-                flex: 'none', borderTop: `1px solid ${DIVIDER}`, bgcolor: '#fff',
-                px: 3, py: 1.5, display: 'flex', alignItems: 'center',
+                flex: 'none', bgcolor: NEUTRAL_200, boxShadow: '0 -2px 6px rgba(59,73,96,0.12)',
+                px: 3, py: 1.5, display: 'flex', alignItems: 'center', overflow: 'hidden', zIndex: 1,
               }}>
-                {/* The labels live in the left zone so the value columns line up
-                    with the per drill columns exactly. */}
                 <Box sx={{
-                  width: showWorkload ? splitWidth : '100%', flex: 'none', minWidth: 0,
+                  width: cardWidth, flex: 'none', minWidth: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2,
                 }}>
-                  <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, overflow: 'hidden' }}>
-                    <MI name="expand_less" size={20} color={PRIMARY} />
-                    <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>Targets</Typography>
-                    <Typography sx={{
-                      fontSize: 14, color: PRIMARY, whiteSpace: 'nowrap',
-                      overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
-                      Total duration: {formatDuration(totalMinutes)}
-                    </Typography>
-                  </Stack>
+                  <Typography sx={{
+                    fontSize: 14, color: PRIMARY, whiteSpace: 'nowrap',
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>
+                    Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
+                  </Typography>
 
                   {showWorkload && (
                     <Box sx={{ textAlign: 'right', flex: 'none', pr: 2 }}>
@@ -1920,25 +1914,33 @@
 
                 {showWorkload && (
                   <React.Fragment>
-                    <Box sx={{ width: 13, flex: 'none' }} />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ width: SPLIT_HANDLE, flex: 'none' }} />
+                    <Box sx={{ width: VALUES_WIDTH, flex: 'none' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         {SESSION_METRICS.map((m) => {
                           const over = totals[m.key] > SESSION_TARGETS[m.key];
                           return (
-                            <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', pr: 2, fontSize: 14,
-                              color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
-                            }}>
-                              {totals[m.key]}
+                            <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
+                                <Box component="span" sx={{
+                                  fontSize: 14, cursor: 'default',
+                                  color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400,
+                                }}>
+                                  {totals[m.key]}
+                                </Box>
+                              </Tooltip>
                             </Box>
                           );
                         })}
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {SESSION_METRICS.map((m) => (
-                          <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2, fontSize: 14, color: PRIMARY }}>
-                            {SESSION_TARGETS[m.key]}
+                          <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                            <Tooltip title={`${m.name}${m.unit ? ` (${m.unit})` : ''}`} placement="top">
+                              <Box component="span" sx={{ fontSize: 14, color: PRIMARY, cursor: 'default' }}>
+                                {SESSION_TARGETS[m.key]}
+                              </Box>
+                            </Tooltip>
                           </Box>
                         ))}
                       </Box>
