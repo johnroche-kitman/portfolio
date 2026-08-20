@@ -280,11 +280,11 @@
       );
     }
 
-    function SubNav({ value, onChange }) {
+    function SubNav({ value, onChange, sections = SUB_SECTIONS }) {
       return (
         <Box sx={{ width: DRAWER_W, flex: 'none', borderRight: `1px solid ${DIVIDER}`, bgcolor: '#fff' }}>
           <List disablePadding sx={{ pt: 1 }}>
-            {SUB_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <ListItemButton
                 key={section}
                 selected={value === section}
@@ -380,15 +380,15 @@
       );
     }
 
-    function ReadOnlyView({ config, onEdit }) {
+    function ReadOnlyView({ config, onAction, title = 'Workload metrics and targets', actionLabel = 'Edit' }) {
       return (
         <Box sx={{ pl: `${CONTENT_X}px`, pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 3.5, pr: `${CONTENT_X}px` }}>
             <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>
-              Workload metrics and targets
+              {title}
             </Typography>
-            <Button variant="contained" color="primary" onClick={onEdit} sx={{ px: 2.5 }}>
-              Edit
+            <Button variant="contained" color="primary" onClick={onAction} sx={{ px: 2.5 }}>
+              {actionLabel}
             </Button>
           </Stack>
 
@@ -665,6 +665,11 @@
         title: 'Version 1 - Set targets in the system',
         description: 'Org settings › Workload › Workload metrics and targets. A grid of metrics against gameday markers, edited a squad and position at a time.',
       },
+      {
+        hash: '#/v2',
+        title: 'Version 2 - Import targets from a CSV',
+        description: 'The same targets page, but set up by uploading a csv. Upload, review the rows and correct any of them inline, then import.',
+      },
     ];
 
     const FIGMA_URL = 'https://www.figma.com/design/4PsNVzrjXX1NQNNRpq6xzM/Workload-management?node-id=7483-35751&t=qZYsXCfVngp6ECfL-1';
@@ -775,7 +780,452 @@
                     onCancel={cancel}
                   />
                 ) : (
-                  <ReadOnlyView config={config} onEdit={startEdit} />
+                  <ReadOnlyView config={config} onAction={startEdit} />
+                )}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    /* ══ Version 2 — import targets from a CSV ═══════════════════════ */
+
+    const V2_SUB_SECTIONS = ['Participation and RPE', 'Workload metrics targets'];
+
+    const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports used', 'GD−4', 'GD−3', 'GD−2', 'GD−1'];
+
+    const CSV_ROWS = [
+      { valid: true,  cells: ['1st team', 'All', 'Total distance', '5', '0', '4000', '4000', '4000'] },
+      { valid: true,  cells: ['1st team', 'All', 'HSR', '5', '0', '4000', '4000', '4000'] },
+      { valid: false, errorAt: 2, errorText: 'Not a metric in your library',
+        cells: ['U21', 'Midfield', 'Total Distance (m)', '5', '4000', '4000', '4000', '4000'] },
+    ];
+
+    const INSTRUCTIONS_W = 340;
+    const AMBER = '#ED9A00';
+    const AMBER_BG = '#FFF6E5';
+
+    /* ── Import stepper ──────────────────────────────────────────────── */
+    function StepCircle({ state, label }) {
+      const bg = state === 'pending' ? '#C0C6CF' : PRIMARY;
+      return (
+        <Box sx={{
+          width: 26, height: 26, borderRadius: '50%', bgcolor: bg, flex: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontSize: 12, fontWeight: 600,
+        }}>
+          {state === 'done' ? <MI name="check" size={15} color="#fff" /> : label}
+        </Box>
+      );
+    }
+
+    function ImportStepper({ step, onPrevious, onNext, nextLabel, nextDisabled }) {
+      return (
+        <Box sx={{
+          display: 'flex', alignItems: 'center', gap: 0,
+          px: 3, py: 1.75, flex: 'none', borderBottom: `1px solid ${DIVIDER}`,
+        }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <StepCircle state={step === 1 ? 'current' : 'done'} label="2" />
+            <Box>
+              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Import CSV</Typography>
+              <Typography sx={{ fontSize: 12, color: GREY100, mt: '2px' }}>Set targets in the csv file</Typography>
+            </Box>
+          </Stack>
+
+          <Box sx={{ flex: 1, height: '1px', bgcolor: DIVIDER, mx: 2.5 }} />
+
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <StepCircle state={step === 2 ? 'current' : 'pending'} label="3" />
+            <Box>
+              <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Preview import</Typography>
+              <Typography sx={{ fontSize: 12, color: GREY100, mt: '2px' }}>Review targets</Typography>
+            </Box>
+          </Stack>
+
+          <Stack direction="row" spacing={1} sx={{ ml: 3.5 }}>
+            <Button variant="contained" color="secondary" onClick={onPrevious} sx={{ px: 2.5 }}>Previous</Button>
+            <Button variant="contained" color="primary" onClick={onNext} disabled={nextDisabled} sx={{ px: 3 }}>
+              {nextLabel}
+            </Button>
+          </Stack>
+        </Box>
+      );
+    }
+
+    /* ── Instructions panel ──────────────────────────────────────────── */
+    function InstructionsPanel({ onCollapse }) {
+      const body = { fontSize: 15, lineHeight: 1.6, color: PRIMARY };
+      const strong = { fontSize: 15, fontWeight: 700, color: PRIMARY };
+      return (
+        <Box sx={{
+          width: INSTRUCTIONS_W, flex: 'none', borderRight: `1px solid ${DIVIDER}`,
+          overflowY: 'auto', bgcolor: '#fff',
+        }}>
+          <Stack
+            direction="row" alignItems="center" justifyContent="space-between"
+            sx={{ px: 3, py: 2.25, borderBottom: `1px solid ${DIVIDER}` }}
+          >
+            <Typography sx={{ fontSize: 20, fontWeight: 700 }}>Instructions</Typography>
+            <IconButton onClick={onCollapse} aria-label="Collapse instructions" sx={{ p: 0.5 }}>
+              <MI name="keyboard_double_arrow_left" size={22} color={PRIMARY} />
+            </IconButton>
+          </Stack>
+
+          <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Typography sx={body}>Download a template csv file with the relevant headers.</Typography>
+
+            <Typography
+              component="a"
+              href="#/v2"
+              onClick={(e) => e.preventDefault()}
+              sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            >
+              template.csv
+            </Typography>
+
+            <Typography sx={strong}>Accepted values</Typography>
+
+            <Box>
+              <Typography sx={body}>Positions:</Typography>
+              <Typography sx={body}>All</Typography>
+              <Typography sx={body}>Goalkeeper</Typography>
+              <Typography sx={body}>Midfield</Typography>
+              <Typography sx={body}>Striker</Typography>
+            </Box>
+
+            <Box>
+              <Typography sx={body}>Calculation:</Typography>
+              <Typography sx={body}>Average</Typography>
+              <Typography sx={body}>Max</Typography>
+              <Typography sx={body}>Min</Typography>
+            </Box>
+
+            <Box>
+              <Typography sx={body}>Imports_used</Typography>
+              <Typography sx={body}>(to calculate average)</Typography>
+              <Typography sx={body}>All</Typography>
+              <Typography sx={body}>1-100</Typography>
+            </Box>
+
+            <Box>
+              <Typography sx={body}>Game day headers</Typography>
+              <Typography sx={body}>GD+1-100</Typography>
+              <Typography sx={body}>GD-1-100</Typography>
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    function ExpandInstructions({ onExpand }) {
+      return (
+        <IconButton onClick={onExpand} aria-label="Show instructions" sx={{ p: 0.5, ml: 2.75, mt: 1.5, alignSelf: 'flex-start' }}>
+          <MI name="keyboard_double_arrow_right" size={22} color={PRIMARY} />
+        </IconButton>
+      );
+    }
+
+    /* ── Step 1: upload ──────────────────────────────────────────────── */
+    function UploadStep({ file, onFile, onRemoveFile }) {
+      return (
+        <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 6 }}>
+          <Box
+            onClick={() => onFile({ name: 'my_target_file.csv', size: '100kb' })}
+            sx={{
+              width: 600, height: 150, border: `1px dashed #C3C9D4`, borderRadius: `${RADIUS}px`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: 1.25, cursor: 'pointer',
+              '&:hover': { borderColor: PRIMARY, bgcolor: '#fcfcfd' },
+            }}
+          >
+            <MI name="upload_file" size={26} color={PRIMARY} />
+            <Typography sx={{ fontSize: 15, color: PRIMARY }}>
+              <Box component="span" sx={{ textDecoration: 'underline' }}>Click to upload</Box> or drag and drop
+            </Typography>
+            <Typography sx={{ fontSize: 14, color: PRIMARY }}>.CSV file only (max. 3MB)</Typography>
+          </Box>
+
+          {file && (
+            <Stack direction="row" alignItems="center" spacing={2} sx={{ width: 600, mt: 3.5, px: 2.5 }}>
+              <MI name="upload_file" size={24} color={PRIMARY} />
+              <Box sx={{ flex: 1 }}>
+                <Typography sx={{ fontSize: 15, color: PRIMARY }}>{file.name}</Typography>
+                <Typography sx={{ fontSize: 14, color: GREY100, mt: '2px' }}>{file.size}</Typography>
+              </Box>
+              <IconButton onClick={onRemoveFile} aria-label={`Remove ${file.name}`}>
+                <MI name="delete" size={22} color={PRIMARY} />
+              </IconButton>
+            </Stack>
+          )}
+        </Box>
+      );
+    }
+
+    /* ── Step 2: preview, with double-click to edit any data cell ────── */
+    function EditableCell({ value, invalid, onCommit }) {
+      const [editing, setEditing] = useState(false);
+      const [buffer, setBuffer] = useState(value);
+
+      const start = () => { setBuffer(value); setEditing(true); };
+      const commit = () => { setEditing(false); onCommit(buffer); };
+
+      if (editing) {
+        return (
+          <TextField
+            value={buffer}
+            autoFocus
+            onChange={(e) => setBuffer(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commit();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+            variant="outlined"
+            size="small"
+            sx={{
+              width: '100%',
+              '& .MuiOutlinedInput-root': {
+                height: 50, borderRadius: `${RADIUS}px`,
+                '& fieldset': { borderColor: '#5B8DEF' },
+                '&.Mui-focused fieldset': { borderColor: '#5B8DEF', borderWidth: 1 },
+              },
+              '& .MuiOutlinedInput-input': { fontSize: 15, color: PRIMARY },
+            }}
+          />
+        );
+      }
+
+      return (
+        <Box
+          onDoubleClick={start}
+          title="Double-click to edit"
+          sx={{
+            fontSize: 15, color: invalid ? PRIMARY : PRIMARY, cursor: 'text',
+            px: invalid ? 1 : 0, py: invalid ? 0.75 : 0, borderRadius: `${RADIUS}px`,
+            border: invalid ? `1px solid ${AMBER}` : '1px solid transparent',
+            bgcolor: invalid ? AMBER_BG : 'transparent',
+            display: 'flex', alignItems: 'center', gap: 0.75,
+            '&:hover': { borderColor: invalid ? AMBER : '#E0E2E6' },
+          }}
+        >
+          {invalid && <MI name="warning_amber" size={16} color={AMBER} />}
+          {value}
+        </Box>
+      );
+    }
+
+    function PreviewStep({ rows, setRows, instructionsOpen, onExpand }) {
+      const [tab, setTab] = useState('All');
+
+      const validCount = rows.filter((r) => r.valid).length;
+      const shown = tab === 'All' ? rows : tab === 'Valid' ? rows.filter((r) => r.valid) : rows.filter((r) => !r.valid);
+
+      const setCell = (rowIndex, colIndex, value) => {
+        const next = rows.map((r) => ({ ...r, cells: [...r.cells] }));
+        next[rowIndex].cells[colIndex] = value;
+        // Editing the flagged cell is what clears the error.
+        if (next[rowIndex].errorAt === colIndex && value !== rows[rowIndex].cells[colIndex]) {
+          next[rowIndex].valid = true;
+          delete next[rowIndex].errorAt;
+        }
+        setRows(next);
+      };
+
+      const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
+      const cols = '44px 1.1fr 1fr 1.2fr 1fr 1fr 1fr 1fr 1fr';
+
+      return (
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ px: 3, pt: 2, flex: 'none' }}>
+            {!instructionsOpen && (
+              <IconButton onClick={onExpand} aria-label="Show instructions" sx={{ p: 0.5 }}>
+                <MI name="keyboard_double_arrow_right" size={22} color={PRIMARY} />
+              </IconButton>
+            )}
+            <Box sx={{ display: 'flex', border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, overflow: 'hidden' }}>
+              {[['All', rows.length], ['Valid', validCount], ['Invalid', rows.length - validCount]].map(([label, count], i) => (
+                <Box
+                  key={label}
+                  onClick={() => setTab(label)}
+                  sx={{
+                    px: 2.25, height: 42, display: 'flex', alignItems: 'center', fontSize: 14, cursor: 'pointer',
+                    borderLeft: i === 0 ? 'none' : `1px solid ${DIVIDER}`,
+                    bgcolor: tab === label ? '#E9EAEC' : 'transparent',
+                    '&:hover': { bgcolor: tab === label ? '#E9EAEC' : '#f7f8f9' },
+                  }}
+                >
+                  {label} ({count})
+                </Box>
+              ))}
+            </Box>
+          </Stack>
+
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 3, py: 2, flex: 'none' }}>
+            <Stack direction="row" spacing={2.5} sx={{ color: PRIMARY }}>
+              <MI name="view_column" size={24} />
+              <MI name="download" size={24} />
+              <MI name="filter_list" size={24} />
+            </Stack>
+            <Box sx={{
+              bgcolor: NEUTRAL_200, borderBottom: `1px solid ${GREY100}`, borderRadius: `${RADIUS}px ${RADIUS}px 0 0`,
+              height: 38, width: 240, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1.5,
+            }}>
+              <Typography sx={{ fontSize: 14, color: PRIMARY }}>Search</Typography>
+              <MI name="search" size={22} color={PRIMARY} />
+            </Box>
+          </Stack>
+
+          <Box sx={{ flex: 1, overflow: 'auto', px: 3 }}>
+            <Box sx={{ minWidth: 1000 }}>
+              <Box sx={{
+                display: 'grid', gridTemplateColumns: cols, alignItems: 'center',
+                height: 44, borderBottom: `1px solid #E0E2E6`,
+              }}>
+                <Box sx={{ width: 18, height: 18, border: `2px solid ${GREY100}`, borderRadius: '2px' }} />
+                {CSV_COLUMNS.map((c) => <Box key={c} sx={head}>{c}</Box>)}
+              </Box>
+
+              {shown.map((row) => {
+                const rowIndex = rows.indexOf(row);
+                return (
+                  <Box
+                    key={rowIndex}
+                    sx={{
+                      display: 'grid', gridTemplateColumns: cols, alignItems: 'center',
+                      minHeight: 52, borderBottom: `1px solid #F0F1F3`, py: 0.5, pr: 2,
+                    }}
+                  >
+                    <Box sx={{ width: 18, height: 18, border: `2px solid ${GREY100}`, borderRadius: '2px' }} />
+                    {row.cells.map((cell, colIndex) => (
+                      <Box key={colIndex} sx={{ pr: 2 }}>
+                        <EditableCell
+                          value={cell}
+                          invalid={row.errorAt === colIndex}
+                          onCommit={(v) => setCell(rowIndex, colIndex, v)}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 3, height: 60, flex: 'none' }}>
+            <Stack direction="row" alignItems="center" spacing={0.25} sx={{ mr: 1.75, fontSize: 14, color: PRIMARY }}>
+              25 <MI name="expand_more" size={18} color={PRIMARY} />
+            </Stack>
+            <MI name="chevron_left" size={20} color={DISABLED} />
+            <Box sx={{
+              width: 32, height: 32, borderRadius: '50%', bgcolor: PRIMARY, color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+            }}>1</Box>
+            <MI name="chevron_right" size={20} color={DISABLED} />
+          </Stack>
+        </Box>
+      );
+    }
+
+    /* ── The import flow ─────────────────────────────────────────────── */
+    function ImportFlow({ onExit, onHome }) {
+      const [step, setStep] = useState(1);
+      const [file, setFile] = useState(null);
+      const [instructionsOpen, setInstructionsOpen] = useState(true);
+      const [rows, setRows] = useState(() => CSV_ROWS.map((r) => ({ ...r, cells: [...r.cells] })));
+
+      // Picking a file closes the instructions, as in the design.
+      const takeFile = (f) => { setFile(f); setInstructionsOpen(false); };
+
+      const next = () => {
+        if (step === 1) { setStep(2); setInstructionsOpen(false); }
+        else onExit();
+      };
+
+      const previous = () => {
+        if (step === 2) setStep(1);
+        else onExit();
+      };
+
+      return (
+        <Box sx={{ height: '100%', display: 'flex' }}>
+          <NavRail onHome={onHome} />
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <TopBar contextLabel="Primary Squad" />
+
+            <ImportStepper
+              step={step}
+              onPrevious={previous}
+              onNext={next}
+              nextLabel={step === 1 ? 'Next' : 'Import'}
+              nextDisabled={step === 1 && !file}
+            />
+
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              {instructionsOpen && <InstructionsPanel onCollapse={() => setInstructionsOpen(false)} />}
+
+              {step === 1 ? (
+                <Box sx={{ flex: 1, display: 'flex', minWidth: 0 }}>
+                  {!instructionsOpen && <ExpandInstructions onExpand={() => setInstructionsOpen(true)} />}
+                  <UploadStep file={file} onFile={takeFile} onRemoveFile={() => setFile(null)} />
+                </Box>
+              ) : (
+                <PreviewStep
+                  rows={rows}
+                  setRows={setRows}
+                  instructionsOpen={instructionsOpen}
+                  onExpand={() => setInstructionsOpen(true)}
+                />
+              )}
+            </Box>
+          </Box>
+        </Box>
+      );
+    }
+
+    /* ── Version 2 ───────────────────────────────────────────────────── */
+    function VersionTwo({ onHome }) {
+      const [section, setSection] = useState(V2_SUB_SECTIONS[0]);
+      const [config] = useState(seedConfig);
+      const [importing, setImporting] = useState(false);
+
+      if (importing) return <ImportFlow onExit={() => setImporting(false)} onHome={onHome} />;
+
+      return (
+        <Box sx={{ height: '100%', display: 'flex' }}>
+          <NavRail onHome={onHome} />
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <TopBar contextLabel={section === V2_SUB_SECTIONS[1] ? '1st team' : 'Kitman Labs'} />
+
+            <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
+              <Tabs
+                value="Workload"
+                sx={{
+                  minHeight: 46, px: 1,
+                  '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+                  '& .MuiTab-root': { pointerEvents: 'none' },
+                }}
+              >
+                {ORG_TABS.map((label) => <Tab key={label} label={label} value={label} />)}
+              </Tabs>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              <SubNav value={section} onChange={setSection} sections={V2_SUB_SECTIONS} />
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {section === V2_SUB_SECTIONS[0] ? (
+                  <ParticipationView />
+                ) : (
+                  <ReadOnlyView
+                    config={config}
+                    title="Workload metrics targets"
+                    actionLabel="Import targets"
+                    onAction={() => setImporting(true)}
+                  />
                 )}
               </Box>
             </Box>
@@ -797,6 +1247,7 @@
       const goHome = () => { window.location.hash = '#/'; };
 
       if (route === '#/v1') return <VersionOne onHome={goHome} />;
+      if (route === '#/v2') return <VersionTwo onHome={goHome} />;
       return <VersionsLanding />;
     }
 
