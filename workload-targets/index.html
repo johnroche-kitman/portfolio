@@ -798,12 +798,7 @@
                 </IconButton>
               </Box>
             ))}
-            {/* Sticky, so it stays in reach however far out the week runs. */}
-            <Box sx={{
-              width: COL_DAY, flex: 'none', pl: '16px',
-              position: 'sticky', right: 0, bgcolor: '#fff', zIndex: 2,
-              height: 56, display: 'flex', alignItems: 'center',
-            }}>
+            <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
               <Button
                 onClick={(e) => setDayAnchor(e.currentTarget)}
                 disabled={unusedDays.length === 0}
@@ -851,10 +846,7 @@
                   />
                 </Box>
               ))}
-              <Box sx={{
-                width: COL_DAY, flex: 'none',
-                position: 'sticky', right: 0, bgcolor: '#FAFBFC', zIndex: 1, height: ROW_H,
-              }} />
+              <Box sx={{ width: COL_DAY, flex: 'none' }} />
             </Box>
           )}
 
@@ -918,11 +910,7 @@
                   </Box>
                 ))}
 
-                <Box sx={{
-                  width: COL_DAY, flex: 'none', pl: '16px',
-                  position: 'sticky', right: 0, bgcolor: '#fff', zIndex: 1,
-                  height: ROW_H, display: 'flex', alignItems: 'center',
-                }}>
+                <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
                   {filledRow && (
                     <Tooltip title="Clear row">
                       <IconButton
