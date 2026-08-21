@@ -466,6 +466,10 @@
       const cell = { fontSize: 14, letterSpacing: 0.17, color: PRIMARY };
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
 
+      // The percentage row is bold only where it sits among metric rows and needs
+      // telling apart. On the percentage only page every row is one, so it reads flat.
+      const pctWeight = percentOnly ? 400 : 700;
+
       return (
         <Box sx={{ mb: 5 }}>
           <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}>
@@ -490,10 +494,10 @@
                     borderBottom: `1px solid ${DIVIDER}`, bgcolor: '#FAFBFC',
                   }}
                 >
-                  <Box sx={{ width: 255, flex: 'none', ...cell, fontWeight: 700 }}>% of GD max</Box>
+                  <Box sx={{ width: 255, flex: 'none', ...cell, fontWeight: pctWeight }}>% of GD max</Box>
                   <Box sx={{ width: 165, flex: 'none', ...cell }}>{row.position}</Box>
                   {cfg.days.map((day) => (
-                    <Box key={day} sx={{ width: 150, flex: 'none', ...cell, fontWeight: 700 }}>
+                    <Box key={day} sx={{ width: 150, flex: 'none', ...cell, fontWeight: pctWeight }}>
                       {row.percents[day] ? `${row.percents[day]}%` : <span style={{ color: DISABLED }}>&mdash;</span>}
                     </Box>
                   ))}
