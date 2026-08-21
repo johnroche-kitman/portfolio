@@ -937,11 +937,30 @@
 
     const FIGMA_URL = 'https://www.figma.com/design/4PsNVzrjXX1NQNNRpq6xzM/Workload-management?node-id=7483-35751&t=qZYsXCfVngp6ECfL-1';
 
+    const DISCUSSION_NOTES = [
+      {
+        title: '% GD Max',
+        body: 'If we added the ability to set targets by a percentage of game day max then the user does not need to set individual values for any metric, and any metric selected will have a target based on GD max.',
+      },
+      {
+        title: 'Drill duration',
+        body: 'At the moment drill duration is not saved in the drill library. We should probably set drill duration by default in the drill library based on the average duration that drill used. Workload values are calculated by average per minute.',
+      },
+      {
+        title: 'GD +/\u2212',
+        body: 'Setting a target for a specific GD plus and minus can make things very complicated. I have assumed the user picks either a GD+ or GD\u2212 to simplify things.',
+      },
+      {
+        title: 'Position',
+        body: 'I have included position when setting targets but at the moment this does not really translate to the session planning page. That is fine for now I guess if for phase 1 we are not including position. In the future we could add a selector or toggle to the session planning page that allows the user to switch between targets for positions, or even labels and group types if we added that.',
+      },
+    ];
+
     function VersionsLanding() {
       return (
         <Box sx={{
           minHeight: '100%', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', px: 3, py: 8, bgcolor: '#fafafa',
+          alignItems: 'center', justifyContent: 'flex-start', px: 3, py: 8, bgcolor: '#fafafa',
         }}>
           <Box sx={{
             width: 64, height: 64, mb: 3, borderRadius: '50%', bgcolor: '#0b1220',
@@ -996,6 +1015,24 @@
           >
             View the Figma design file
           </Typography>
+
+          <Box sx={{ width: '100%', maxWidth: 560, mt: 6, pt: 4, borderTop: `1px solid ${DIVIDER}` }}>
+            <Typography sx={{
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
+              textTransform: 'uppercase', color: GREY100, mb: 2.5,
+            }}>
+              Notes to discuss
+            </Typography>
+
+            <Stack spacing={3}>
+              {DISCUSSION_NOTES.map((note) => (
+                <Box key={note.title}>
+                  <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 0.75 }}>{note.title}</Typography>
+                  <Typography sx={{ fontSize: 14, color: GREY100, lineHeight: 1.6 }}>{note.body}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
         </Box>
       );
     }
