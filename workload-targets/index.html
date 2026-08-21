@@ -940,7 +940,10 @@
     const DISCUSSION_NOTES = [
       {
         title: '% GD Max',
-        body: 'If we added the ability to set targets by a percentage of game day max then the user does not need to set individual values for any metric, and any metric selected will have a target based on GD max.',
+        body: [
+          'If we added the ability to set targets by a percentage of game day max then the user does not need to set individual values for any metric, and any metric selected will have a target based on GD max.',
+          'For the CSV import option we could have a simplified template that just needs: squad, GD+/\u2212 and percent of GD max.',
+        ],
       },
       {
         title: 'Drill duration',
@@ -1032,7 +1035,11 @@
               {DISCUSSION_NOTES.map((note) => (
                 <Box key={note.title}>
                   <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 0.75 }}>{note.title}</Typography>
-                  <Typography sx={{ fontSize: 14, color: GREY100, lineHeight: 1.6 }}>{note.body}</Typography>
+                  {(Array.isArray(note.body) ? note.body : [note.body]).map((para, i) => (
+                    <Typography key={i} sx={{ fontSize: 14, color: GREY100, lineHeight: 1.6, mt: i > 0 ? 1 : 0 }}>
+                      {para}
+                    </Typography>
+                  ))}
                 </Box>
               ))}
             </Stack>
