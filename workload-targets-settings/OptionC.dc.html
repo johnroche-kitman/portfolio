@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif; background: #fff; color: #3B4960; }
+    a { color: #3B4960; } a:hover { color: #22293a; }
+    .tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #A7B0BF; }
+    .btn { border: 1px solid #3B4960; background: #3B4960; color: #fff; font: 600 12px 'Open Sans', sans-serif; padding: 8px 16px; border-radius: 3px; }
+    .btn-q { border: 1px dashed #C3C9D4; background: #fff; color: #7A869A; font: 600 12px 'Open Sans', sans-serif; padding: 10px 14px; border-radius: 3px; text-align: center; }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid #E7EAEF; }
+    .tabs > div { padding: 10px 16px; font-size: 13px; color: #7A869A; }
+    .tabs > div.on { color: #3B4960; font-weight: 700; box-shadow: inset 0 -2px 0 #3B4960; }
+    .card { border: 1px solid #E7EAEF; border-radius: 3px; background: #fff; }
+    .chead { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .cname { font-size: 14px; font-weight: 700; }
+    .csub { font-size: 11px; color: #A7B0BF; margin-top: 3px; }
+    .cbody { border-top: 1px solid #E7EAEF; padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+    .sel { border: 1px solid #D6DAE2; background: #F4F5F7; border-radius: 3px; padding: 7px 11px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .lbl { font-size: 11px; color: #7A869A; margin-bottom: 5px; }
+    .gd { display: flex; flex-direction: column; gap: 6px; }
+    .gd .k { font-size: 11px; font-weight: 700; color: #7A869A; text-align: center; }
+    .gd .v { border: 1px solid #D6DAE2; border-radius: 3px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 13px; }
+    .gd .v .u { font-size: 10px; color: #A7B0BF; }
+    .gd .v.empty { border-style: dashed; border-color: #E7EAEF; color: #C3C9D4; }
+    .pchip { border: 1px solid #D6DAE2; border-radius: 999px; padding: 6px 12px; font-size: 12px; background: #fff; color: #7A869A; }
+    .pchip.on { background: #3B4960; border-color: #3B4960; color: #fff; font-weight: 600; }
+    .note { font-size: 12px; line-height: 1.5; color: #7A869A; }
+  </style>
+</helmet>
+
+<div style="width: 1200px; min-height: 900px; padding: 32px 36px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div class="tag">Option C &middot; Stacked cards</div>
+      <h1 style="font-size: 20px; font-weight: 700; margin: 0;">Workload targets</h1>
+      <div class="note">Settings &rsaquo; Performance &rsaquo; Workload targets</div>
+    </div>
+    <div class="btn">Save changes</div>
+  </div>
+
+  <div class="tabs">
+    <div class="on">Men&#39;s first team</div>
+    <div>U21</div>
+    <div>U18</div>
+    <div>Women&#39;s first team</div>
+    <div style="color: #3B4960; font-weight: 600;">+ Add squad</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+
+    <div class="card">
+      <div class="chead">
+        <div>
+          <div class="cname">Total distance</div>
+          <div class="csub">Average per drill &middot; last 5 imports &middot; 6 gameday targets</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="note" style="font-size: 11px;">Metres</div>
+          <div class="note">&#9650;</div>
+        </div>
+      </div>
+      <div class="cbody">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 14px;">
+          <div><div class="lbl">Metric</div><div class="sel"><span>Total distance</span><span style="font-size:9px; color:#A7B0BF;">&#9660;</span></div></div>
+          <div><div class="lbl">Value taken per</div><div class="sel"><span>Drill</span><span style="font-size:9px; color:#A7B0BF;">&#9660;</span></div></div>
+          <div><div class="lbl">Calculation</div><div class="sel"><span>Average</span><span style="font-size:9px; color:#A7B0BF;">&#9660;</span></div></div>
+          <div><div class="lbl">Imports used</div><div class="sel"><span>Last 5 imports</span><span style="font-size:9px; color:#A7B0BF;">&#9660;</span></div></div>
+        </div>
+
+        <div>
+          <div class="lbl">Targets by gameday</div>
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr) 92px; gap: 8px; align-items: end;">
+            <div class="gd"><div class="k">GD-4</div><div class="v">1200<span class="u">m</span></div></div>
+            <div class="gd"><div class="k">GD-3</div><div class="v">1400<span class="u">m</span></div></div>
+            <div class="gd"><div class="k">GD-2</div><div class="v">1100<span class="u">m</span></div></div>
+            <div class="gd"><div class="k">GD-1</div><div class="v">1000<span class="u">m</span></div></div>
+            <div class="gd"><div class="k">GD</div><div class="v empty">&mdash;</div></div>
+            <div class="gd"><div class="k">GD+1</div><div class="v">400<span class="u">m</span></div></div>
+            <div class="gd"><div class="k">GD+2</div><div class="v">600<span class="u">m</span></div></div>
+            <div class="btn-q" style="padding: 11px 8px;">+ Day</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="lbl">Showing targets for</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <div class="pchip on">All positions</div>
+            <div class="pchip">Central midfield &middot; 2 changed</div>
+            <div class="pchip">Striker</div>
+            <div class="pchip" style="border-style: dashed; color: #3B4960;">+ Position</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead">
+        <div>
+          <div class="cname">High speed running</div>
+          <div class="csub">Average per drill &middot; last 5 imports &middot; 5 gameday targets</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="note" style="font-size: 11px;">240 &middot; 160 &middot; 140 &middot; 40 m</div>
+          <div class="note">&#9660;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead">
+        <div>
+          <div class="cname">Accelerations</div>
+          <div class="csub">Total per drill &middot; last 10 imports &middot; 5 gameday targets</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="note" style="font-size: 11px;">12 &middot; 9 &middot; 7 &middot; 3 count</div>
+          <div class="note">&#9660;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="chead">
+        <div>
+          <div class="cname">Player load</div>
+          <div class="csub">Total per drill &middot; all imports</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div class="note" style="font-size: 11px; color: #C08A2E;">No targets set</div>
+          <div class="note">&#9660;</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div class="btn-q" style="width: 160px;">+ Add metric</div>
+      <div class="note">4 of 6 metrics used in this squad</div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: auto; border-top: 1px solid #E7EAEF; padding-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div class="tag">Good at</div>
+      <div class="note">Everything for one metric sits together, and the collapsed cards summarise the rest, so nothing is hidden behind a click. Works down to a tablet width.</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div class="tag">Tradeoff</div>
+      <div class="note">Six expanded cards make a long page, and comparing GD-3 across metrics means scrolling rather than reading down a column.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1200,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

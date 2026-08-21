@@ -167,10 +167,20 @@
     const SQUADS    = ['1st team', 'U21', 'U18'];
     const POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
+    // The metric library, named exactly as it reads in the app. Every dropdown on
+    // every page picks from this one list.
     const METRIC_LIBRARY = [
-      'Total distance', 'High speed running', 'Sprint distance',
-      'Accelerations (count)', 'Decelerations (count)', 'Player load',
-      'Max speed', 'Distance per minute', 'Dynamic stress load',
+      'Total Distance (m)',
+      'Distance Per Minute (m/min)',
+      'HMLD (m)',
+      'HSR Distance (m)',
+      'Sprint Distance (m)',
+      'Accels Distance (m)',
+      'Accels (Count)',
+      'Decels Distance (m)',
+      'Decels (Count)',
+      'RPE x Duration',
+      '% max velocity',
     ];
 
     const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
@@ -194,28 +204,28 @@
     // Order of values matches GD_DEFAULT: GD−4, GD−3, GD−2, GD−1, GD+1, GD+2.
     const SQUAD_TARGETS = {
       '1st team': {
-        'Total distance':       [4800, 5600, 4200, 3100, 2200, 4400],
-        'High speed running':   [420, 610, 480, 260, 90, 380],
-        'Sprint distance':      [120, 210, 180, 70, 20, 110],
-        'Accelerations (count)': [28, 38, 32, 18, 8, 26],
-        'Decelerations (count)': [30, 41, 34, 19, 9, 28],
-        'Max speed':            [27, 32, 29, 24, 20, 26],
+        'Total Distance (m)':  [4800, 5600, 4200, 3100, 2200, 4400],
+        'HMLD (m)':            [1050, 1300, 980, 640, 420, 950],
+        'HSR Distance (m)':    [420, 610, 480, 260, 90, 380],
+        'Sprint Distance (m)': [120, 210, 180, 70, 20, 110],
+        'Accels (Count)':      [28, 38, 32, 18, 8, 26],
+        'Decels (Count)':      [30, 41, 34, 19, 9, 28],
       },
       'U21': {
-        'Total distance':       [4300, 5000, 3800, 2800, 2000, 3900],
-        'High speed running':   [360, 520, 410, 220, 80, 320],
-        'Sprint distance':      [95, 170, 145, 55, 15, 90],
-        'Accelerations (count)': [24, 33, 28, 16, 7, 22],
-        'Decelerations (count)': [26, 35, 30, 17, 8, 24],
-        'Max speed':            [26, 31, 28, 23, 19, 25],
+        'Total Distance (m)':  [4300, 5000, 3800, 2800, 2000, 3900],
+        'HMLD (m)':            [940, 1160, 880, 570, 375, 850],
+        'HSR Distance (m)':    [360, 520, 410, 220, 80, 320],
+        'Sprint Distance (m)': [95, 170, 145, 55, 15, 90],
+        'Accels (Count)':      [24, 33, 28, 16, 7, 22],
+        'Decels (Count)':      [26, 35, 30, 17, 8, 24],
       },
       'U18': {
-        'Total distance':       [3800, 4500, 3400, 2500, 1800, 3500],
-        'High speed running':   [300, 430, 340, 180, 65, 270],
-        'Sprint distance':      [75, 135, 115, 45, 12, 70],
-        'Accelerations (count)': [20, 28, 24, 13, 6, 19],
-        'Decelerations (count)': [22, 30, 26, 14, 7, 20],
-        'Max speed':            [25, 30, 27, 22, 18, 24],
+        'Total Distance (m)':  [3800, 4500, 3400, 2500, 1800, 3500],
+        'HMLD (m)':            [830, 1020, 775, 505, 330, 750],
+        'HSR Distance (m)':    [300, 430, 340, 180, 65, 270],
+        'Sprint Distance (m)': [75, 135, 115, 45, 12, 70],
+        'Accels (Count)':      [20, 28, 24, 13, 6, 19],
+        'Decels (Count)':      [22, 30, 26, 14, 7, 20],
       },
     };
 
@@ -227,19 +237,22 @@
     // different number for every metric.
     const GD_MAX = {
       '1st team': {
-        'Total distance': 10500, 'High speed running': 900, 'Sprint distance': 300,
-        'Accelerations (count)': 45, 'Decelerations (count)': 48, 'Player load': 980,
-        'Max speed': 33, 'Distance per minute': 115, 'Dynamic stress load': 420,
+        'Total Distance (m)': 10500, 'Distance Per Minute (m/min)': 115, 'HMLD (m)': 2400,
+        'HSR Distance (m)': 900, 'Sprint Distance (m)': 300, 'Accels Distance (m)': 260,
+        'Accels (Count)': 45, 'Decels Distance (m)': 240, 'Decels (Count)': 48,
+        'RPE x Duration': 630, '% max velocity': 100,
       },
       'U21': {
-        'Total distance': 9800, 'High speed running': 780, 'Sprint distance': 260,
-        'Accelerations (count)': 40, 'Decelerations (count)': 43, 'Player load': 880,
-        'Max speed': 32, 'Distance per minute': 108, 'Dynamic stress load': 380,
+        'Total Distance (m)': 9800, 'Distance Per Minute (m/min)': 108, 'HMLD (m)': 2150,
+        'HSR Distance (m)': 780, 'Sprint Distance (m)': 260, 'Accels Distance (m)': 235,
+        'Accels (Count)': 40, 'Decels Distance (m)': 215, 'Decels (Count)': 43,
+        'RPE x Duration': 580, '% max velocity': 100,
       },
       'U18': {
-        'Total distance': 9000, 'High speed running': 680, 'Sprint distance': 220,
-        'Accelerations (count)': 35, 'Decelerations (count)': 38, 'Player load': 790,
-        'Max speed': 31, 'Distance per minute': 100, 'Dynamic stress load': 340,
+        'Total Distance (m)': 9000, 'Distance Per Minute (m/min)': 100, 'HMLD (m)': 1900,
+        'HSR Distance (m)': 680, 'Sprint Distance (m)': 220, 'Accels Distance (m)': 210,
+        'Accels (Count)': 35, 'Decels Distance (m)': 195, 'Decels (Count)': 38,
+        'RPE x Duration': 520, '% max velocity': 100,
       },
     };
 
@@ -324,9 +337,9 @@
     const RAIL_W    = 60;
     const DRAWER_W  = 280;
     const CONTENT_X = 26;   // content inset inside the pane
-    const COL_METRIC = 219;
+    const COL_METRIC = 275;
     const COL_DAY    = 145;
-    const IN_METRIC  = 193;
+    const IN_METRIC  = 249;
     const IN_DAY     = 129;
     const ROW_H      = 77;
 
@@ -462,7 +475,7 @@
           <Box sx={{ overflowX: 'auto' }}>
             <Box sx={{ minWidth: tableWidth }}>
               <Box sx={{ display: 'flex', alignItems: 'center', height: 44, borderBottom: `1px solid ${DIVIDER}` }}>
-                <Box sx={{ width: 220, flex: 'none', ...head }}>{percentOnly ? '' : 'Metric'}</Box>
+                <Box sx={{ width: 255, flex: 'none', ...head }}>{percentOnly ? '' : 'Metric'}</Box>
                 <Box sx={{ width: 165, flex: 'none', ...head }}>Position</Box>
                 {cfg.days.map((day) => (
                   <Box key={day} sx={{ width: 150, flex: 'none', ...head }}>{day}</Box>
@@ -477,7 +490,7 @@
                     borderBottom: `1px solid ${DIVIDER}`, bgcolor: '#FAFBFC',
                   }}
                 >
-                  <Box sx={{ width: 220, flex: 'none', ...cell, fontWeight: 700 }}>% of GD max</Box>
+                  <Box sx={{ width: 255, flex: 'none', ...cell, fontWeight: 700 }}>% of GD max</Box>
                   <Box sx={{ width: 165, flex: 'none', ...cell }}>{row.position}</Box>
                   {cfg.days.map((day) => (
                     <Box key={day} sx={{ width: 150, flex: 'none', ...cell, fontWeight: 700 }}>
@@ -490,7 +503,7 @@
                   key={`${row.position}-${row.metric}-${i}`}
                   sx={{ display: 'flex', alignItems: 'center', height: 50, borderBottom: `1px solid ${DIVIDER}` }}
                 >
-                  <Box sx={{ width: 220, flex: 'none', ...cell }}>{row.metric}</Box>
+                  <Box sx={{ width: 255, flex: 'none', ...cell }}>{row.metric}</Box>
                   <Box sx={{ width: 165, flex: 'none', ...cell }}>{row.position}</Box>
                   {cfg.days.map((day) => (
                     <Box key={day} sx={{ width: 150, flex: 'none', ...cell }}>
@@ -1153,18 +1166,18 @@
 
     // Squad, Position, metric, Imports_used, then GD−4 … GD+2.
     const CSV_ROWS = [
-      { valid: true,  cells: ['1st team', 'All',      'Total distance',        '5',   '4800', '5600', '4200', '3100', '2200', '4400'] },
-      { valid: true,  cells: ['1st team', 'All',      'High speed running',    '5',   '420',  '610',  '480',  '260',  '90',   '380'] },
-      { valid: true,  cells: ['1st team', 'All',      'Sprint distance',       '5',   '120',  '210',  '180',  '70',   '20',   '110'] },
-      { valid: true,  cells: ['1st team', 'All',      'Accelerations (count)', '10',  '28',   '38',   '32',   '18',   '8',    '26'] },
-      { valid: true,  cells: ['1st team', 'All',      'Decelerations (count)', '10',  '30',   '41',   '34',   '19',   '9',    '28'] },
-      { valid: true,  cells: ['1st team', 'All',      'Player load',           'All', '420',  '520',  '390',  '250',  '160',  '400'] },
-      { valid: true,  cells: ['1st team', 'Midfield', 'Total distance',        '5',   '5200', '6100', '4600', '3400', '2400', '4800'] },
-      { valid: true,  cells: ['1st team', 'Striker',  'Sprint distance',       '5',   '150',  '260',  '220',  '90',   '25',   '140'] },
-      { valid: true,  cells: ['U21',      'All',      'Total distance',        '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
-      { valid: true,  cells: ['U21',      'All',      'High speed running',    '5',   '360',  '520',  '410',  '220',  '80',   '320'] },
+      { valid: true,  cells: ['1st team', 'All',      'Total Distance (m)',  '5',   '4800', '5600', '4200', '3100', '2200', '4400'] },
+      { valid: true,  cells: ['1st team', 'All',      'HMLD (m)',            '5',   '1050', '1300', '980',  '640',  '420',  '950'] },
+      { valid: true,  cells: ['1st team', 'All',      'HSR Distance (m)',    '5',   '420',  '610',  '480',  '260',  '90',   '380'] },
+      { valid: true,  cells: ['1st team', 'All',      'Sprint Distance (m)', '5',   '120',  '210',  '180',  '70',   '20',   '110'] },
+      { valid: true,  cells: ['1st team', 'All',      'Accels (Count)',      '10',  '28',   '38',   '32',   '18',   '8',    '26'] },
+      { valid: true,  cells: ['1st team', 'All',      'Decels (Count)',      '10',  '30',   '41',   '34',   '19',   '9',    '28'] },
+      { valid: true,  cells: ['1st team', 'Midfield', 'Total Distance (m)',  '5',   '5200', '6100', '4600', '3400', '2400', '4800'] },
+      { valid: true,  cells: ['1st team', 'Striker',  'Sprint Distance (m)', '5',   '150',  '260',  '220',  '90',   '25',   '140'] },
+      { valid: true,  cells: ['U21',      'All',      'Total Distance (m)',  '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
+      { valid: true,  cells: ['U21',      'All',      'RPE x Duration',      'All', '380',  '460',  '350',  '230',  '150',  '340'] },
       { valid: false, errorAt: 2, errorText: 'Not a metric in your library',
-        cells: ['U21',      'All',      'Total Distance (m)',    '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
+        cells: ['U21',      'All',      'Total Dist (m)',      '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
     ];
 
     // The percentage import needs no metric column: one figure per gameday
@@ -1423,7 +1436,7 @@
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
       const cols = mode === 'percent'
         ? `44px 1.1fr 1fr 1fr repeat(6, 0.85fr)`
-        : `44px 1.1fr 1fr 1.4fr 1fr repeat(6, 0.85fr)`;
+        : `44px 1.1fr 1fr 1.9fr 1fr repeat(6, 0.85fr)`;
 
       return (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
@@ -1660,25 +1673,28 @@
 
     // Up to six, matching the cap on the targets pages. Six is why the split
     // between the drills and the values needs to be draggable.
-    // agg says how a metric behaves over time. sum scales with the drill
-    // duration and adds up across the session; max and avg do neither, because a
-    // top speed or a per minute rate does not double when a drill runs twice as
-    // long. The last three carry no target, which is the point: not every metric
-    // has one, and the bar simply shows none.
+    // The same library as the targets pages, with the short column label and the
+    // behaviour each metric has over time. agg says how it aggregates: sum scales
+    // with the drill duration and adds up across the session; avg and max do
+    // neither, because a per minute rate does not double when a drill runs twice
+    // as long, and a peak velocity is a peak. Only the metrics the squad has
+    // configured carry a target, which is the point: the rest show none.
     const METRIC_LIBRARY_SESSION = [
-      { key: 'td',       label: 'TD (m)',        name: 'Total distance',       unit: 'm',     agg: 'sum', color: '#00968F' },
-      { key: 'hsr',      label: 'HSR (m)',       name: 'High speed running',   unit: 'm',     agg: 'sum', color: '#2E7D32' },
-      { key: 'sd',       label: 'SD (m)',        name: 'Sprint distance',      unit: 'm',     agg: 'sum', color: '#1565C0' },
-      { key: 'accels',   label: 'Accels (#)',    name: 'Accelerations',        unit: '',      agg: 'sum', color: '#E8590C' },
-      { key: 'decels',   label: 'Decels (#)',    name: 'Decelerations',        unit: '',      agg: 'sum', color: '#7C3AED' },
-      { key: 'load',     label: 'Load (AU)',     name: 'Player load',          unit: 'AU',    agg: 'sum', color: '#AD1457' },
-      { key: 'dsl',      label: 'DSL (AU)',      name: 'Dynamic stress load',  unit: 'AU',    agg: 'sum', color: '#546E7A' },
-      { key: 'maxspeed', label: 'Max spd',       name: 'Max speed',            unit: 'km/h',  agg: 'max', color: '#00838F' },
-      { key: 'dpm',      label: 'DPM (m/min)',   name: 'Distance per minute',  unit: 'm/min', agg: 'avg', color: '#5D4037' },
+      { key: 'td',      label: 'TD (m)',        name: 'Total Distance (m)',          unit: 'm',     agg: 'sum', color: '#00968F' },
+      { key: 'dpm',     label: 'DPM (m/min)',   name: 'Distance Per Minute (m/min)', unit: 'm/min', agg: 'avg', color: '#5D4037' },
+      { key: 'hmld',    label: 'HMLD (m)',      name: 'HMLD (m)',                    unit: 'm',     agg: 'sum', color: '#00838F' },
+      { key: 'hsr',     label: 'HSR (m)',       name: 'HSR Distance (m)',            unit: 'm',     agg: 'sum', color: '#2E7D32' },
+      { key: 'sd',      label: 'SD (m)',        name: 'Sprint Distance (m)',         unit: 'm',     agg: 'sum', color: '#1565C0' },
+      { key: 'acceld',  label: 'Accel D (m)',   name: 'Accels Distance (m)',         unit: 'm',     agg: 'sum', color: '#EF6C00' },
+      { key: 'accels',  label: 'Accels (#)',    name: 'Accels (Count)',              unit: '',      agg: 'sum', color: '#E8590C' },
+      { key: 'deceld',  label: 'Decel D (m)',   name: 'Decels Distance (m)',         unit: 'm',     agg: 'sum', color: '#6A1B9A' },
+      { key: 'decels',  label: 'Decels (#)',    name: 'Decels (Count)',              unit: '',      agg: 'sum', color: '#7C3AED' },
+      { key: 'rpedur',  label: 'RPE x Dur',     name: 'RPE x Duration',              unit: 'AU',    agg: 'sum', color: '#AD1457' },
+      { key: 'maxvel',  label: '% max vel',     name: '% max velocity',              unit: '',      agg: 'max', color: '#546E7A' },
     ];
 
     const metricByKey = (key) => METRIC_LIBRARY_SESSION.find((m) => m.key === key);
-    const DEFAULT_COLUMNS = ['td', 'hsr', 'sd', 'accels', 'decels', 'maxspeed'];
+    const DEFAULT_COLUMNS = ['td', 'hmld', 'hsr', 'sd', 'accels', 'decels'];
     const MAX_SESSION_COLUMNS = 6;
 
     // base values hold at baseDuration; a drill scales linearly from there.
@@ -1687,47 +1703,39 @@
         id: 'd1', name: 'Rondo 5v1 3reps x 3mins', tag: 'Warm up',
         desc: 'Rondo 6v2 interspersed with mobility and dynamic flexibility.',
         duration: 15, baseDuration: 15,
-        base: { td: 280, hsr: 40, sd: 85, accels: 12, decels: 3, load: 65, dsl: 45, maxspeed: 24.5, dpm: 19 },
+        base: { td: 280, dpm: 19, hmld: 62, hsr: 40, sd: 85, acceld: 9, accels: 12, deceld: 4, decels: 3, rpedur: 45, maxvel: 78 },
         athletes: [22, 24], staff: [3, 3],
       },
       {
         id: 'd2', name: '1v1 SDP', tag: 'Game play',
         desc: 'Activity begins with shot from side players into mini-goal. After pass play continues to the wide areas.',
         duration: 30, baseDuration: 30,
-        base: { td: 1100, hsr: 210, sd: 45, accels: 6, decels: 11, load: 260, dsl: 180, maxspeed: 31.2, dpm: 37 },
+        base: { td: 1100, dpm: 37, hmld: 240, hsr: 210, sd: 45, acceld: 22, accels: 6, deceld: 30, decels: 11, rpedur: 180, maxvel: 94 },
         athletes: [20, 24], staff: [3, 3],
       },
       {
         id: 'd3', name: 'Goalkeeper catching and holding', tag: 'Goalkeepers',
         desc: 'The GK should keep their eyes on the ball using their hand eye coordination to catch and hold.',
         duration: 15, baseDuration: 15,
-        base: { td: 520, hsr: 95, sd: 170, accels: 3, decels: 8, load: 120, dsl: 90, maxspeed: 22.0, dpm: 35 },
+        base: { td: 520, dpm: 35, hmld: 115, hsr: 95, sd: 170, acceld: 8, accels: 3, deceld: 20, decels: 8, rpedur: 75, maxvel: 67 },
         athletes: [3, 24], staff: [1, 3],
       },
       {
         id: 'd4', name: '7v6 build out game', tag: 'Medium games',
         desc: 'GK throws out. Team in possession attempts to score on any of the 2 mini goals.',
         duration: 15, baseDuration: 15,
-        base: { td: 750, hsr: 140, sd: 20, accels: 9, decels: 2, load: 175, dsl: 130, maxspeed: 28.4, dpm: 50 },
+        base: { td: 750, dpm: 50, hmld: 165, hsr: 140, sd: 20, acceld: 18, accels: 9, deceld: 6, decels: 2, rpedur: 105, maxvel: 86 },
         athletes: [21, 24], staff: [3, 3],
       },
     ];
 
-    // The session targets are not their own numbers: this is a GD−1 session for
-    // the first team, so they are read straight off that squad's GD−1 column on
+    // The session targets are not their own numbers: this is a GD−3 session for
+    // the first team, so they are read straight off that squad's GD−3 column on
     // the targets pages. Metrics that squad has not configured get no target,
-    // which is why Player load shows a dash.
-    const CONFIG_METRIC_TO_SESSION = {
-      'Total distance': 'td',
-      'High speed running': 'hsr',
-      'Sprint distance': 'sd',
-      'Accelerations (count)': 'accels',
-      'Decelerations (count)': 'decels',
-      'Player load': 'load',
-      'Dynamic stress load': 'dsl',
-      'Max speed': 'maxspeed',
-      'Distance per minute': 'dpm',
-    };
+    // which is why the metrics outside its six show a dash.
+    const CONFIG_METRIC_TO_SESSION = METRIC_LIBRARY_SESSION.reduce(
+      (acc, m) => ({ ...acc, [m.name]: m.key }), {},
+    );
 
     const SESSION_SQUAD = '1st team';
     const SESSION_GD = 'GD−3';
@@ -1804,8 +1812,8 @@
     }
 
     /* ── One metric cell: value over a bar showing its share of target ── */
-    const metricTitle = (metric, over) =>
-      `${metric.name}${metric.unit ? ` (${metric.unit})` : ''}${over ? ' — over target' : ''}`;
+    // The metric names already carry their unit, so the tooltip just repeats the name.
+    const metricTitle = (metric, over) => `${metric.name}${over ? ' — over target' : ''}`;
 
     function MetricBar({ metric, mode, value, target, before }) {
       const track = { height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' };
@@ -2403,7 +2411,7 @@
                         {metrics.map((m) => {
                           const target = targetFor(m);
                           const total = totals[m.key];
-                          // Round: 32 - 31.2 lands at 0.7999999999999972 otherwise
+                          // Round: scaled durations produce long floats otherwise
                           const raw = target == null || total == null ? null : target - total;
                           const left = raw == null ? null : Math.round(raw * 10) / 10;
                           const over = left != null && left < 0;

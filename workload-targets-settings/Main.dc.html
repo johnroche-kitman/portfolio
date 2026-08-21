@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif; background: #fff; color: #3B4960; }
+    a { color: #3B4960; } a:hover { color: #22293a; }
+    .lvl { border: 1px solid #D6DAE2; border-radius: 3px; background: #fff; padding: 14px 16px; }
+    .tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #A7B0BF; }
+    .h { font-size: 15px; font-weight: 700; margin: 4px 0 0; }
+    .p { font-size: 12px; line-height: 1.5; color: #7A869A; margin: 6px 0 0; }
+    .pill { border: 1px solid #D6DAE2; border-radius: 999px; padding: 3px 9px; font-size: 11px; color: #7A869A; background: #F4F5F7; }
+    .stem { width: 1px; height: 16px; background: #D6DAE2; margin-left: 28px; }
+    .idx { font-size: 12px; line-height: 1.5; }
+  </style>
+</helmet>
+
+<div style="width: 760px; min-height: 900px; padding: 40px 36px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px;">
+
+  <div style="display: flex; flex-direction: column; gap: 6px;">
+    <div class="tag">Wireframes</div>
+    <h1 style="font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.01em;">Workload targets</h1>
+    <p style="font-size: 13px; line-height: 1.6; color: #7A869A; margin: 0; max-width: 560px;">Four layouts of the same underlying model. The model below never changes between options, only how it is laid out and how much of it you see at once.</p>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 0;">
+
+    <div class="lvl">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="tag">1 &middot; Scope</div>
+        <div class="pill">Optional</div>
+      </div>
+      <div class="h">Squad</div>
+      <p class="p">Everything below is saved against a squad. Start with one set that covers all squads; add a squad when its age group needs different metrics or numbers.</p>
+      <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+        <span class="pill">All squads</span>
+        <span class="pill">Men&#39;s first team</span>
+        <span class="pill">U21</span>
+        <span class="pill">U18</span>
+      </div>
+    </div>
+
+    <div class="stem"></div>
+
+    <div class="lvl">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="tag">2 &middot; Metrics</div>
+        <div class="pill">Max 6 per squad</div>
+      </div>
+      <div class="h">What you measure, and how it is calculated</div>
+      <p class="p">Each metric carries its own calculation: the value taken per drill or per session, whether that is an average, a total or a maximum, and how many past imports of the same drill feed the number.</p>
+      <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+        <span class="pill">Total distance</span>
+        <span class="pill">Average per drill</span>
+        <span class="pill">Last 5 imports</span>
+      </div>
+    </div>
+
+    <div class="stem"></div>
+
+    <div class="lvl">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="tag">3 &middot; Targets</div>
+        <div class="pill">As many days as you like</div>
+      </div>
+      <div class="h">One value per gameday marker</div>
+      <p class="p">Training days are numbered relative to the match. GD-1 is the day before, GD+1 the day after. A metric can carry a target on some days and none on others.</p>
+      <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+        <span class="pill">GD-3 &middot; 1400 m</span>
+        <span class="pill">GD-1 &middot; 1000 m</span>
+        <span class="pill">GD+1 &middot; 400 m</span>
+      </div>
+    </div>
+
+    <div class="stem"></div>
+
+    <div class="lvl">
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div class="tag">4 &middot; Overrides</div>
+        <div class="pill">Optional</div>
+      </div>
+      <div class="h">Position</div>
+      <p class="p">Positions inherit the squad number until you type over it. Nothing is duplicated, so a squad-level change still reaches every position you have not overridden.</p>
+      <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+        <span class="pill">All positions</span>
+        <span class="pill">Central midfield</span>
+        <span class="pill">Striker</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="border-top: 1px solid #E7EAEF; padding-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+    <div class="tag">On this canvas</div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="idx"><strong>Option A &middot; Target matrix</strong> &mdash; metrics down, gameday across. Everything on one screen.</div>
+      <div class="idx"><strong>Option B &middot; Metric first</strong> &mdash; pick a metric, then set it up end to end.</div>
+      <div class="idx"><strong>Option C &middot; Stacked cards</strong> &mdash; one card per metric, expand the one you are editing.</div>
+      <div class="idx"><strong>Option D &middot; Training week</strong> &mdash; a column per gameday, the way the week is planned.</div>
+      <div class="idx" style="color: #7A869A;">Below: the metric setup panel and how position overrides read. Both are shared by all four options.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":760,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

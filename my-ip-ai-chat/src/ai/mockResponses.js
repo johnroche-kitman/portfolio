@@ -44,12 +44,12 @@ const RESPONSES = {
     'what athlete has the highest total distance this week?': {
       text: 'Jordan Pierce has covered the highest total distance this week across all tracked athletes, driven by two high-volume training days ahead of Saturday’s fixture.',
       table: {
-        columns: ['Athlete', 'Position', 'Total distance (km)', 'Max speed (km/h)'],
+        columns: ['Athlete', 'Position', 'Total distance (km)', 'High speed running (m)'],
         rows: [
-          ['Jordan Pierce', 'Winger', '48.2', '32.6'],
-          ['Sam Whitfield', 'Full-back', '45.7', '31.1'],
-          ['Alex Romero', 'Midfielder', '44.9', '29.8'],
-          ['Chris Doyle', 'Winger', '43.1', '33.2'],
+          ['Jordan Pierce', 'Winger', '48.2', '2140'],
+          ['Sam Whitfield', 'Full-back', '45.7', '1980'],
+          ['Alex Romero', 'Midfielder', '44.9', '1760'],
+          ['Chris Doyle', 'Winger', '43.1', '2260'],
         ],
       },
     },

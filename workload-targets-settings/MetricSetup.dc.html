@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif; background: #F4F5F7; color: #3B4960; }
+    a { color: #3B4960; } a:hover { color: #22293a; }
+    .tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #A7B0BF; }
+    .btn { border: 1px solid #3B4960; background: #3B4960; color: #fff; font: 600 12px 'Open Sans', sans-serif; padding: 9px 18px; border-radius: 3px; }
+    .btn-t { border: 1px solid #D6DAE2; background: #fff; color: #3B4960; font: 600 12px 'Open Sans', sans-serif; padding: 9px 18px; border-radius: 3px; }
+    .sel { border: 1px solid #D6DAE2; background: #F4F5F7; border-radius: 3px; padding: 9px 12px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .lbl { font-size: 11px; color: #7A869A; margin-bottom: 6px; }
+    .seg { border: 1px solid #D6DAE2; border-radius: 3px; overflow: hidden; display: flex; }
+    .seg > div { flex: 1; padding: 9px 6px; font-size: 12px; color: #7A869A; border-right: 1px solid #E7EAEF; background: #fff; text-align: center; }
+    .seg > div.on { background: #3B4960; color: #fff; font-weight: 600; }
+    .seg > div:last-child { border-right: 0; }
+    .note { font-size: 12px; line-height: 1.5; color: #7A869A; }
+    .bar { height: 8px; background: #D6DAE2; border-radius: 2px; }
+    .bar.dim { background: #E7EAEF; }
+  </style>
+</helmet>
+
+<div style="width: 560px; min-height: 780px; padding: 24px; box-sizing: border-box;">
+  <div style="background: #fff; border: 1px solid #D6DAE2; border-radius: 3px; display: flex; flex-direction: column;">
+
+    <div style="padding: 20px 24px; border-bottom: 1px solid #E7EAEF; display: flex; flex-direction: column; gap: 4px;">
+      <div class="tag">Shared by every option</div>
+      <div style="font-size: 16px; font-weight: 700;">Add workload metric</div>
+      <div class="note">Men&#39;s first team &middot; metric 5 of 6</div>
+    </div>
+
+    <div style="padding: 22px 24px; display: flex; flex-direction: column; gap: 20px;">
+
+      <div>
+        <div class="lbl">Metric</div>
+        <div class="sel"><span>Total distance</span><span style="color:#A7B0BF; font-size: 10px;">&#9660;</span></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div>
+          <div class="lbl">Value taken per</div>
+          <div class="sel"><span>Drill</span><span style="color:#A7B0BF; font-size: 10px;">&#9660;</span></div>
+        </div>
+        <div>
+          <div class="lbl">Calculation</div>
+          <div class="sel"><span>Average</span><span style="color:#A7B0BF; font-size: 10px;">&#9660;</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="lbl">How many past imports of the same drill feed the average</div>
+        <div class="seg">
+          <div>Last 3</div>
+          <div class="on">Last 5</div>
+          <div>Last 10</div>
+          <div>All imports</div>
+        </div>
+      </div>
+
+      <div style="background: #F7F8FA; border: 1px solid #E7EAEF; border-radius: 3px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+        <div class="tag">What this will do</div>
+        <div class="note" style="color: #3B4960;">Each time you import <strong>4v4 rondo</strong>, we take its total distance and average it across the last 5 imports of that drill, then compare it to the target for that gameday.</div>
+        <div style="display: flex; flex-direction: column; gap: 7px;">
+          <div style="display: flex; align-items: center; gap: 10px;"><span class="note" style="width: 70px; font-size: 11px;">18 Jul</span><div class="bar dim" style="width: 128px;"></div><span class="note" style="font-size: 11px;">386 m</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><span class="note" style="width: 70px; font-size: 11px;">25 Jul</span><div class="bar" style="width: 142px;"></div><span class="note" style="font-size: 11px;">428 m</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><span class="note" style="width: 70px; font-size: 11px;">1 Aug</span><div class="bar" style="width: 134px;"></div><span class="note" style="font-size: 11px;">402 m</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><span class="note" style="width: 70px; font-size: 11px;">8 Aug</span><div class="bar" style="width: 139px;"></div><span class="note" style="font-size: 11px;">419 m</span></div>
+          <div style="display: flex; align-items: center; gap: 10px;"><span class="note" style="width: 70px; font-size: 11px;">15 Aug</span><div class="bar" style="width: 136px;"></div><span class="note" style="font-size: 11px;">410 m</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; border-top: 1px solid #E7EAEF; padding-top: 8px;"><span class="note" style="width: 70px; font-size: 11px; font-weight: 700; color: #3B4960;">Average</span><div class="bar" style="width: 136px; background: #3B4960;"></div><span style="font-size: 12px; font-weight: 700;">409 m</span></div>
+        </div>
+      </div>
+
+      <div class="note" style="border-top: 1px dashed #E7EAEF; padding-top: 14px;">Targets for this metric are set on the next step, one value per gameday. Positions can override those values later.</div>
+
+    </div>
+
+    <div style="padding: 16px 24px; border-top: 1px solid #E7EAEF; display: flex; justify-content: flex-end; gap: 10px;">
+      <div class="btn-t">Cancel</div>
+      <div class="btn">Add metric</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":560,"height":780}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

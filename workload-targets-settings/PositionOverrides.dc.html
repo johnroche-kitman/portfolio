@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif; background: #fff; color: #3B4960; }
+    a { color: #3B4960; } a:hover { color: #22293a; }
+    .tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #A7B0BF; }
+    .seg { border: 1px solid #D6DAE2; border-radius: 3px; overflow: hidden; display: flex; width: fit-content; }
+    .seg > div { padding: 7px 14px; font-size: 12px; color: #7A869A; border-right: 1px solid #E7EAEF; background: #fff; }
+    .seg > div.on { background: #3B4960; color: #fff; font-weight: 600; }
+    .seg > div:last-child { border-right: 0; }
+    .th { font-size: 11px; font-weight: 700; color: #7A869A; padding-bottom: 8px; text-align: center; }
+    .mname { font-size: 13px; font-weight: 600; }
+    .cell { border: 1px solid #E7EAEF; border-radius: 3px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #FAFBFC; color: #A7B0BF; font-size: 13px; }
+    .cell .k { font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
+    .cell.own { background: #fff; border-color: #3B4960; color: #3B4960; font-weight: 700; }
+    .cell.own .k { color: #7A869A; font-weight: 400; }
+    .cell.none { border-style: dashed; color: #C3C9D4; }
+    .note { font-size: 12px; line-height: 1.5; color: #7A869A; }
+    .key { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #7A869A; }
+    .sw { width: 22px; height: 16px; border-radius: 2px; border: 1px solid #E7EAEF; background: #FAFBFC; }
+    .sw.own { background: #fff; border-color: #3B4960; }
+    .sw.none { border-style: dashed; background: #fff; }
+  </style>
+</helmet>
+
+<div style="width: 1200px; min-height: 620px; padding: 32px 36px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px;">
+
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 5px;">
+      <div class="tag">Shared by every option</div>
+      <h1 style="font-size: 18px; font-weight: 700; margin: 0;">How a position override reads</h1>
+      <div class="note" style="max-width: 620px;">A position never gets its own copy of the targets. It shows the squad number until you type over it, so a squad-level change still reaches every position you have not touched.</div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+      <div class="tag">Position</div>
+      <div class="seg">
+        <div>All positions</div>
+        <div>Centre back</div>
+        <div class="on">Central midfield</div>
+        <div>Striker</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div style="display: grid; grid-template-columns: 230px repeat(7, 1fr) 130px; gap: 8px; align-items: end;">
+      <div class="th" style="text-align: left;">Metric</div>
+      <div class="th">GD-4</div>
+      <div class="th">GD-3</div>
+      <div class="th">GD-2</div>
+      <div class="th">GD-1</div>
+      <div class="th">GD</div>
+      <div class="th">GD+1</div>
+      <div class="th">GD+2</div>
+      <div class="th"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 230px repeat(7, 1fr) 130px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid #E7EAEF;">
+      <div class="mname">Total distance</div>
+      <div class="cell">1200<div class="k">Squad</div></div>
+      <div class="cell own">1650<div class="k">Overridden</div></div>
+      <div class="cell">1100<div class="k">Squad</div></div>
+      <div class="cell own">1250<div class="k">Overridden</div></div>
+      <div class="cell none">&mdash;</div>
+      <div class="cell">400<div class="k">Squad</div></div>
+      <div class="cell">600<div class="k">Squad</div></div>
+      <div class="note" style="font-size: 11px;">Reset to squad</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 230px repeat(7, 1fr) 130px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid #F0F2F5;">
+      <div class="mname">High speed running</div>
+      <div class="cell">180<div class="k">Squad</div></div>
+      <div class="cell">240<div class="k">Squad</div></div>
+      <div class="cell">160<div class="k">Squad</div></div>
+      <div class="cell">140<div class="k">Squad</div></div>
+      <div class="cell none">&mdash;</div>
+      <div class="cell">40<div class="k">Squad</div></div>
+      <div class="cell none">&mdash;</div>
+      <div class="note" style="font-size: 11px; color: #C3C9D4;">Nothing overridden</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 230px repeat(7, 1fr) 130px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid #F0F2F5;">
+      <div class="mname">Accelerations</div>
+      <div class="cell">8<div class="k">Squad</div></div>
+      <div class="cell own">15<div class="k">Overridden</div></div>
+      <div class="cell">9<div class="k">Squad</div></div>
+      <div class="cell">7<div class="k">Squad</div></div>
+      <div class="cell none">&mdash;</div>
+      <div class="cell">3<div class="k">Squad</div></div>
+      <div class="cell none">&mdash;</div>
+      <div class="note" style="font-size: 11px;">Reset to squad</div>
+    </div>
+  </div>
+
+  <div style="border-top: 1px solid #E7EAEF; padding-top: 16px; display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
+    <div class="key"><div class="sw"></div>Inherited from the squad. Editing the squad value changes this too.</div>
+    <div class="key"><div class="sw own"></div>Overridden for central midfield. The squad value no longer applies.</div>
+    <div class="key"><div class="sw none"></div>No target set on this day.</div>
+  </div>
+
+  <div class="note" style="background: #F7F8FA; border-left: 2px solid #D6DAE2; padding: 12px 14px;">The same rule holds one level up: a squad you have not customised inherits the metrics and targets set for all squads, so a new age group starts from something rather than from nothing.</div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1200,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
