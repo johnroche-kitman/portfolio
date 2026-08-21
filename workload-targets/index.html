@@ -297,6 +297,29 @@
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 
+    // Same targets, but held as a share of each metric's GD max, which is what a
+    // percentage import produces.
+    const seedPercentConfig = () => {
+      const cfg = seedConfig();
+      Object.entries(cfg).forEach(([squad, squadCfg]) => {
+        Object.values(squadCfg.byPosition).forEach((combo) => {
+          const first = combo.metrics.find(isFilled);
+          if (!first) return;
+          combo.mode = 'percent';
+          combo.percents = {};
+          squadCfg.days.forEach((day) => {
+            combo.percents[day] = percentFromValue(squad, first.metric, first.targets[day]);
+          });
+          combo.metrics.filter(isFilled).forEach((slot) => {
+            squadCfg.days.forEach((day) => {
+              slot.targets[day] = valueFromPercent(squad, slot.metric, combo.percents[day]);
+            });
+          });
+        });
+      });
+      return cfg;
+    };
+
     /* ── Layout constants (from the Figma frame) ─────────────────────── */
     const RAIL_W    = 60;
     const DRAWER_W  = 280;
@@ -906,6 +929,11 @@
             title: 'Version 3 - Set targets as a share of GD max',
             description: 'Version 1 plus a switch in the edit header. Type one percentage per gameday and every metric takes that share of its own match day maximum.',
           },
+          {
+            hash: '#/v4',
+            title: 'Version 4 - Import a share of GD max from a CSV',
+            description: 'Version 2 crossed with version 3. The file carries squad, position and one percentage per gameday, and nothing else: no metric rows, since every metric takes that share of its own match day maximum.',
+          },
         ],
       },
       {
@@ -1135,6 +1163,20 @@
         cells: ['U21',      'All',      'Total Distance (m)',    '5',   '4300', '5000', '3800', '2800', '2000', '3900'] },
     ];
 
+    // The percentage import needs no metric column: one figure per gameday
+    // applies to every metric, taken as a share of that metric's own GD max.
+    const PERCENT_CSV_COLUMNS = ['Squad', 'Position', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
+
+    const PERCENT_CSV_ROWS = [
+      { valid: true,  cells: ['1st team', 'All',      '46', '53', '40', '30', '21', '42'] },
+      { valid: true,  cells: ['1st team', 'Midfield', '50', '57', '44', '33', '24', '46'] },
+      { valid: true,  cells: ['1st team', 'Striker',  '48', '55', '42', '31', '22', '44'] },
+      { valid: true,  cells: ['U21',      'All',      '45', '52', '39', '29', '20', '41'] },
+      { valid: true,  cells: ['U18',      'All',      '44', '50', '38', '28', '19', '40'] },
+      { valid: false, errorAt: 0, errorText: 'No squad by that name',
+        cells: ['U23',      'All',      '45', '52', '39', '29', '20', '41'] },
+    ];
+
     const INSTRUCTIONS_W = 340;
     const AMBER = '#ED9A00';
     const AMBER_BG = '#FFF6E5';
@@ -1188,7 +1230,7 @@
     }
 
     /* ── Instructions panel ──────────────────────────────────────────── */
-    function InstructionsPanel({ onCollapse }) {
+    function InstructionsPanel({ onCollapse, mode = 'metrics' }) {
       const body = { fontSize: 15, lineHeight: 1.6, color: PRIMARY };
       const strong = { fontSize: 15, fontWeight: 700, color: PRIMARY };
       return (
@@ -1228,25 +1270,42 @@
               <Typography sx={body}>Striker</Typography>
             </Box>
 
-            <Box>
-              <Typography sx={body}>Calculation:</Typography>
-              <Typography sx={body}>Average</Typography>
-              <Typography sx={body}>Max</Typography>
-              <Typography sx={body}>Min</Typography>
-            </Box>
+            {mode === 'metrics' ? (
+              <React.Fragment>
+                <Box>
+                  <Typography sx={body}>Calculation:</Typography>
+                  <Typography sx={body}>Average</Typography>
+                  <Typography sx={body}>Max</Typography>
+                  <Typography sx={body}>Min</Typography>
+                </Box>
 
-            <Box>
-              <Typography sx={body}>Imports_used</Typography>
-              <Typography sx={body}>(to calculate average)</Typography>
-              <Typography sx={body}>All</Typography>
-              <Typography sx={body}>1-100</Typography>
-            </Box>
+                <Box>
+                  <Typography sx={body}>Imports_used</Typography>
+                  <Typography sx={body}>(to calculate average)</Typography>
+                  <Typography sx={body}>All</Typography>
+                  <Typography sx={body}>1-100</Typography>
+                </Box>
+              </React.Fragment>
+            ) : (
+              <Box>
+                <Typography sx={body}>Percent of GD max</Typography>
+                <Typography sx={body}>1-200</Typography>
+                <Typography sx={body}>(over 100 to overload a day)</Typography>
+              </Box>
+            )}
 
             <Box>
               <Typography sx={body}>Game day headers</Typography>
               <Typography sx={body}>GD+1-100</Typography>
               <Typography sx={body}>GD-1-100</Typography>
             </Box>
+
+            {mode === 'percent' && (
+              <Typography sx={{ ...body, fontSize: 14, color: GREY100 }}>
+                One figure per gameday. Every metric in that squad takes that share
+                of its own game day maximum, so the file carries no metric rows.
+              </Typography>
+            )}
           </Box>
         </Box>
       );
@@ -1349,7 +1408,7 @@
       );
     }
 
-    function PreviewStep({ rows, setRows, instructionsOpen, onExpand }) {
+    function PreviewStep({ rows, setRows, instructionsOpen, onExpand, columns, mode }) {
       const [tab, setTab] = useState('All');
 
       const validCount = rows.filter((r) => r.valid).length;
@@ -1367,7 +1426,9 @@
       };
 
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
-      const cols = `44px 1.1fr 1fr 1.4fr 1fr repeat(6, 0.85fr)`;
+      const cols = mode === 'percent'
+        ? `44px 1.1fr 1fr repeat(6, 0.85fr)`
+        : `44px 1.1fr 1fr 1.4fr 1fr repeat(6, 0.85fr)`;
 
       return (
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
@@ -1417,7 +1478,7 @@
                 height: 44, borderBottom: `1px solid #E0E2E6`,
               }}>
                 <Box sx={{ width: 18, height: 18, border: `2px solid ${GREY100}`, borderRadius: '2px' }} />
-                {CSV_COLUMNS.map((c) => <Box key={c} sx={head}>{c}</Box>)}
+                {columns.map((c) => <Box key={c} sx={head}>{c}</Box>)}
               </Box>
 
               {shown.map((row) => {
@@ -1462,11 +1523,13 @@
     }
 
     /* ── The import flow ─────────────────────────────────────────────── */
-    function ImportFlow({ onExit, onHome }) {
+    function ImportFlow({ onExit, onHome, mode = 'metrics' }) {
       const [step, setStep] = useState(1);
       const [file, setFile] = useState(null);
       const [instructionsOpen, setInstructionsOpen] = useState(true);
-      const [rows, setRows] = useState(() => CSV_ROWS.map((r) => ({ ...r, cells: [...r.cells] })));
+      const source = mode === 'percent' ? PERCENT_CSV_ROWS : CSV_ROWS;
+      const columns = mode === 'percent' ? PERCENT_CSV_COLUMNS : CSV_COLUMNS;
+      const [rows, setRows] = useState(() => source.map((r) => ({ ...r, cells: [...r.cells] })));
 
       // Instructions stay open through the whole upload step; they only close
       // when the preview appears and the table needs the width.
@@ -1499,7 +1562,7 @@
             />
 
             <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-              {instructionsOpen && <InstructionsPanel onCollapse={() => setInstructionsOpen(false)} />}
+              {instructionsOpen && <InstructionsPanel onCollapse={() => setInstructionsOpen(false)} mode={mode} />}
 
               {step === 1 ? (
                 <Box sx={{ flex: 1, display: 'flex', minWidth: 0 }}>
@@ -1512,6 +1575,8 @@
                   setRows={setRows}
                   instructionsOpen={instructionsOpen}
                   onExpand={() => setInstructionsOpen(true)}
+                  columns={columns}
+                  mode={mode}
                 />
               )}
             </Box>
@@ -1521,9 +1586,9 @@
     }
 
     /* ── Version 2 ───────────────────────────────────────────────────── */
-    function VersionTwo({ onHome }) {
+    function VersionTwo({ onHome, importMode = 'metrics' }) {
       const [section, setSection] = useState(V2_SUB_SECTIONS[1]);
-      const [config] = useState(seedConfig);
+      const [config] = useState(importMode === 'percent' ? seedPercentConfig : seedConfig);
       const [importing, setImporting] = useState(false);
       const [imported, setImported] = useState(false);
 
@@ -1532,7 +1597,7 @@
         if (didImport) setImported(true);
       };
 
-      if (importing) return <ImportFlow onExit={leaveImport} onHome={onHome} />;
+      if (importing) return <ImportFlow onExit={leaveImport} onHome={onHome} mode={importMode} />;
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
@@ -2577,6 +2642,7 @@
       if (route === '#/v1') return <VersionOne onHome={goHome} />;
       if (route === '#/v2') return <VersionTwo onHome={goHome} />;
       if (route === '#/v3') return <VersionOne onHome={goHome} allowPercent key="v3" />;
+      if (route === '#/v4') return <VersionTwo onHome={goHome} importMode="percent" key="v4" />;
       if (route === '#/planning-v1') return <SessionPlanning onHome={goHome} key="p1" />;
       if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
       if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
