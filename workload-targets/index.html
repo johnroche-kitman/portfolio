@@ -425,7 +425,7 @@
     }
 
     /* ── Read-only view ──────────────────────────────────────────────── */
-    function SquadTargetTable({ squad, cfg }) {
+    function SquadTargetTable({ squad, cfg, percentOnly = false }) {
       const rows = [];
       const filled = [];
       POSITIONS.forEach((position) => {
@@ -438,7 +438,11 @@
         if (combo.mode === 'percent') {
           rows.push({ position, percentRow: true, percents: combo.percents });
         }
-        set.forEach((row) => rows.push({ position, ...row }));
+        // Version 4 states the share and leaves it there: the metric names add
+        // nothing when every one of them takes the same percentage.
+        if (!(percentOnly && combo.mode === 'percent')) {
+          set.forEach((row) => rows.push({ position, ...row }));
+        }
       });
 
       // The design states the window once beneath the table. Only name the positions
@@ -458,7 +462,7 @@
           <Box sx={{ overflowX: 'auto' }}>
             <Box sx={{ minWidth: tableWidth }}>
               <Box sx={{ display: 'flex', alignItems: 'center', height: 44, borderBottom: `1px solid ${DIVIDER}` }}>
-                <Box sx={{ width: 220, flex: 'none', ...head }}>Metric</Box>
+                <Box sx={{ width: 220, flex: 'none', ...head }}>{percentOnly ? '' : 'Metric'}</Box>
                 <Box sx={{ width: 165, flex: 'none', ...head }}>Position</Box>
                 {cfg.days.map((day) => (
                   <Box key={day} sx={{ width: 150, flex: 'none', ...head }}>{day}</Box>
@@ -521,7 +525,7 @@
       );
     }
 
-    function ReadOnlyView({ config, onAction, title = 'Workload metrics and targets', actionLabel = 'Edit' }) {
+    function ReadOnlyView({ config, onAction, title = 'Workload metrics and targets', actionLabel = 'Edit', percentOnly = false }) {
       return (
         <Box sx={{ pl: `${CONTENT_X}px`, pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 3.5, pr: `${CONTENT_X}px` }}>
@@ -534,7 +538,7 @@
           </Stack>
 
           {SQUADS.map((squad) => (
-            <SquadTargetTable key={squad} squad={squad} cfg={config[squad]} />
+            <SquadTargetTable key={squad} squad={squad} cfg={config[squad]} percentOnly={percentOnly} />
           ))}
         </Box>
       );
@@ -1142,7 +1146,7 @@
 
     /* ══ Version 2 — import targets from a CSV ═══════════════════════ */
 
-    const V2_SUB_SECTIONS = ['Participation and RPE', 'Workload metrics targets'];
+    const V2_SUB_SECTIONS = ['Participation and RPE', 'Workload metrics and targets'];
 
     // Raw csv headers, so they read exactly as the instructions panel lists them.
     const CSV_COLUMNS = ['Squad', 'Position', 'metric', 'Imports_used', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
@@ -1165,16 +1169,16 @@
 
     // The percentage import needs no metric column: one figure per gameday
     // applies to every metric, taken as a share of that metric's own GD max.
-    const PERCENT_CSV_COLUMNS = ['Squad', 'Position', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
+    const PERCENT_CSV_COLUMNS = ['Squad', 'Position', 'Imports_used', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
 
     const PERCENT_CSV_ROWS = [
-      { valid: true,  cells: ['1st team', 'All',      '46', '53', '40', '30', '21', '42'] },
-      { valid: true,  cells: ['1st team', 'Midfield', '50', '57', '44', '33', '24', '46'] },
-      { valid: true,  cells: ['1st team', 'Striker',  '48', '55', '42', '31', '22', '44'] },
-      { valid: true,  cells: ['U21',      'All',      '45', '52', '39', '29', '20', '41'] },
-      { valid: true,  cells: ['U18',      'All',      '44', '50', '38', '28', '19', '40'] },
+      { valid: true,  cells: ['1st team', 'All',      '5',  '46', '53', '40', '30', '21', '42'] },
+      { valid: true,  cells: ['1st team', 'Midfield', '5',  '50', '57', '44', '33', '24', '46'] },
+      { valid: true,  cells: ['1st team', 'Striker',  '5',  '48', '55', '42', '31', '22', '44'] },
+      { valid: true,  cells: ['U21',      'All',      '5',  '45', '52', '39', '29', '20', '41'] },
+      { valid: true,  cells: ['U18',      'All',      '10', '44', '50', '38', '28', '19', '40'] },
       { valid: false, errorAt: 0, errorText: 'No squad by that name',
-        cells: ['U23',      'All',      '45', '52', '39', '29', '20', '41'] },
+        cells: ['U23',      'All',      '5',  '45', '52', '39', '29', '20', '41'] },
     ];
 
     const INSTRUCTIONS_W = 340;
@@ -1270,23 +1274,23 @@
               <Typography sx={body}>Striker</Typography>
             </Box>
 
-            {mode === 'metrics' ? (
-              <React.Fragment>
-                <Box>
-                  <Typography sx={body}>Calculation:</Typography>
-                  <Typography sx={body}>Average</Typography>
-                  <Typography sx={body}>Max</Typography>
-                  <Typography sx={body}>Min</Typography>
-                </Box>
+            {mode === 'metrics' && (
+              <Box>
+                <Typography sx={body}>Calculation:</Typography>
+                <Typography sx={body}>Average</Typography>
+                <Typography sx={body}>Max</Typography>
+                <Typography sx={body}>Min</Typography>
+              </Box>
+            )}
 
-                <Box>
-                  <Typography sx={body}>Imports_used</Typography>
-                  <Typography sx={body}>(to calculate average)</Typography>
-                  <Typography sx={body}>All</Typography>
-                  <Typography sx={body}>1-100</Typography>
-                </Box>
-              </React.Fragment>
-            ) : (
+            <Box>
+              <Typography sx={body}>Imports_used</Typography>
+              <Typography sx={body}>(to calculate average)</Typography>
+              <Typography sx={body}>All</Typography>
+              <Typography sx={body}>1-100</Typography>
+            </Box>
+
+            {mode === 'percent' && (
               <Box>
                 <Typography sx={body}>Percent of GD max</Typography>
                 <Typography sx={body}>1-200</Typography>
@@ -1427,7 +1431,7 @@
 
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
       const cols = mode === 'percent'
-        ? `44px 1.1fr 1fr repeat(6, 0.85fr)`
+        ? `44px 1.1fr 1fr 1fr repeat(6, 0.85fr)`
         : `44px 1.1fr 1fr 1.4fr 1fr repeat(6, 0.85fr)`;
 
       return (
@@ -1587,7 +1591,11 @@
 
     /* ── Version 2 ───────────────────────────────────────────────────── */
     function VersionTwo({ onHome, importMode = 'metrics' }) {
-      const [section, setSection] = useState(V2_SUB_SECTIONS[1]);
+      const percentMode = importMode === 'percent';
+      const sections = percentMode
+        ? ['Participation and RPE', 'Workload targets']
+        : V2_SUB_SECTIONS;
+      const [section, setSection] = useState(sections[1]);
       const [config] = useState(importMode === 'percent' ? seedPercentConfig : seedConfig);
       const [importing, setImporting] = useState(false);
       const [imported, setImported] = useState(false);
@@ -1620,17 +1628,18 @@
             </Box>
 
             <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-              <SubNav value={section} onChange={setSection} sections={V2_SUB_SECTIONS} />
+              <SubNav value={section} onChange={setSection} sections={sections} />
 
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {section === V2_SUB_SECTIONS[0] ? (
+                {section === sections[0] ? (
                   <ParticipationView />
                 ) : (
                   <ReadOnlyView
                     config={config}
-                    title="Workload metrics targets"
+                    title={percentMode ? 'Workload targets' : 'Workload metrics and targets'}
                     actionLabel="Import targets"
                     onAction={() => setImporting(true)}
+                    percentOnly={percentMode}
                   />
                 )}
               </Box>
