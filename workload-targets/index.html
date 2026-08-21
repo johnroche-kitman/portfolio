@@ -185,9 +185,18 @@
 
     const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
 
-    // Gameday markers, in training-week order. The minus sign matches the design (U+2212).
-    // Match day itself is deliberately absent: the game cannot carry a target.
-    const GD_ALL = ['GD−5', 'GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2', 'GD+3'];
+    // Gameday markers. The minus sign matches the design (U+2212). Match day
+    // itself is deliberately absent: the game cannot carry a target.
+    const GD_LIMIT = 15;
+    const MINUS = '−';
+    const gdLabel = (offset) => `GD${offset < 0 ? MINUS : '+'}${Math.abs(offset)}`;
+    const gdOffset = (label) => {
+      const n = Number(label.slice(3));
+      return label[2] === MINUS ? -n : n;
+    };
+    // Training-week order: the deepest minus day first, up to the last plus day.
+    const gdSort = (a, b) => gdOffset(a) - gdOffset(b);
+
     const GD_DEFAULT = ['GD−4', 'GD−3', 'GD−2', 'GD−1', 'GD+1', 'GD+2'];
 
     const MAX_METRICS = 6;
@@ -461,7 +470,7 @@
       // The design states the window once beneath the table. Only name the positions
       // when they have drifted apart.
       const uniform = filled.length > 0 && filled.every((f) => f.imports === filled[0].imports);
-      const tableWidth = 220 + 165 + cfg.days.length * 150;
+      const tableWidth = 255 + 165 + cfg.days.length * 150;
 
       const cell = { fontSize: 14, letterSpacing: 0.17, color: PRIMARY };
       const head = { fontSize: 14, fontWeight: 600, lineHeight: '24px', letterSpacing: 0.17, color: PRIMARY };
@@ -588,12 +597,32 @@
     function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel, allowPercent = false }) {
       const [dayAnchor, setDayAnchor] = useState(null);
 
+      // A week can run out to GD−15, well past the width of the screen, so the
+      // column just added is scrolled into view.
+      const scrollRef = React.useRef(null);
+      const addedDay  = React.useRef(null);
+      React.useEffect(() => {
+        if (!addedDay.current || !scrollRef.current) return;
+        const cell = scrollRef.current.querySelector(`[data-day="${addedDay.current}"]`);
+        if (cell) cell.scrollIntoView({ inline: 'center', block: 'nearest' });
+        addedDay.current = null;
+      });
+
       const cfg   = draft[squad];
       const combo = cfg.byPosition[position] || emptyCombination();
       const rows  = combo.metrics;
-      const usedCount = rows.filter(isFilled).length;
       const usedMetrics = rows.filter(isFilled).map((r) => r.metric);
-      const unusedDays = GD_ALL.filter((d) => !cfg.days.includes(d));
+      // The week extends one day at a time in either direction, so the menu offers
+      // any gap in what is already there plus the next day out on each side, as far
+      // as GD−15 and GD+15.
+      const nextDays = (sign) => {
+        const offsets = cfg.days.map(gdOffset).filter((n) => Math.sign(n) === sign);
+        const deepest = offsets.length ? Math.max(...offsets.map(Math.abs)) : 0;
+        const reach = Math.min(deepest + 1, GD_LIMIT);
+        return Array.from({ length: reach }, (_, i) => gdLabel(sign * (i + 1)))
+          .filter((d) => !cfg.days.includes(d));
+      };
+      const unusedDays = [...nextDays(-1).reverse(), ...nextDays(1)];
       const percentMode = allowPercent && combo.mode === 'percent';
 
       const mutate = (fn) => {
@@ -656,7 +685,7 @@
       const addDay = (day) => mutate((next) => {
         const days = next[squad].days;
         days.push(day);
-        days.sort((a, b) => GD_ALL.indexOf(a) - GD_ALL.indexOf(b));
+        days.sort(gdSort);
       });
 
       const removeDay = (day) => mutate((next) => {
@@ -745,14 +774,14 @@
 
           {/* One scroll container so the header cells and the inputs below them
               can never drift out of alignment at narrow widths. */}
-          <Box sx={{ overflowX: 'auto' }}>
+          <Box ref={scrollRef} sx={{ overflowX: 'auto' }}>
           <Box sx={{ minWidth: tableWidth }}>
 
           {/* Header row */}
           <Box sx={{ display: 'flex', alignItems: 'center', height: 56, borderBottom: `1px solid ${DIVIDER}` }}>
             <Box sx={{ width: COL_METRIC, flex: 'none', pl: `${CONTENT_X}px`, ...head }}>Metric</Box>
             {cfg.days.map((day) => (
-              <Box key={day} sx={{
+              <Box key={day} data-day={day} sx={{
                 width: COL_DAY, flex: 'none', pl: '16px', ...head,
                 display: 'flex', alignItems: 'center', gap: 0.5,
                 '&:hover .day-remove': { opacity: 1 },
@@ -769,7 +798,12 @@
                 </IconButton>
               </Box>
             ))}
-            <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+            {/* Sticky, so it stays in reach however far out the week runs. */}
+            <Box sx={{
+              width: COL_DAY, flex: 'none', pl: '16px',
+              position: 'sticky', right: 0, bgcolor: '#fff', zIndex: 2,
+              height: 56, display: 'flex', alignItems: 'center',
+            }}>
               <Button
                 onClick={(e) => setDayAnchor(e.currentTarget)}
                 disabled={unusedDays.length === 0}
@@ -779,7 +813,12 @@
               </Button>
               <Menu anchorEl={dayAnchor} open={Boolean(dayAnchor)} onClose={() => setDayAnchor(null)}>
                 {unusedDays.map((day) => (
-                  <MenuItem key={day} onClick={() => { addDay(day); setDayAnchor(null); }}>{day}</MenuItem>
+                  <MenuItem
+                    key={day}
+                    onClick={() => { addedDay.current = day; addDay(day); setDayAnchor(null); }}
+                  >
+                    {day}
+                  </MenuItem>
                 ))}
               </Menu>
             </Box>
@@ -812,7 +851,10 @@
                   />
                 </Box>
               ))}
-              <Box sx={{ width: COL_DAY, flex: 'none' }} />
+              <Box sx={{
+                width: COL_DAY, flex: 'none',
+                position: 'sticky', right: 0, bgcolor: '#FAFBFC', zIndex: 1, height: ROW_H,
+              }} />
             </Box>
           )}
 
@@ -876,7 +918,11 @@
                   </Box>
                 ))}
 
-                <Box sx={{ width: COL_DAY, flex: 'none', pl: '16px' }}>
+                <Box sx={{
+                  width: COL_DAY, flex: 'none', pl: '16px',
+                  position: 'sticky', right: 0, bgcolor: '#fff', zIndex: 1,
+                  height: ROW_H, display: 'flex', alignItems: 'center',
+                }}>
                   {filledRow && (
                     <Tooltip title="Clear row">
                       <IconButton
@@ -901,17 +947,13 @@
               combination, unlike the two filters above. */}
           <Box sx={{ pl: '18px', mt: 2.5 }}>
             <FilledSelect
-              label="Imports used for averages"
+              label="Imports used for drill averages"
               value={combo.imports}
               options={IMPORT_WINDOWS}
               onChange={setImports}
               width={499}
             />
           </Box>
-
-          <Typography sx={{ fontSize: 13, color: GREY100, mt: 2, pl: `${CONTENT_X}px` }}>
-            {usedCount} of {MAX_METRICS} metrics used for {squad} &middot; {position === 'All' ? 'all positions' : position.toLowerCase()}
-          </Typography>
         </Box>
       );
     }
