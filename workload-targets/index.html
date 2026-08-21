@@ -2129,7 +2129,18 @@
                           )}
 
                           <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
-                            Add: <Box component="span" sx={{ color: PRIMARY }}>Note</Box>
+                            Add:{' '}
+                            {['Area size', 'Note', 'Principles'].map((item, i) => (
+                              <React.Fragment key={item}>
+                                {i > 0 && ' | '}
+                                <Box component="span" sx={{
+                                  color: PRIMARY, cursor: 'pointer',
+                                  '&:hover': { textDecoration: 'underline' },
+                                }}>
+                                  {item}
+                                </Box>
+                              </React.Fragment>
+                            ))}
                           </Typography>
                         </Box>
 
