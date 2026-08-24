@@ -1843,6 +1843,7 @@
     // where six columns still read cleanly. Past it they stop shrinking and
     // slide off the right edge instead.
     const FOOTER_ROW_H = 24;               // labels and values share this
+    const DURATION_LINE_H = 20;            // the duration line, held open when empty
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     const SPLIT_HANDLE = 13;
@@ -2278,7 +2279,8 @@
 
                         <PitchThumb />
 
-                        <Box sx={{ flex: 1, minWidth: 0, pr: 5 }}>
+                        {/* pb leaves the add row breathing space above the card edge */}
+                        <Box sx={{ flex: 1, minWidth: 0, pr: 5, pb: 1 }}>
                           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5, minWidth: 0 }}>
                             <Typography sx={{
                               fontSize: 15, fontWeight: 700, minWidth: 0,
@@ -2331,7 +2333,7 @@
                                 </IconButton>
                               </Stack>
                             </Box>
-                          ) : drill.duration != null && (
+                          ) : drill.duration != null ? (
                             <Stack
                               direction="row" alignItems="center" spacing={0.75}
                               onClick={() => openDuration(drill)}
@@ -2340,6 +2342,10 @@
                               <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>{drill.duration} mins</Typography>
                               <MI name="edit" size={13} color={GREY100} />
                             </Stack>
+                          ) : (
+                            // Holds the line the duration would occupy, so a drill
+                            // without one is the same height as the rest.
+                            <Box sx={{ height: DURATION_LINE_H }} />
                           )}
 
                           <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
