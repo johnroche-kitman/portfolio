@@ -72,7 +72,7 @@
       createTheme, ThemeProvider, CssBaseline,
       Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
       Tabs, Tab, List, ListItemButton, ListItemText,
-      TextField, MenuItem, Menu, Avatar, ButtonBase,
+      TextField, MenuItem, Menu, ListSubheader, Avatar, ButtonBase,
       Snackbar, Alert, AlertTitle,
       ToggleButton, ToggleButtonGroup, InputAdornment, Switch,
     } from '@mui/material';
@@ -570,6 +570,42 @@
       );
     }
 
+    /* ── Search field at the head of a metric dropdown ───────────────── */
+    // Eleven metrics is enough to want typing rather than reading. The key
+    // handler is the point: without it the menu takes the keystrokes as its own
+    // type-ahead and jumps the highlight around instead of letting you type.
+    const metricMatches = (name, query) =>
+      !query.trim() || name.toLowerCase().includes(query.trim().toLowerCase());
+
+    function MetricSearch({ value, onChange }) {
+      return (
+        <Box
+          sx={{ px: 1.5, py: 1, bgcolor: '#fff' }}
+          onKeyDown={(e) => { if (e.key !== 'Escape') e.stopPropagation(); }}
+        >
+          <TextField
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Search metrics"
+            autoFocus
+            fullWidth
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start" sx={{ mr: 0.75 }}>
+                  <MI name="search" size={18} color={GREY100} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px`, fontSize: 14 },
+              '& .MuiOutlinedInput-input': { py: '7px' },
+            }}
+          />
+        </Box>
+      );
+    }
+
     /* ── Edit view ───────────────────────────────────────────────────── */
     function FilledSelect({ label, value, options, onChange, width, disabledOptions = [] }) {
       return (
@@ -596,6 +632,8 @@
 
     function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel, allowPercent = false }) {
       const [dayAnchor, setDayAnchor] = useState(null);
+      // One field is enough: only one metric dropdown is ever open.
+      const [metricQuery, setMetricQuery] = useState('');
 
       // A week can run out to GD−15, well past the width of the screen, so the
       // column just added is scrolled into view.
@@ -869,21 +907,40 @@
                     onChange={(e) => setMetric(index, e.target.value)}
                     variant="filled"
                     hiddenLabel
+                    SelectProps={{
+                      // The search field owns the focus, not the first option
+                      MenuProps: { autoFocus: false },
+                      onOpen: () => setMetricQuery(''),
+                      onClose: () => setMetricQuery(''),
+                    }}
                     sx={{
                       width: IN_METRIC,
                       '& .MuiFilledInput-root': { height: 52 },
                       '& .MuiSelect-select': { py: 0, display: 'flex', alignItems: 'center', height: 52, fontSize: 15, color: PRIMARY },
                     }}
                   >
+                    <ListSubheader sx={{ p: 0, lineHeight: 'normal' }}>
+                      <MetricSearch value={metricQuery} onChange={setMetricQuery} />
+                    </ListSubheader>
+
                     {METRIC_LIBRARY.map((metric) => (
                       <MenuItem
                         key={metric}
                         value={metric}
+                        // Hidden rather than dropped: a select whose value is not
+                        // among its children loses track of what is chosen.
+                        sx={metricMatches(metric, metricQuery) ? undefined : { display: 'none' }}
                         disabled={usedMetrics.includes(metric) && slot.metric !== metric}
                       >
                         {metric}
                       </MenuItem>
                     ))}
+
+                    {!METRIC_LIBRARY.some((m) => metricMatches(m, metricQuery)) && (
+                      <Typography sx={{ px: 2, py: 1.5, fontSize: 14, color: GREY100 }}>
+                        No metric by that name
+                      </Typography>
+                    )}
                   </TextField>
                 </Box>
 
@@ -1966,6 +2023,7 @@
       const [areaWidth, setAreaWidth] = useState(0);
       const [columns, setColumns] = useState(DEFAULT_COLUMNS);
       const [colAnchor, setColAnchor] = useState(null);   // { el, index }
+      const [metricQuery, setMetricQuery] = useState('');
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
       const areaRef = React.useRef(null);
@@ -2120,7 +2178,7 @@
             }}>
               {/* The whole label is the hit area, not just the icon */}
               <ButtonBase
-                onClick={(e) => setColAnchor({ el: e.currentTarget, index: i })}
+                onClick={(e) => { setMetricQuery(''); setColAnchor({ el: e.currentTarget, index: i }); }}
                 aria-label={`Change the ${m.name} column`}
                 sx={{
                   display: 'flex', alignItems: 'center', gap: 0.25, minWidth: 0,
@@ -2165,7 +2223,7 @@
               pt: '10px', display: 'flex', alignItems: 'center',
             }}>
               <ButtonBase
-                onClick={(e) => setColAnchor({ el: e.currentTarget, index: null })}
+                onClick={(e) => { setMetricQuery(''); setColAnchor({ el: e.currentTarget, index: null }); }}
                 aria-label="Add a metric column"
                 sx={{
                   display: 'flex', alignItems: 'center', gap: 0.25,
@@ -2462,9 +2520,14 @@
                   <Menu
                     anchorEl={colAnchor?.el}
                     open={Boolean(colAnchor)}
-                    onClose={() => setColAnchor(null)}
+                    onClose={() => { setColAnchor(null); setMetricQuery(''); }}
+                    // The search field takes the focus, not the first metric
+                    autoFocus={false}
+                    MenuListProps={{ sx: { pt: 0 } }}
                   >
-                    {METRIC_LIBRARY_SESSION.map((m) => {
+                    <MetricSearch value={metricQuery} onChange={setMetricQuery} />
+
+                    {METRIC_LIBRARY_SESSION.filter((m) => metricMatches(m.name, metricQuery)).map((m) => {
                       const adding = colAnchor?.index == null;
                       const usedElsewhere = columns.includes(m.key) && (adding || columns[colAnchor?.index] !== m.key);
                       return (
@@ -2477,6 +2540,7 @@
                               ? [...prev, m.key]
                               : prev.map((k, i) => (i === colAnchor.index ? m.key : k)));
                             setColAnchor(null);
+                            setMetricQuery('');
                           }}
                         >
                           <Stack direction="row" alignItems="baseline" spacing={1}>
@@ -2488,6 +2552,12 @@
                         </MenuItem>
                       );
                     })}
+
+                    {!METRIC_LIBRARY_SESSION.some((m) => metricMatches(m.name, metricQuery)) && (
+                      <Typography sx={{ px: 2, py: 1.5, fontSize: 14, color: GREY100 }}>
+                        No metric by that name
+                      </Typography>
+                    )}
                   </Menu>
                 </Box>
               </Box>
