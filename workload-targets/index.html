@@ -1844,6 +1844,7 @@
     // slide off the right edge instead.
     const FOOTER_ROW_H = 24;               // labels and values share this
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
+    const ADD_METRIC_W = 88;               // what + Metric needs, not a whole column
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     const SPLIT_HANDLE = 13;
@@ -2092,13 +2093,12 @@
       const valuesSx = showWorkload
         ? { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` }
         : { flex: '0 0 0px', width: 0, minWidth: 0, overflow: 'hidden', pr: 0 };
-      // Reserve exactly one slot for the + button and divide the rest between the
-      // columns, so five metrics sit at the same width as six, four at the width
-      // of five, and so on.
-      const columnSlots = metrics.length < MAX_SESSION_COLUMNS
-        ? metrics.length + 1
-        : MAX_SESSION_COLUMNS;
-      const colWidth = `${100 / columnSlots}%`;
+      // The + button needs its own width, not a whole column: reserve that much
+      // and give the rest to the metrics, so dropping a column widens the ones
+      // that remain instead of leaving a hole on the right.
+      const colWidth = metrics.length < MAX_SESSION_COLUMNS
+        ? `calc((100% - ${ADD_METRIC_W}px) / ${metrics.length})`
+        : `${100 / MAX_SESSION_COLUMNS}%`;
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
@@ -2156,7 +2156,7 @@
           ))}
 
           {metrics.length < MAX_SESSION_COLUMNS && (
-            <Box sx={{ width: colWidth, flex: 'none', pr: 2, pt: '10px', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ width: ADD_METRIC_W, flex: 'none', pt: '10px', display: 'flex', alignItems: 'center' }}>
               <ButtonBase
                 onClick={(e) => setColAnchor({ el: e.currentTarget, index: null })}
                 aria-label="Add a metric column"
