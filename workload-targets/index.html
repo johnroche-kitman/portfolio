@@ -2279,8 +2279,17 @@
 
                         <PitchThumb />
 
-                        {/* pb leaves the add row breathing space above the card edge */}
-                        <Box sx={{ flex: 1, minWidth: 0, pr: 5, pb: 1 }}>
+                        {/* The add row keeps its space above the card edge. A drill
+                            with no duration takes that line back here, below the row,
+                            so it stands the same height without a gap up the card. */}
+                        <Box sx={{
+                          flex: 1, minWidth: 0, pr: 5,
+                          // 8 as everywhere, plus the duration line and the margin
+                          // above it that the row no longer carries.
+                          pb: drill.duration == null && editingId !== drill.id
+                            ? `${8 + DURATION_LINE_H + 4}px`
+                            : 1,
+                        }}>
                           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5, minWidth: 0 }}>
                             <Typography sx={{
                               fontSize: 15, fontWeight: 700, minWidth: 0,
@@ -2342,11 +2351,7 @@
                               <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>{drill.duration} mins</Typography>
                               <MI name="edit" size={13} color={GREY100} />
                             </Stack>
-                          ) : (
-                            // Holds the line the duration would occupy, so a drill
-                            // without one is the same height as the rest.
-                            <Box sx={{ height: DURATION_LINE_H }} />
-                          )}
+                          ) : null}
 
                           <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
                             Add:{' '}
