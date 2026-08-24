@@ -1846,9 +1846,11 @@
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
-    // The + Metric cell is the button and nothing more: the panel's own gutter is
-    // all the space that follows it. Not a whole column, which left a hole.
+    // The + Metric button reaches the keyline: its cell sits over the panel gutter
+    // rather than before it, so what it actually costs the columns is the button
+    // less that gutter. Not a whole column, which left a hole on the right.
     const ADD_METRIC_W = 55;               // the button, label and its own padding
+    const ADD_METRIC_COST = ADD_METRIC_W - VALUES_GUTTER;
     const SPLIT_HANDLE = 13;
     const OFF_NUM_W = 42;                  // drill number and edit, workload hidden
     const OFF_PART_W = 104;                // attendance, workload hidden
@@ -2099,7 +2101,7 @@
       // and give the rest to the metrics, so dropping a column widens the ones
       // that remain instead of leaving a hole on the right.
       const colWidth = metrics.length < MAX_SESSION_COLUMNS
-        ? `calc((100% - ${ADD_METRIC_W}px) / ${metrics.length})`
+        ? `calc((100% - ${ADD_METRIC_COST}px) / ${metrics.length})`
         : `${100 / MAX_SESSION_COLUMNS}%`;
 
       // Sits inside the first drill's row rather than in a band of its own,
@@ -2158,7 +2160,10 @@
           ))}
 
           {metrics.length < MAX_SESSION_COLUMNS && (
-            <Box sx={{ width: ADD_METRIC_W, flex: 'none', pt: '10px', display: 'flex', alignItems: 'center' }}>
+            <Box sx={{
+              width: ADD_METRIC_W, flex: 'none', mr: `-${VALUES_GUTTER}px`,
+              pt: '10px', display: 'flex', alignItems: 'center',
+            }}>
               <ButtonBase
                 onClick={(e) => setColAnchor({ el: e.currentTarget, index: null })}
                 aria-label="Add a metric column"
