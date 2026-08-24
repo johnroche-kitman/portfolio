@@ -1874,8 +1874,10 @@
     }
 
     /* ── One metric cell: value over a bar showing its share of target ── */
-    // The metric names already carry their unit, so the tooltip just repeats the name.
-    const metricTitle = (metric, over) => `${metric.name}${over ? ' — over target' : ''}`;
+    // The metric names already carry their unit, so the tooltip just repeats the
+    // name, saying which of the two states the cell is in when it is in one.
+    const metricTitle = (metric, over, missing) =>
+      `${metric.name}${over ? ' — over target' : ''}${missing ? ' — no data' : ''}`;
 
     function MetricBar({ metric, mode, value, target, before }) {
       const track = { height: 5, borderRadius: '2px', bgcolor: '#E4E7EB', overflow: 'hidden', display: 'flex' };
@@ -1916,7 +1918,7 @@
           width, flex: 'none', pr: 2, pt: padTop,
           ...(highlight && { bgcolor: COLUMN_TINT }),
         }}>
-          <Tooltip title={metricTitle(metric, over)} placement="top" followCursor>
+          <Tooltip title={metricTitle(metric, over, value == null)} placement="top" followCursor>
             <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.75, cursor: 'default', width: 'fit-content' }}>
               <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
                 {value == null ? '—' : value}
@@ -1952,6 +1954,7 @@
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
       const [editingId, setEditingId] = useState(null);
+      const [durationDraft, setDurationDraft] = useState('');
       const [splitWidth, setSplitWidth] = useState(640);
       const [dragging, setDragging] = useState(false);
       const [areaWidth, setAreaWidth] = useState(0);
@@ -2013,11 +2016,17 @@
         };
       }, [dragging]);
 
-      // Cleared back to empty means no duration again, not zero minutes.
-      const setDuration = (id, raw) => {
-        const digits = String(raw).replace(/[^0-9]/g, '');
-        const mins = digits === '' ? null : Math.max(0, parseInt(digits, 10));
+      // The field holds its own value until the tick, so a cancel leaves the
+      // drill as it was. Cleared back to empty means no duration again, not zero.
+      const openDuration = (drill) => {
+        setDurationDraft(drill.duration == null ? '' : String(drill.duration));
+        setEditingId(drill.id);
+      };
+
+      const commitDuration = (id) => {
+        const mins = durationDraft === '' ? null : Math.max(0, parseInt(durationDraft, 10));
         setDrills((prev) => prev.map((d) => (d.id === id ? { ...d, duration: mins } : d)));
+        setEditingId(null);
       };
 
       const totals = metrics.reduce((acc, m) => {
@@ -2287,44 +2296,64 @@
                           }}>{drill.desc}</Typography>
 
                           {editingId === drill.id ? (
-                            <Stack direction="row" alignItems="center" spacing={0.75}>
-                              <TextField
-                                value={drill.duration ?? ''}
-                                autoFocus
-                                onFocus={(e) => e.target.select()}
-                                onChange={(e) => setDuration(drill.id, e.target.value)}
-                                onBlur={() => setEditingId(null)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') setEditingId(null); }}
-                                variant="outlined"
-                                size="small"
-                                inputProps={{ inputMode: 'numeric', style: { padding: '4px 8px', fontSize: 13, width: 34 } }}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px` } }}
-                              />
-                              <Typography sx={{ fontSize: 13, color: GREY100 }}>mins</Typography>
-                            </Stack>
-                          ) : drill.duration != null ? (
+                            <Box sx={{ mb: 0.5 }}>
+                              <Typography sx={{ fontSize: 13, color: PRIMARY, mb: 0.5 }}>Duration (mins):</Typography>
+                              <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <TextField
+                                  value={durationDraft}
+                                  autoFocus
+                                  onFocus={(e) => e.target.select()}
+                                  onChange={(e) => setDurationDraft(e.target.value.replace(/[^0-9]/g, ''))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') commitDuration(drill.id);
+                                    if (e.key === 'Escape') setEditingId(null);
+                                  }}
+                                  variant="outlined"
+                                  size="small"
+                                  inputProps={{ inputMode: 'numeric', style: { padding: '6px 10px', fontSize: 14, width: 130 } }}
+                                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px` } }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={() => commitDuration(drill.id)}
+                                  aria-label="Save duration"
+                                  sx={{ border: `1px solid ${UNDERLINE}`, borderRadius: `${RADIUS}px`, p: '5px' }}
+                                >
+                                  <MI name="check" size={16} color={PRIMARY} />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setEditingId(null)}
+                                  aria-label="Cancel"
+                                  sx={{ border: `1px solid ${UNDERLINE}`, borderRadius: `${RADIUS}px`, p: '5px' }}
+                                >
+                                  <MI name="close" size={16} color={PRIMARY} />
+                                </IconButton>
+                              </Stack>
+                            </Box>
+                          ) : drill.duration != null && (
                             <Stack
                               direction="row" alignItems="center" spacing={0.75}
-                              onClick={() => setEditingId(drill.id)}
+                              onClick={() => openDuration(drill)}
                               sx={{ cursor: 'pointer', width: 'fit-content' }}
                             >
                               <Typography sx={{ fontSize: 13, color: GREY100, whiteSpace: 'nowrap' }}>{drill.duration} mins</Typography>
                               <MI name="edit" size={13} color={GREY100} />
                             </Stack>
-                          ) : (
-                            <Typography sx={{ fontSize: 13, color: DISABLED, whiteSpace: 'nowrap' }}>
-                              No duration set
-                            </Typography>
                           )}
 
                           <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
                             Add:{' '}
-                            {['Duration', 'Area size', 'Note', 'Principles'].map((item, i) => (
+                            {/* Duration only while the drill is without one */}
+                            {[
+                              ...(drill.duration == null && editingId !== drill.id ? ['Duration'] : []),
+                              'Area size', 'Note', 'Principles',
+                            ].map((item, i) => (
                               <React.Fragment key={item}>
                                 {i > 0 && ' | '}
                                 <Box
                                   component="span"
-                                  onClick={item === 'Duration' ? () => setEditingId(drill.id) : undefined}
+                                  onClick={item === 'Duration' ? () => openDuration(drill) : undefined}
                                   sx={{
                                     color: PRIMARY, cursor: 'pointer',
                                     '&:hover': { textDecoration: 'underline' },
@@ -2532,7 +2561,7 @@
                             <Box key={m.key} sx={{
                               width: colWidth, flex: 'none', pr: 2,
                             }}>
-                              <Tooltip title={metricTitle(m, over)} placement="top">
+                              <Tooltip title={metricTitle(m, over, totals[m.key] == null)} placement="top">
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
                                   <Box component="span" sx={{
                                     fontSize: 14,
