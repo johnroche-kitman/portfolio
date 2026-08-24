@@ -1846,11 +1846,9 @@
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
-    // The + Metric cell is the button and the 34 that follows its label, less the
-    // gutter the panel already carries. Not a whole column, which left a hole.
-    const ADD_METRIC_BTN = 55;             // the button, label and its own padding
-    const ADD_METRIC_GAP = 34;             // clear space after the label
-    const ADD_METRIC_W = ADD_METRIC_BTN + ADD_METRIC_GAP - VALUES_GUTTER;
+    // The + Metric cell is the button and nothing more: the panel's own gutter is
+    // all the space that follows it. Not a whole column, which left a hole.
+    const ADD_METRIC_W = 55;               // the button, label and its own padding
     const SPLIT_HANDLE = 13;
     const OFF_NUM_W = 42;                  // drill number and edit, workload hidden
     const OFF_PART_W = 104;                // attendance, workload hidden
