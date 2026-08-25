@@ -1025,23 +1025,19 @@
           {
             hash: '#/v1',
             title: 'Version 1 - Set targets in the system',
-            description: 'Org settings › Workload › Workload metrics and targets. A grid of metrics against gameday markers, edited a squad and position at a time.',
           },
           {
             hash: '#/v2',
             chosen: true,
             title: 'Version 2 - Import targets from a CSV',
-            description: 'The same targets page, but set up by uploading a csv. Upload, review the rows and correct any of them inline, then import.',
           },
           {
             hash: '#/v3',
             title: 'Version 3 - Set targets as a share of GD max',
-            description: 'Version 1 plus a switch in the edit header. Type one percentage per gameday and every metric takes that share of its own match day maximum.',
           },
           {
             hash: '#/v4',
             title: 'Version 4 - Import a share of GD max from a CSV',
-            description: 'Version 2 crossed with version 3. The file carries squad, position and one percentage per gameday, and nothing else: no metric rows, since every metric takes that share of its own match day maximum.',
           },
         ],
       },
@@ -1051,33 +1047,27 @@
           {
             hash: '#/planning-v1',
             title: 'Version 1 - Build a session against its targets',
-            description: 'Drill list with workload values alongside. Change a drill duration and the values follow; the bar at the foot turns red when the session goes over target. Drag the divider to give the values more room.',
           },
           {
             hash: '#/planning-v2',
             title: 'Version 2 - Cumulative bars',
-            description: 'Same page, but each bar shows the running total through that drill rather than the drill on its own. Read down and you watch the budget fill; the pale part is what came before it.',
           },
           {
             hash: '#/planning-v3',
             title: 'Version 3 - Cumulative rows and a total bar',
-            description: 'Version 2 plus one plain bar per metric in the targets bar, the session total against its target. The rows carry the drill by drill detail, so the total bar stays undivided.',
           },
           {
             hash: '#/planning-v4',
             title: 'Version 4 - Highlight the column that is over',
-            description: 'Version 1, but any metric whose session total has passed its target tints its whole column, heading down to the targets bar, so the problem is visible without reading a number.',
           },
           {
             hash: '#/planning-v5',
             chosen: true,
             title: 'Version 5 - Scroll the values instead of stretching them',
-            description: 'Version 3, cumulative rows and a total bar, with the columns held at a fixed width. Rather than dividing the space between however many metrics are shown, the values area scrolls sideways, headings, drill rows and targets bar together. The divider still drags either way.',
           },
           {
             hash: '#/planning-v6',
             title: 'Version 6 - Read the values as a table',
-            description: 'Version 5 drawn as a ruled table: a heading row, a row per drill still level with its card, and the numbers on their own. The only bars left are the session totals in the targets bar. Everything else holds, the divider, the sideways scroll and the columns you can add or drop.',
           },
         ],
       },
@@ -1157,7 +1147,7 @@
                         '&:hover': { borderColor: PRIMARY, bgcolor: '#fafafa' },
                       }}
                     >
-                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
                         <Typography sx={{ fontSize: 16, fontWeight: 700 }}>{version.title}</Typography>
                         {version.chosen && (
                           <Box sx={{
@@ -1169,7 +1159,6 @@
                           </Box>
                         )}
                       </Stack>
-                      <Typography sx={{ fontSize: 14, color: GREY100 }}>{version.description}</Typography>
                     </ButtonBase>
                   ))}
                 </Stack>
