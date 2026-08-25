@@ -2208,14 +2208,13 @@
           ? `calc((100% - ${ADD_METRIC_COST}px) / ${metrics.length})`
           : `${100 / MAX_SESSION_COLUMNS}%`;
 
-      // A table column can be dragged to a width of its own; everywhere else the
-      // columns are all one width.
-      const colWidthOf = (metric) => (table ? (colWidths[metric.key] ?? SCROLL_COL_W) : colWidth);
+      // Where the columns hold a width rather than dividing the panel, each can be
+      // dragged to a width of its own. Where they stretch, they are all one width
+      // and there is nothing to drag.
+      const colWidthOf = (metric) => (scrollValues ? (colWidths[metric.key] ?? SCROLL_COL_W) : colWidth);
 
       // How wide the columns actually are, which the scroll runs against.
-      const trackW = (table
-        ? metrics.reduce((sum, m) => sum + colWidthOf(m), 0)
-        : metrics.length * SCROLL_COL_W)
+      const trackW = (scrollValues ? metrics.reduce((sum, m) => sum + colWidthOf(m), 0) : 0)
         + (metrics.length < MAX_SESSION_COLUMNS ? ADD_METRIC_W : 0);
 
       // Drag the right edge of a heading to set that column's width. The floor is
@@ -2297,8 +2296,9 @@
             <Box key={m.key} sx={{
               width: colWidthOf(m), flex: 'none',
               ...(table
-                ? { px: 1.5, borderRight: `1px solid ${DIVIDER}`, position: 'relative' }
+                ? { px: 1.5, borderRight: `1px solid ${DIVIDER}` }
                 : { pr: 2, pt: '10px' }),
+              ...(scrollValues && { position: 'relative' }),
               display: 'flex', alignItems: 'center',
               ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
               '&:hover .col-tool': { opacity: 1 },
@@ -2347,8 +2347,9 @@
                 </IconButton>
               )}
 
-              {/* Sits over the rule between this column and the next */}
-              {table && (
+              {/* On the table it sits over the rule between this column and the
+                  next; without one it is the only thing marking the edge. */}
+              {scrollValues && (
                 <Box
                   className="col-grip"
                   onMouseDown={onColResize(m)}
@@ -2359,6 +2360,7 @@
                     width: 7, cursor: 'col-resize', zIndex: 2,
                     display: 'flex', justifyContent: 'center',
                     opacity: 0, transition: 'opacity .12s',
+                    ...(table ? {} : { height: TABLE_HEAD_H }),
                   }}
                 >
                   <Box sx={{ width: 3, height: '100%', bgcolor: PRIMARY, borderRadius: 2 }} />
