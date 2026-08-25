@@ -1910,7 +1910,6 @@
     const ADD_LINE_H = 24;                 // the add row, its own margin included
     const WORKLOAD_CARD_TAIL = 28;         // duration line to card foot, workload view
     const SCROLL_COL_W = 150;              // fixed column, the version that scrolls
-    const SCROLLBAR_H = 10;
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2040,7 +2039,6 @@
       // One scroll position for the whole values area: the headings, every drill
       // row and the targets bar all read it, so they can never drift apart.
       const [scrollX, setScrollX] = useState(0);
-      const scrollRef = React.useRef(null);
 
       const metrics = columns.map(metricByKey);
       const targetFor = (metric) => {
@@ -2205,10 +2203,9 @@
           : children
       );
 
-      // What the panel actually shows, and so how far there is to scroll. Taken
-      // from the measured area rather than the DOM: a native scrollbar is drawn
-      // by the platform and on this one it is an overlay that fades out, which
-      // leaves nothing on screen to say the columns run on.
+      // What the panel actually shows, and so how far there is to scroll. There
+      // is no bar to read it off: the columns are swiped sideways, or moved with
+      // shift and a wheel.
       const valuesViewW = Math.max(0, areaWidth - splitWidth - SPLIT_HANDLE - VALUES_GUTTER);
       const maxScroll = Math.max(0, trackW - valuesViewW);
       const clampScroll = (x) => Math.max(0, Math.min(maxScroll, x));
@@ -2227,31 +2224,6 @@
         if (delta) setScrollX((x) => clampScroll(x + delta));
       };
 
-      // Thumb drag. The track is the panel, so a pixel of thumb travel is
-      // maxScroll / (view - thumb) pixels of columns.
-      const thumbW = maxScroll ? Math.max(48, (valuesViewW / trackW) * valuesViewW) : 0;
-      const thumbTravel = Math.max(1, valuesViewW - thumbW);
-      const thumbX = maxScroll ? (scrollX / maxScroll) * thumbTravel : 0;
-
-      const onThumbDown = (e) => {
-        e.preventDefault();
-        const startX = e.clientX;
-        const startScroll = scrollX;
-        const move = (ev) => {
-          const dx = ev.clientX - startX;
-          setScrollX(clampScroll(startScroll + (dx / thumbTravel) * maxScroll));
-        };
-        const up = () => {
-          window.removeEventListener('mousemove', move);
-          window.removeEventListener('mouseup', up);
-          document.body.style.cursor = '';
-          document.body.style.userSelect = '';
-        };
-        window.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', up);
-        document.body.style.cursor = 'grabbing';
-        document.body.style.userSelect = 'none';
-      };
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
@@ -2650,33 +2622,6 @@
                     </Box>
                   );
                   })}
-
-                  {/* The one scrollbar for the values, sat under the last drill and
-                      lined up with the columns. Everything else follows it. */}
-                  {scrollValues && maxScroll > 0 && (
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1, ...fadeSx }}>
-                      <Box sx={{ width: showWorkload ? 0 : OFF_NUM_W, flex: 'none', ...growSx }} />
-                      <Box sx={{ width: cardWidth, flex: 'none', ...growSx }} />
-                      <Box sx={{ width: showWorkload ? SPLIT_HANDLE : 0, flex: 'none' }} />
-                      <Box sx={{ ...valuesSx, minWidth: 0 }}>
-                        <Box sx={{
-                          position: 'relative', height: SCROLLBAR_H,
-                          bgcolor: NEUTRAL_200, borderRadius: `${SCROLLBAR_H / 2}px`,
-                        }}>
-                          <Box
-                            ref={scrollRef}
-                            onMouseDown={onThumbDown}
-                            sx={{
-                              position: 'absolute', top: 0, left: thumbX,
-                              width: thumbW, height: SCROLLBAR_H,
-                              borderRadius: `${SCROLLBAR_H / 2}px`, bgcolor: '#C3C9D4',
-                              cursor: 'grab', '&:hover': { bgcolor: GREY100 },
-                            }}
-                          />
-                        </Box>
-                      </Box>
-                    </Box>
-                  )}
 
                   <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2.5 }}>
                     <Button variant="contained" color="primary" startIcon={<MI name="add" size={18} color="#fff" />} sx={{ px: 2 }}>
