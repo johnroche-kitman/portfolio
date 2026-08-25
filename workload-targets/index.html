@@ -1902,7 +1902,8 @@
     // slide off the right edge instead.
     const FOOTER_ROW_H = 24;               // labels and values share this
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
-    const ADD_LINE_H = 24;                 // the add row, held open when it has nothing
+    const ADD_LINE_H = 24;                 // the add row, its own margin included
+    const WORKLOAD_CARD_TAIL = 28;         // duration line to card foot, workload view
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2332,6 +2333,17 @@
                       'Area size', 'Note',
                       ...(hasPrinciples ? [] : ['Principles']),
                     ];
+
+                  // The workload view closes the card just under its last line, and
+                  // the cards have to stand level, so the padding takes back
+                  // whatever that drill happens not to be carrying. The regular view
+                  // keeps its roomier foot, with the same allowance for a drill that
+                  // shows no duration line.
+                  const tail = (drill.duration != null ? DURATION_LINE_H : 0)
+                    + (addItems.length ? ADD_LINE_H : 0);
+                  const bottomPad = showWorkload
+                    ? Math.max(8, WORKLOAD_CARD_TAIL - tail)
+                    : 8 + (canAddDuration ? DURATION_LINE_H + 4 : 0);
                   return (
                     <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start' }}>
 
@@ -2359,17 +2371,7 @@
 
                         <PitchThumb />
 
-                        {/* The add row keeps its space above the card edge. A drill
-                            with no duration takes that line back here, below the row,
-                            so it stands the same height without a gap up the card. */}
-                        <Box sx={{
-                          flex: 1, minWidth: 0, pr: 5,
-                          // 8 as everywhere, plus the duration line and the margin
-                          // above it that the row no longer carries.
-                          pb: drill.duration == null && editingId !== drill.id
-                            ? `${8 + DURATION_LINE_H + 4}px`
-                            : 1,
-                        }}>
+                        <Box sx={{ flex: 1, minWidth: 0, pr: 5, pb: `${bottomPad}px` }}>
                           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5, minWidth: 0 }}>
                             <Typography sx={{
                               fontSize: 15, fontWeight: 700, minWidth: 0,
@@ -2464,7 +2466,7 @@
                             </Box>
                           )}
 
-                          {addItems.length > 0 ? (
+                          {addItems.length > 0 && (
                             <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
                               Add:{' '}
                               {addItems.map((item, i) => (
@@ -2483,10 +2485,6 @@
                                 </React.Fragment>
                               ))}
                             </Typography>
-                          ) : (
-                            // Nothing left to add, but the line still has to be there
-                            // or this card would stand shorter than the others.
-                            <Box sx={{ height: ADD_LINE_H }} />
                           )}
                         </Box>
 
