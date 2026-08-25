@@ -2031,9 +2031,14 @@
       return (
         <Box sx={cell}>
           {/* Same weight as the row bars, but a white track: the grey one
-              disappeared into the grey of the bar itself */}
+              disappeared into the grey of the bar itself. As a table these are
+              the only bars on the page, so a colour per metric is telling nobody
+              anything: they all read navy, and red when they are over. */}
           <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#ffffff', overflow: 'hidden', display: 'flex' }}>
-            <Box sx={{ width: `${Math.min(100, (total / target) * 100)}%`, bgcolor: over ? ERROR : metric.color }} />
+            <Box sx={{
+              width: `${Math.min(100, (total / target) * 100)}%`,
+              bgcolor: over ? ERROR : table ? PRIMARY : metric.color,
+            }} />
           </Box>
         </Box>
       );
