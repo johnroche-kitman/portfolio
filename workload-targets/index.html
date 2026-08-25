@@ -1070,6 +1070,10 @@
             chosen: true,
             title: 'Version 6 - Read the values as a table',
           },
+          {
+            hash: '#/planning-v7',
+            title: 'Version 7 - Type a value where there is no data',
+          },
         ],
       },
     ];
@@ -1885,8 +1889,10 @@
       return Math.round((base * drill.duration) / drill.baseDuration);
     };
 
-    const totalFor = (drills, metric) => {
-      const vals = drills.map((d) => drillValue(d, metric)).filter((v) => v != null);
+    // resolve says where a drill's value comes from. It is drillValue everywhere
+    // but the version that lets a figure be typed in where an import left none.
+    const totalFor = (drills, metric, resolve = drillValue) => {
+      const vals = drills.map((d) => resolve(d, metric)).filter((v) => v != null);
       if (!vals.length) return null;
       if (metric.agg === 'max') return Math.max(...vals);
       if (metric.agg === 'avg') return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
@@ -1987,24 +1993,68 @@
     // own top padding for the same reason.
     const COLUMN_TINT = 'rgba(195, 29, 43, 0.08)';
 
-    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false, padTop = 0, table = false }) {
+    function MetricCell({
+      metric, value, target, width, mode = 'target', before = 0, highlight = false, padTop = 0,
+      table = false, editable = false, editing = false, typed = false,
+      draft = '', onStartEdit, onDraft, onCommit, onCancel,
+    }) {
       const over = target != null && value != null && value > target;
 
       // As a table the cell is a cell: ruled, its value sat in the middle of the
       // row, and no bar. The number carries it on its own.
       if (table) {
+        const cellSx = {
+          width, flex: 'none', px: 1.5, display: 'flex', alignItems: 'center',
+          borderRight: `1px solid ${DIVIDER}`,
+          ...(highlight && { bgcolor: COLUMN_TINT }),
+        };
+
+        // Nothing was imported for this drill, so a figure can be typed instead.
+        if (editing) {
+          return (
+            <Box sx={cellSx}>
+              <TextField
+                value={draft}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => onDraft(e.target.value.replace(/[^0-9.]/g, ''))}
+                onBlur={onCommit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') onCommit();
+                  if (e.key === 'Escape') onCancel();
+                }}
+                variant="outlined"
+                size="small"
+                inputProps={{ inputMode: 'numeric', style: { padding: '2px 6px', fontSize: 14, width: 56 } }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: `${RADIUS}px`, bgcolor: '#fff' } }}
+              />
+            </Box>
+          );
+        }
+
         return (
-          <Box sx={{
-            width, flex: 'none', px: 1.5, display: 'flex', alignItems: 'center',
-            borderRight: `1px solid ${DIVIDER}`,
-            ...(highlight && { bgcolor: COLUMN_TINT }),
-          }}>
-            <Tooltip title={metricTitle(metric, over, value == null)} placement="top" followCursor>
-              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+          <Box
+            onClick={editable ? onStartEdit : undefined}
+            sx={{
+              ...cellSx,
+              ...(editable && { cursor: 'pointer', '&:hover .cell-edit': { opacity: 1 } }),
+            }}
+          >
+            <Tooltip
+              title={`${metricTitle(metric, over, value == null)}${typed ? ' — entered by hand' : ''}`}
+              placement="top"
+              followCursor
+            >
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'inherit', width: 'fit-content' }}>
                 <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
                   {value == null ? '—' : value}
                 </Typography>
                 {over && <MI name="error" size={15} color={ERROR} />}
+                {editable && (
+                  <Box className="cell-edit" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
+                    <MI name="edit" size={13} color={GREY100} />
+                  </Box>
+                )}
               </Stack>
             </Tooltip>
           </Box>
@@ -2053,7 +2103,10 @@
     }
 
     /* ── Session planning, version 1 ─────────────────────────────────── */
-    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false, scrollValues = false, table = false }) {
+    function SessionPlanning({
+      onHome, rowBars = 'target', footerBar = 'none', highlightOver = false,
+      scrollValues = false, table = false, manualEntry = false,
+    }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
@@ -2065,6 +2118,10 @@
       const [columns, setColumns] = useState(DEFAULT_COLUMNS);
       const [colAnchor, setColAnchor] = useState(null);   // { el, index }
       const [colWidths, setColWidths] = useState({});     // key → px, table version
+      // Figures typed in where an import left none: drill id → metric key → value
+      const [manualValues, setManualValues] = useState({});
+      const [editingCell, setEditingCell] = useState(null); // { drillId, key }
+      const [cellDraft, setCellDraft] = useState('');
       const [metricQuery, setMetricQuery] = useState('');
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
@@ -2138,8 +2195,27 @@
         setEditingId(null);
       };
 
+      // The imported figure, or the one typed in its place. Everything downstream
+      // reads this, so a typed value counts towards the totals like any other.
+      const typedValue = (drill, metric) => {
+        const raw = manualValues[drill.id]?.[metric.key];
+        return raw == null || raw === '' ? null : Number(raw);
+      };
+      const valueFor = (drill, metric) => drillValue(drill, metric) ?? (manualEntry ? typedValue(drill, metric) : null);
+      const canType = (drill, metric) => manualEntry && drillValue(drill, metric) == null;
+
+      const commitCell = () => {
+        if (!editingCell) return;
+        const { drillId, key } = editingCell;
+        setManualValues((prev) => ({
+          ...prev,
+          [drillId]: { ...prev[drillId], [key]: cellDraft === '' ? undefined : cellDraft },
+        }));
+        setEditingCell(null);
+      };
+
       const totals = metrics.reduce((acc, m) => {
-        acc[m.key] = totalFor(drills, m);
+        acc[m.key] = totalFor(drills, m, valueFor);
         return acc;
       }, {});
 
@@ -2159,7 +2235,7 @@
         const running = {};
         drills.forEach((d, i) => {
           out[i] = { ...running };
-          metrics.forEach((m) => { running[m.key] = (running[m.key] ?? 0) + (drillValue(d, m) ?? 0); });
+          metrics.forEach((m) => { running[m.key] = (running[m.key] ?? 0) + (valueFor(d, m) ?? 0); });
         });
         return out;
       })();
@@ -2688,7 +2764,7 @@
                                 <MetricCell
                                   key={m.key}
                                   metric={m}
-                                  value={drillValue(drill, m)}
+                                  value={valueFor(drill, m)}
                                   target={targetFor(m)}
                                   width={colWidthOf(m)}
                                   mode={rowBars}
@@ -2696,6 +2772,17 @@
                                   highlight={overColumns.has(m.key)}
                                   padTop={drillIndex === 0 ? 0 : '10px'}
                                   table={table}
+                                  editable={canType(drill, m)}
+                                  typed={typedValue(drill, m) != null}
+                                  editing={editingCell?.drillId === drill.id && editingCell?.key === m.key}
+                                  draft={cellDraft}
+                                  onStartEdit={() => {
+                                    setCellDraft(String(manualValues[drill.id]?.[m.key] ?? ''));
+                                    setEditingCell({ drillId: drill.id, key: m.key });
+                                  }}
+                                  onDraft={setCellDraft}
+                                  onCommit={commitCell}
+                                  onCancel={() => setEditingCell(null)}
                                 />
                               ))}
                             </Box>
@@ -3070,6 +3157,9 @@
       }
       if (route === '#/planning-v6') {
         return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table key="p6" />;
+      }
+      if (route === '#/planning-v7') {
+        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table manualEntry key="p7" />;
       }
       return <VersionsLanding />;
     }
