@@ -1072,7 +1072,7 @@
             hash: '#/planning-v5',
             chosen: true,
             title: 'Version 5 - Scroll the values instead of stretching them',
-            description: 'Version 1 with the columns held at a fixed width. Rather than dividing the space between however many metrics are shown, the values area scrolls sideways, headings, drill rows and targets bar together. The divider still drags either way.',
+            description: 'Version 3, cumulative rows and a total bar, with the columns held at a fixed width. Rather than dividing the space between however many metrics are shown, the values area scrolls sideways, headings, drill rows and targets bar together. The divider still drags either way.',
           },
         ],
       },
@@ -3016,7 +3016,9 @@
       if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
       if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
       if (route === '#/planning-v4') return <SessionPlanning onHome={goHome} highlightOver key="p4" />;
-      if (route === '#/planning-v5') return <SessionPlanning onHome={goHome} scrollValues key="p5" />;
+      if (route === '#/planning-v5') {
+        return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" scrollValues key="p5" />;
+      }
       return <VersionsLanding />;
     }
 
