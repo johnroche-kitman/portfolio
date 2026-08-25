@@ -11,7 +11,7 @@ import OndemandVideoOutlinedIcon from '@mui/icons-material/OndemandVideoOutlined
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined'
-import KeyboardDoubleArrowLeftOutlinedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftOutlined'
+import KeyboardDoubleArrowRightOutlinedIcon from '@mui/icons-material/KeyboardDoubleArrowRightOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import ArrowDropDownOutlinedIcon from '@mui/icons-material/ArrowDropDownOutlined'
 import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined'
@@ -57,7 +57,7 @@ export const ICONS = {
   recruitment: AssignmentIndOutlinedIcon,
   settings: SettingsOutlinedIcon,
   help: HelpOutlineOutlinedIcon,
-  collapse: KeyboardDoubleArrowLeftOutlinedIcon,
+  collapse: KeyboardDoubleArrowRightOutlinedIcon,
   search: SearchOutlinedIcon,
   arrowDropDown: ArrowDropDownOutlinedIcon,
   moreVert: MoreVertOutlinedIcon,
