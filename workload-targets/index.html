@@ -1069,6 +1069,11 @@
             title: 'Version 4 - Highlight the column that is over',
             description: 'Version 1, but any metric whose session total has passed its target tints its whole column, heading down to the targets bar, so the problem is visible without reading a number.',
           },
+          {
+            hash: '#/planning-v5',
+            title: 'Version 5 - Scroll the values instead of stretching them',
+            description: 'Version 1 with the columns held at a fixed width. Rather than dividing the space between however many metrics are shown, the values area scrolls sideways, headings, drill rows and targets bar together. The divider still drags either way.',
+          },
         ],
       },
     ];
@@ -1904,6 +1909,8 @@
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
     const ADD_LINE_H = 24;                 // the add row, its own margin included
     const WORKLOAD_CARD_TAIL = 28;         // duration line to card foot, workload view
+    const SCROLL_COL_W = 150;              // fixed column, the version that scrolls
+    const SCROLLBAR_H = 10;
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2015,7 +2022,7 @@
     }
 
     /* ── Session planning, version 1 ─────────────────────────────────── */
-    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false }) {
+    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false, scrollValues = false }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
@@ -2030,6 +2037,10 @@
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
       const areaRef = React.useRef(null);
+      // One scroll position for the whole values area: the headings, every drill
+      // row and the targets bar all read it, so they can never drift apart.
+      const [scrollX, setScrollX] = useState(0);
+      const scrollRef = React.useRef(null);
 
       const metrics = columns.map(metricByKey);
       const targetFor = (metric) => {
@@ -2156,14 +2167,91 @@
       // Collapsed to nothing when the workload view is off, or it would keep its
       // minimum width and shove the attendance column off the right edge.
       const valuesSx = showWorkload
-        ? { flex: '1 1 auto', minWidth: VALUES_MIN, pr: `${VALUES_GUTTER}px` }
+        ? {
+          flex: '1 1 auto', minWidth: scrollValues ? 0 : VALUES_MIN,
+          pr: `${VALUES_GUTTER}px`, ...(scrollValues && { overflow: 'hidden' }),
+        }
         : { flex: '0 0 0px', width: 0, minWidth: 0, overflow: 'hidden', pr: 0 };
+
+      // Stretching divides the panel between the columns. Scrolling holds every
+      // column at a legible width and moves the whole area instead.
       // The + button needs its own width, not a whole column: reserve that much
       // and give the rest to the metrics, so dropping a column widens the ones
       // that remain instead of leaving a hole on the right.
-      const colWidth = metrics.length < MAX_SESSION_COLUMNS
-        ? `calc((100% - ${ADD_METRIC_COST}px) / ${metrics.length})`
-        : `${100 / MAX_SESSION_COLUMNS}%`;
+      const colWidth = scrollValues
+        ? SCROLL_COL_W
+        : metrics.length < MAX_SESSION_COLUMNS
+          ? `calc((100% - ${ADD_METRIC_COST}px) / ${metrics.length})`
+          : `${100 / MAX_SESSION_COLUMNS}%`;
+
+      // How wide the columns actually are, which the scrollbar runs against.
+      const trackW = metrics.length * SCROLL_COL_W
+        + (metrics.length < MAX_SESSION_COLUMNS ? ADD_METRIC_W : 0);
+
+      // Every values panel rides this, so one scroll position moves them together.
+      // A plain function rather than a component: declared in the render, a
+      // component is a new type every time and remounts everything under it.
+      const valuesTrack = (children, column = false) => (
+        scrollValues
+          ? (
+            <Box sx={{
+              width: trackW, flex: 'none',
+              transform: `translateX(${-scrollX}px)`,
+              ...(column && { display: 'flex', flexDirection: 'column', flex: 1 }),
+            }}>
+              {children}
+            </Box>
+          )
+          : children
+      );
+
+      // What the panel actually shows, and so how far there is to scroll. Taken
+      // from the measured area rather than the DOM: a native scrollbar is drawn
+      // by the platform and on this one it is an overlay that fades out, which
+      // leaves nothing on screen to say the columns run on.
+      const valuesViewW = Math.max(0, areaWidth - splitWidth - SPLIT_HANDLE - VALUES_GUTTER);
+      const maxScroll = Math.max(0, trackW - valuesViewW);
+      const clampScroll = (x) => Math.max(0, Math.min(maxScroll, x));
+
+      // Dragging the divider changes how much there is to see, so the position
+      // has to come back inside the new range.
+      React.useEffect(() => {
+        setScrollX((x) => Math.max(0, Math.min(maxScroll, x)));
+      }, [maxScroll]);
+
+      // Trackpads swipe sideways over the values, and shift with a wheel does the
+      // same on a mouse.
+      const onValuesWheel = (e) => {
+        if (!scrollValues || !maxScroll) return;
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+        if (delta) setScrollX((x) => clampScroll(x + delta));
+      };
+
+      // Thumb drag. The track is the panel, so a pixel of thumb travel is
+      // maxScroll / (view - thumb) pixels of columns.
+      const thumbW = maxScroll ? Math.max(48, (valuesViewW / trackW) * valuesViewW) : 0;
+      const thumbTravel = Math.max(1, valuesViewW - thumbW);
+      const thumbX = maxScroll ? (scrollX / maxScroll) * thumbTravel : 0;
+
+      const onThumbDown = (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startScroll = scrollX;
+        const move = (ev) => {
+          const dx = ev.clientX - startX;
+          setScrollX(clampScroll(startScroll + (dx / thumbTravel) * maxScroll));
+        };
+        const up = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+      };
 
       // Sits inside the first drill's row rather than in a band of its own,
       // which is where the space above the drills was going.
@@ -2514,23 +2602,31 @@
                         }} />
                       </Box>
 
-                      <Box sx={{ ...valuesSx, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', ...fadeSx }}>
-                        {drillIndex === 0 && renderMetricHeaders()}
-                        <Box sx={{ display: 'flex', flex: 1 }}>
-                          {metrics.map((m) => (
-                            <MetricCell
-                              key={m.key}
-                              metric={m}
-                              value={drillValue(drill, m)}
-                              target={targetFor(m)}
-                              width={colWidth}
-                              mode={rowBars}
-                              before={runningBefore[drillIndex]?.[m.key] ?? 0}
-                              highlight={overColumns.has(m.key)}
-                              padTop={drillIndex === 0 ? 0 : '10px'}
-                            />
-                          ))}
-                        </Box>
+                      <Box
+                        onWheel={onValuesWheel}
+                        sx={{ ...valuesSx, alignSelf: 'stretch', display: 'flex', flexDirection: 'column', ...fadeSx }}
+                      >
+                        {valuesTrack(
+                          <React.Fragment>
+                            {drillIndex === 0 && renderMetricHeaders()}
+                            <Box sx={{ display: 'flex', flex: 1 }}>
+                              {metrics.map((m) => (
+                                <MetricCell
+                                  key={m.key}
+                                  metric={m}
+                                  value={drillValue(drill, m)}
+                                  target={targetFor(m)}
+                                  width={colWidth}
+                                  mode={rowBars}
+                                  before={runningBefore[drillIndex]?.[m.key] ?? 0}
+                                  highlight={overColumns.has(m.key)}
+                                  padTop={drillIndex === 0 ? 0 : '10px'}
+                                />
+                              ))}
+                            </Box>
+                          </React.Fragment>,
+                          true,
+                        )}
                       </Box>
 
                       {/* Attendance, only without the workload view */}
@@ -2554,6 +2650,33 @@
                     </Box>
                   );
                   })}
+
+                  {/* The one scrollbar for the values, sat under the last drill and
+                      lined up with the columns. Everything else follows it. */}
+                  {scrollValues && maxScroll > 0 && (
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1, ...fadeSx }}>
+                      <Box sx={{ width: showWorkload ? 0 : OFF_NUM_W, flex: 'none', ...growSx }} />
+                      <Box sx={{ width: cardWidth, flex: 'none', ...growSx }} />
+                      <Box sx={{ width: showWorkload ? SPLIT_HANDLE : 0, flex: 'none' }} />
+                      <Box sx={{ ...valuesSx, minWidth: 0 }}>
+                        <Box sx={{
+                          position: 'relative', height: SCROLLBAR_H,
+                          bgcolor: NEUTRAL_200, borderRadius: `${SCROLLBAR_H / 2}px`,
+                        }}>
+                          <Box
+                            ref={scrollRef}
+                            onMouseDown={onThumbDown}
+                            sx={{
+                              position: 'absolute', top: 0, left: thumbX,
+                              width: thumbW, height: SCROLLBAR_H,
+                              borderRadius: `${SCROLLBAR_H / 2}px`, bgcolor: '#C3C9D4',
+                              cursor: 'grab', '&:hover': { bgcolor: GREY100 },
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  )}
 
                   <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2.5 }}>
                     <Button variant="contained" color="primary" startIcon={<MI name="add" size={18} color="#fff" />} sx={{ px: 2 }}>
@@ -2641,7 +2764,8 @@
 
                 <React.Fragment>
                     <Box sx={{ width: showWorkload ? SPLIT_HANDLE : 0, flex: 'none' }} />
-                    <Box sx={{ ...valuesSx, ...collapseSx }}>
+                    <Box onWheel={onValuesWheel} sx={{ ...valuesSx, ...collapseSx }}>
+                      {valuesTrack(<React.Fragment>
                       {/* What is still available to spend on this session */}
                       <Box sx={{ display: 'flex', alignItems: 'center', height: FOOTER_ROW_H }}>
                         {metrics.map((m) => {
@@ -2786,6 +2910,7 @@
                           ))}
                         </Box>
                       )}
+                      </React.Fragment>)}
                     </Box>
                   </React.Fragment>
               </Box>
@@ -2891,6 +3016,7 @@
       if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
       if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
       if (route === '#/planning-v4') return <SessionPlanning onHome={goHome} highlightOver key="p4" />;
+      if (route === '#/planning-v5') return <SessionPlanning onHome={goHome} scrollValues key="p5" />;
       return <VersionsLanding />;
     }
 
