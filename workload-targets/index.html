@@ -1902,6 +1902,7 @@
     // slide off the right edge instead.
     const FOOTER_ROW_H = 24;               // labels and values share this
     const DURATION_LINE_H = 20;            // the duration line, held open when empty
+    const ADD_LINE_H = 24;                 // the add row, held open when it has nothing
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2320,6 +2321,17 @@
 
                   {drills.map((drill, drillIndex) => {
                   const hasPrinciples = Boolean(drill.principles?.length);
+                  // Each is offered only while the drill is without one. The
+                  // workload view offers duration alone: it is the one that moves
+                  // the numbers beside it, and the rest belong to the other mode.
+                  const canAddDuration = drill.duration == null && editingId !== drill.id;
+                  const addItems = showWorkload
+                    ? (canAddDuration ? ['Duration'] : [])
+                    : [
+                      ...(canAddDuration ? ['Duration'] : []),
+                      'Area size', 'Note',
+                      ...(hasPrinciples ? [] : ['Principles']),
+                    ];
                   return (
                     <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start' }}>
 
@@ -2452,29 +2464,30 @@
                             </Box>
                           )}
 
-                          <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
-                            Add:{' '}
-                            {/* Each is offered only while the drill is without one */}
-                            {[
-                              ...(drill.duration == null && editingId !== drill.id ? ['Duration'] : []),
-                              'Area size', 'Note',
-                              ...(hasPrinciples ? [] : ['Principles']),
-                            ].map((item, i) => (
-                              <React.Fragment key={item}>
-                                {i > 0 && ' | '}
-                                <Box
-                                  component="span"
-                                  onClick={item === 'Duration' ? () => openDuration(drill) : undefined}
-                                  sx={{
-                                    color: PRIMARY, cursor: 'pointer',
-                                    '&:hover': { textDecoration: 'underline' },
-                                  }}
-                                >
-                                  {item}
-                                </Box>
-                              </React.Fragment>
-                            ))}
-                          </Typography>
+                          {addItems.length > 0 ? (
+                            <Typography sx={{ fontSize: 13, color: GREY100, mt: 0.5, whiteSpace: 'nowrap' }}>
+                              Add:{' '}
+                              {addItems.map((item, i) => (
+                                <React.Fragment key={item}>
+                                  {i > 0 && ' | '}
+                                  <Box
+                                    component="span"
+                                    onClick={item === 'Duration' ? () => openDuration(drill) : undefined}
+                                    sx={{
+                                      color: PRIMARY, cursor: 'pointer',
+                                      '&:hover': { textDecoration: 'underline' },
+                                    }}
+                                  >
+                                    {item}
+                                  </Box>
+                                </React.Fragment>
+                              ))}
+                            </Typography>
+                          ) : (
+                            // Nothing left to add, but the line still has to be there
+                            // or this card would stand shorter than the others.
+                            <Box sx={{ height: ADD_LINE_H }} />
+                          )}
                         </Box>
 
                         {/* Pinned to the card edge, so it rides the divider and stays
