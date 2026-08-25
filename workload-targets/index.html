@@ -1375,16 +1375,23 @@
           </Stack>
 
           <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            <Typography sx={body}>Download a template csv file with the relevant headers.</Typography>
-
-            <Typography
-              component="a"
-              href="#/v2"
-              onClick={(e) => e.preventDefault()}
-              sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-            >
-              template.csv
+            <Typography sx={body}>
+              Download a template csv file with the relevant headers.
+              {mode === 'metrics' && ' Select metrics from the metrics sheet.'}
             </Typography>
+
+            {/* The metrics sheet is only of use to the file that names metrics */}
+            {(mode === 'metrics' ? ['template.csv', 'metrics-list.csv'] : ['template.csv']).map((file) => (
+              <Typography
+                key={file}
+                component="a"
+                href="#/v2"
+                onClick={(e) => e.preventDefault()}
+                sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              >
+                {file}
+              </Typography>
+            ))}
 
             <Typography sx={strong}>Accepted values</Typography>
 
