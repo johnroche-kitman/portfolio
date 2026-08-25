@@ -2251,13 +2251,17 @@
                 }}
               >
                 <Tooltip title={metricTitle(m, overMetrics.has(m.key))} placement="top">
+                  {/* The full name where the columns hold a fixed width, cut with
+                      an ellipsis when it outruns one. The tooltip has the whole of
+                      it either way. minWidth is what lets the cut happen at all:
+                      a flex item will not shrink below its text without it. */}
                   <Box component="span" sx={{
-                    fontSize: 12,
+                    fontSize: 12, minWidth: 0,
                     color: overMetrics.has(m.key) ? ERROR : GREY100,
                     fontWeight: overMetrics.has(m.key) ? 700 : 400,
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   }}>
-                    {m.label}
+                    {scrollValues ? m.name : m.label}
                   </Box>
                 </Tooltip>
                 <Box className="col-tool" sx={{ opacity: 0, transition: 'opacity .12s', display: 'flex', flex: 'none' }}>
