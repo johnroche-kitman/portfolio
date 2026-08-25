@@ -1074,6 +1074,11 @@
             title: 'Version 5 - Scroll the values instead of stretching them',
             description: 'Version 3, cumulative rows and a total bar, with the columns held at a fixed width. Rather than dividing the space between however many metrics are shown, the values area scrolls sideways, headings, drill rows and targets bar together. The divider still drags either way.',
           },
+          {
+            hash: '#/planning-v6',
+            title: 'Version 6 - Read the values as a table',
+            description: 'Version 5 drawn as a ruled table: a heading row, a row per drill still level with its card, and the numbers on their own. The only bars left are the session totals in the targets bar. Everything else holds, the divider, the sideways scroll and the columns you can add or drop.',
+          },
         ],
       },
     ];
@@ -1910,6 +1915,7 @@
     const ADD_LINE_H = 24;                 // the add row, its own margin included
     const WORKLOAD_CARD_TAIL = 28;         // duration line to card foot, workload view
     const SCROLL_COL_W = 150;              // fixed column, the version that scrolls
+    const TABLE_HEAD_H = 34;               // heading row, the version drawn as a table
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -1983,8 +1989,30 @@
     // own top padding for the same reason.
     const COLUMN_TINT = 'rgba(195, 29, 43, 0.08)';
 
-    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false, padTop = 0 }) {
+    function MetricCell({ metric, value, target, width, mode = 'target', before = 0, highlight = false, padTop = 0, table = false }) {
       const over = target != null && value != null && value > target;
+
+      // As a table the cell is a cell: ruled, its value sat in the middle of the
+      // row, and no bar. The number carries it on its own.
+      if (table) {
+        return (
+          <Box sx={{
+            width, flex: 'none', px: 1.5, display: 'flex', alignItems: 'center',
+            borderRight: `1px solid ${DIVIDER}`,
+            ...(highlight && { bgcolor: COLUMN_TINT }),
+          }}>
+            <Tooltip title={metricTitle(metric, over, value == null)} placement="top" followCursor>
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
+                <Typography sx={{ fontSize: 15, color: over ? ERROR : PRIMARY, fontWeight: over ? 700 : 400 }}>
+                  {value == null ? '—' : value}
+                </Typography>
+                {over && <MI name="error" size={15} color={ERROR} />}
+              </Stack>
+            </Tooltip>
+          </Box>
+        );
+      }
+
       return (
         <Box sx={{
           width, flex: 'none', pr: 2, pt: padTop,
@@ -2006,11 +2034,12 @@
 
     // Just the session total against its target. No drill segments: version 4
     // already carries that in each row, so repeating it here only adds noise.
-    function TotalFooterBar({ metric, total, target, width }) {
-      if (!target || total == null) return <Box sx={{ width, flex: 'none', pr: 2 }}><Box sx={{ height: 5 }} /></Box>;
+    function TotalFooterBar({ metric, total, target, width, table = false }) {
+      const cell = { width, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }) };
+      if (!target || total == null) return <Box sx={cell}><Box sx={{ height: 5 }} /></Box>;
       const over = total > target;
       return (
-        <Box sx={{ width, flex: 'none', pr: 2 }}>
+        <Box sx={cell}>
           {/* Same weight as the row bars, but a white track: the grey one
               disappeared into the grey of the bar itself */}
           <Box sx={{ height: 5, borderRadius: '2px', bgcolor: '#ffffff', overflow: 'hidden', display: 'flex' }}>
@@ -2021,7 +2050,7 @@
     }
 
     /* ── Session planning, version 1 ─────────────────────────────────── */
-    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false, scrollValues = false }) {
+    function SessionPlanning({ onHome, rowBars = 'target', footerBar = 'none', highlightOver = false, scrollValues = false, table = false }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
       const [complete, setComplete] = useState(false);
@@ -2231,10 +2260,19 @@
       // it would be a new type every render, remounting the headings and leaving
       // the menu's anchor detached, which parked it in the top left corner.
       const renderMetricHeaders = () => (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{
+          display: 'flex',
+          ...(table && {
+            height: TABLE_HEAD_H, bgcolor: NEUTRAL_200,
+            borderBottom: `1px solid ${DIVIDER}`, flex: 'none',
+          }),
+        }}>
           {metrics.map((m, i) => (
             <Box key={m.key} sx={{
-              width: colWidth, flex: 'none', pr: 2, pt: '10px',
+              width: colWidth, flex: 'none',
+              ...(table
+                ? { px: 1.5, borderRight: `1px solid ${DIVIDER}` }
+                : { pr: 2, pt: '10px' }),
               display: 'flex', alignItems: 'center',
               ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
               '&:hover .col-tool': { opacity: 1 },
@@ -2287,7 +2325,8 @@
           {metrics.length < MAX_SESSION_COLUMNS && (
             <Box sx={{
               width: ADD_METRIC_W, flex: 'none', mr: `-${VALUES_GUTTER}px`,
-              pt: '10px', display: 'flex', alignItems: 'center',
+              pt: table ? 0 : '10px', pl: table ? 1.5 : 0,
+              display: 'flex', alignItems: 'center',
             }}>
               <ButtonBase
                 onClick={(e) => { setMetricQuery(''); setColAnchor({ el: e.currentTarget, index: null }); }}
@@ -2585,7 +2624,12 @@
                         {valuesTrack(
                           <React.Fragment>
                             {drillIndex === 0 && renderMetricHeaders()}
-                            <Box sx={{ display: 'flex', flex: 1 }}>
+                            <Box sx={{
+                              display: 'flex', flex: 1,
+                              // The rule under each row is what makes it a table.
+                              // The rows stack flush, so they read as one.
+                              ...(table && { borderBottom: `1px solid ${DIVIDER}` }),
+                            }}>
                               {metrics.map((m) => (
                                 <MetricCell
                                   key={m.key}
@@ -2597,6 +2641,7 @@
                                   before={runningBefore[drillIndex]?.[m.key] ?? 0}
                                   highlight={overColumns.has(m.key)}
                                   padTop={drillIndex === 0 ? 0 : '10px'}
+                                  table={table}
                                 />
                               ))}
                             </Box>
@@ -2726,7 +2771,7 @@
                           const over = left != null && left < 0;
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', pr: 2,
+                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               <Tooltip
                                 title={left == null
@@ -2767,7 +2812,7 @@
                           const over = target != null && totals[m.key] > target;
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', pr: 2,
+                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               <Tooltip title={metricTitle(m, over, totals[m.key] == null)} placement="top">
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
@@ -2790,7 +2835,7 @@
                           const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
                           if (editingTarget === m.key) {
                             return (
-                              <Box key={m.key} sx={{ width: colWidth, flex: 'none', pr: 2 }}>
+                              <Box key={m.key} sx={{ width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }) }}>
                                 <TextField
                                   value={targetOverrides[m.key] ?? (target ?? '')}
                                   autoFocus
@@ -2810,7 +2855,7 @@
                           }
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', pr: 2,
+                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               {/* Value and icon together are the hit area */}
                               <ButtonBase
@@ -2855,6 +2900,7 @@
                               total={totals[m.key]}
                               target={targetFor(m)}
                               width={colWidth}
+                              table={table}
                             />
                           ))}
                         </Box>
@@ -2967,6 +3013,9 @@
       if (route === '#/planning-v4') return <SessionPlanning onHome={goHome} highlightOver key="p4" />;
       if (route === '#/planning-v5') {
         return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" scrollValues key="p5" />;
+      }
+      if (route === '#/planning-v6') {
+        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table key="p6" />;
       }
       return <VersionsLanding />;
     }
