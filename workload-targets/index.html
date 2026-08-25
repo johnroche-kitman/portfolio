@@ -1905,6 +1905,7 @@
     const WORKLOAD_CARD_TAIL = 28;         // duration line to card foot, workload view
     const SCROLL_COL_W = 150;              // fixed column, the version that scrolls
     const TABLE_HEAD_H = 34;               // heading row, the version drawn as a table
+    const MIN_COL_W = 96;                  // floor for a dragged table column
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2050,6 +2051,7 @@
       const [areaWidth, setAreaWidth] = useState(0);
       const [columns, setColumns] = useState(DEFAULT_COLUMNS);
       const [colAnchor, setColAnchor] = useState(null);   // { el, index }
+      const [colWidths, setColWidths] = useState({});     // key → px, table version
       const [metricQuery, setMetricQuery] = useState('');
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
@@ -2200,9 +2202,38 @@
           ? `calc((100% - ${ADD_METRIC_COST}px) / ${metrics.length})`
           : `${100 / MAX_SESSION_COLUMNS}%`;
 
-      // How wide the columns actually are, which the scrollbar runs against.
-      const trackW = metrics.length * SCROLL_COL_W
+      // A table column can be dragged to a width of its own; everywhere else the
+      // columns are all one width.
+      const colWidthOf = (metric) => (table ? (colWidths[metric.key] ?? SCROLL_COL_W) : colWidth);
+
+      // How wide the columns actually are, which the scroll runs against.
+      const trackW = (table
+        ? metrics.reduce((sum, m) => sum + colWidthOf(m), 0)
+        : metrics.length * SCROLL_COL_W)
         + (metrics.length < MAX_SESSION_COLUMNS ? ADD_METRIC_W : 0);
+
+      // Drag the right edge of a heading to set that column's width. The floor is
+      // what still holds a heading and a number worth reading.
+      const onColResize = (metric) => (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const startX = e.clientX;
+        const startW = colWidthOf(metric);
+        const move = (ev) => {
+          const width = Math.max(MIN_COL_W, Math.round(startW + ev.clientX - startX));
+          setColWidths((prev) => ({ ...prev, [metric.key]: width }));
+        };
+        const up = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+      };
 
       // Every values panel rides this, so one scroll position moves them together.
       // A plain function rather than a component: declared in the render, a
@@ -2258,13 +2289,14 @@
         }}>
           {metrics.map((m, i) => (
             <Box key={m.key} sx={{
-              width: colWidth, flex: 'none',
+              width: colWidthOf(m), flex: 'none',
               ...(table
-                ? { px: 1.5, borderRight: `1px solid ${DIVIDER}` }
+                ? { px: 1.5, borderRight: `1px solid ${DIVIDER}`, position: 'relative' }
                 : { pr: 2, pt: '10px' }),
               display: 'flex', alignItems: 'center',
               ...(overColumns.has(m.key) && { bgcolor: COLUMN_TINT }),
               '&:hover .col-tool': { opacity: 1 },
+              '&:hover .col-grip': { opacity: 1 },
             }}>
               {/* The whole label is the hit area, not just the icon */}
               <ButtonBase
@@ -2307,6 +2339,24 @@
                 >
                   <MI name="close" size={13} color={GREY100} />
                 </IconButton>
+              )}
+
+              {/* Sits over the rule between this column and the next */}
+              {table && (
+                <Box
+                  className="col-grip"
+                  onMouseDown={onColResize(m)}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Drag to resize the column"
+                  sx={{
+                    position: 'absolute', top: 0, bottom: 0, right: -3,
+                    width: 7, cursor: 'col-resize', zIndex: 2,
+                    display: 'flex', justifyContent: 'center',
+                    opacity: 0, transition: 'opacity .12s',
+                  }}
+                >
+                  <Box sx={{ width: 3, height: '100%', bgcolor: PRIMARY, borderRadius: 2 }} />
+                </Box>
               )}
             </Box>
           ))}
@@ -2625,7 +2675,7 @@
                                   metric={m}
                                   value={drillValue(drill, m)}
                                   target={targetFor(m)}
-                                  width={colWidth}
+                                  width={colWidthOf(m)}
                                   mode={rowBars}
                                   before={runningBefore[drillIndex]?.[m.key] ?? 0}
                                   highlight={overColumns.has(m.key)}
@@ -2760,7 +2810,7 @@
                           const over = left != null && left < 0;
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
+                              width: colWidthOf(m), flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               <Tooltip
                                 title={left == null
@@ -2801,7 +2851,7 @@
                           const over = target != null && totals[m.key] > target;
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
+                              width: colWidthOf(m), flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               <Tooltip title={metricTitle(m, over, totals[m.key] == null)} placement="top">
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ cursor: 'default', width: 'fit-content' }}>
@@ -2824,7 +2874,7 @@
                           const custom = targetOverrides[m.key] != null && targetOverrides[m.key] !== '';
                           if (editingTarget === m.key) {
                             return (
-                              <Box key={m.key} sx={{ width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }) }}>
+                              <Box key={m.key} sx={{ width: colWidthOf(m), flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }) }}>
                                 <TextField
                                   value={targetOverrides[m.key] ?? (target ?? '')}
                                   autoFocus
@@ -2844,7 +2894,7 @@
                           }
                           return (
                             <Box key={m.key} sx={{
-                              width: colWidth, flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
+                              width: colWidthOf(m), flex: 'none', ...(table ? { px: 1.5 } : { pr: 2 }),
                             }}>
                               {/* Value and icon together are the hit area */}
                               <ButtonBase
@@ -2888,7 +2938,7 @@
                               metric={m}
                               total={totals[m.key]}
                               target={targetFor(m)}
-                              width={colWidth}
+                              width={colWidthOf(m)}
                               table={table}
                             />
                           ))}
