@@ -1074,6 +1074,10 @@
             hash: '#/planning-v7',
             title: 'Version 7 - Type a value where there is no data',
           },
+          {
+            hash: '#/planning-v8',
+            title: 'Version 8 - Switch the values and targets by position',
+          },
         ],
       },
     ];
@@ -1866,6 +1870,19 @@
     const SESSION_SQUAD = '1st team';
     const SESSION_GD = 'GD−3';
 
+    // What a position does to a session. A goalkeeper covers a fraction of the
+    // ground an outfield player does and carries a target to match, but the two
+    // do not move in step: that is the whole reason to look position by position,
+    // since who is over target changes with who you are looking at.
+    const SESSION_POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+    const POSITION_EFFECT = {
+      'All':        { value: 1,    target: 1 },
+      'Goalkeeper': { value: 0.42, target: 0.50 },
+      'Defender':   { value: 0.96, target: 1.00 },
+      'Midfielder': { value: 1.14, target: 1.06 },
+      'Forward':    { value: 1.06, target: 1.02 },
+    };
+
     const SESSION_TARGETS = (() => {
       const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
       const out = {};
@@ -2101,7 +2118,7 @@
     /* ── Session planning, version 1 ─────────────────────────────────── */
     function SessionPlanning({
       onHome, rowBars = 'target', footerBar = 'none', highlightOver = false,
-      scrollValues = false, table = false, manualEntry = false,
+      scrollValues = false, table = false, manualEntry = false, byPosition = false,
     }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
@@ -2118,6 +2135,8 @@
       const [manualValues, setManualValues] = useState({});
       const [editingCell, setEditingCell] = useState(null); // { drillId, key }
       const [cellDraft, setCellDraft] = useState('');
+      const [position, setPosition] = useState('All');
+      const [posAnchor, setPosAnchor] = useState(null);
       const [metricQuery, setMetricQuery] = useState('');
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
@@ -2127,10 +2146,15 @@
       const [scrollX, setScrollX] = useState(0);
 
       const metrics = columns.map(metricByKey);
+      const effect = POSITION_EFFECT[position] || POSITION_EFFECT.All;
+
       const targetFor = (metric) => {
+        // A typed target is the figure the coach meant, so it stands as typed.
         const custom = targetOverrides[metric.key];
         if (custom != null && custom !== '') return Number(custom);
-        return SESSION_TARGETS[metric.key] ?? null;
+        const base = SESSION_TARGETS[metric.key];
+        if (base == null) return null;
+        return byPosition ? Math.round(base * effect.target) : base;
       };
 
       // Inside the padding, since that is where the columns actually start.
@@ -2197,7 +2221,12 @@
         const raw = manualValues[drill.id]?.[metric.key];
         return raw == null || raw === '' ? null : Number(raw);
       };
-      const valueFor = (drill, metric) => drillValue(drill, metric) ?? (manualEntry ? typedValue(drill, metric) : null);
+      const valueFor = (drill, metric) => {
+        const imported = drillValue(drill, metric);
+        if (imported != null) return byPosition ? Math.round(imported * effect.value) : imported;
+        // Typed by hand, so it is already the figure for whoever is being shown.
+        return manualEntry ? typedValue(drill, metric) : null;
+      };
       const canType = (drill, metric) => manualEntry && drillValue(drill, metric) == null;
 
       const commitCell = () => {
@@ -2496,6 +2525,43 @@
                     <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>Training</Typography>
 
                     <Stack direction="row" alignItems="center" spacing={2}>
+                      {/* Beside the workload toggle, because it is the same kind of
+                          control: both say who and what this page is showing, and
+                          both have to stay put while the values scroll. */}
+                      {byPosition && (
+                        <React.Fragment>
+                          <ButtonBase
+                            onClick={(e) => setPosAnchor(e.currentTarget)}
+                            aria-label="Show the session for a position"
+                            sx={{
+                              display: 'flex', alignItems: 'center', gap: 0.25,
+                              px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
+                              '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
+                            }}
+                          >
+                            <Typography sx={{ fontSize: 14, whiteSpace: 'nowrap' }}>
+                              {position === 'All' ? 'All positions' : position}
+                            </Typography>
+                            <MI name="arrow_drop_down" size={20} color={PRIMARY} />
+                          </ButtonBase>
+                          <Menu
+                            anchorEl={posAnchor}
+                            open={Boolean(posAnchor)}
+                            onClose={() => setPosAnchor(null)}
+                          >
+                            {SESSION_POSITIONS.map((p) => (
+                              <MenuItem
+                                key={p}
+                                selected={p === position}
+                                onClick={() => { setPosition(p); setPosAnchor(null); }}
+                              >
+                                {p === 'All' ? 'All positions' : p}
+                              </MenuItem>
+                            ))}
+                          </Menu>
+                        </React.Fragment>
+                      )}
+
                       <Stack
                         direction="row" alignItems="center" spacing={0.75}
                         onClick={() => setShowWorkload((v) => !v)}
@@ -3156,6 +3222,9 @@
       }
       if (route === '#/planning-v7') {
         return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table manualEntry key="p7" />;
+      }
+      if (route === '#/planning-v8') {
+        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table byPosition key="p8" />;
       }
       return <VersionsLanding />;
     }
