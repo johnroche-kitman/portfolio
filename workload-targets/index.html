@@ -2137,6 +2137,8 @@
       const [cellDraft, setCellDraft] = useState('');
       const [position, setPosition] = useState('All');
       const [posAnchor, setPosAnchor] = useState(null);
+      const [draggingId, setDraggingId] = useState(null);
+      const rowRefs = React.useRef({});
       const [metricQuery, setMetricQuery] = useState('');
       const [targetOverrides, setTargetOverrides] = useState({});
       const [editingTarget, setEditingTarget] = useState(null);
@@ -2201,6 +2203,44 @@
           document.body.style.userSelect = '';
         };
       }, [dragging]);
+
+      // Grab a drill by its grip and the order follows the pointer. The row the
+      // pointer is over is read from the DOM each time rather than from a list
+      // captured on mousedown, which would be the order before the first swap.
+      // Everything else follows the array: the values sit in the drill's own row,
+      // and the cumulative bars recount from the new order.
+      const onDrillGrab = (id) => (e) => {
+        e.preventDefault();
+        setDraggingId(id);
+        const move = (ev) => {
+          const overId = Object.keys(rowRefs.current).find((key) => {
+            const el = rowRefs.current[key];
+            if (!el) return false;
+            const r = el.getBoundingClientRect();
+            return ev.clientY >= r.top && ev.clientY <= r.bottom;
+          });
+          if (!overId || overId === id) return;
+          setDrills((prev) => {
+            const from = prev.findIndex((d) => d.id === id);
+            const to = prev.findIndex((d) => d.id === overId);
+            if (from < 0 || to < 0 || from === to) return prev;
+            const next = [...prev];
+            next.splice(to, 0, next.splice(from, 1)[0]);
+            return next;
+          });
+        };
+        const up = () => {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          setDraggingId(null);
+        };
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+      };
 
       // The field holds its own value until the tick, so a cancel leaves the
       // drill as it was. Cleared back to empty means no duration again, not zero.
@@ -2603,7 +2643,16 @@
                     ? Math.max(8, WORKLOAD_CARD_TAIL - tail)
                     : 8 + (canAddDuration ? DURATION_LINE_H + 4 : 0);
                   return (
-                    <Box key={drill.id} sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <Box
+                      key={drill.id}
+                      ref={(el) => { rowRefs.current[drill.id] = el; }}
+                      sx={{
+                        display: 'flex', alignItems: 'flex-start',
+                        // Lifted while it is being carried, so it is clear which
+                        // row is moving and which are making way for it.
+                        ...(draggingId === drill.id && { opacity: 0.55 }),
+                      }}
+                    >
 
                       {/* Drill number and edit, only without the workload view */}
                       <Box sx={{
@@ -2623,8 +2672,18 @@
                         border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`, bgcolor: '#fff',
                         display: 'flex', alignItems: 'flex-start', gap: 1.5, p: 1.5,
                       }}>
-                        <Box sx={{ pt: 1.5, flex: 'none' }}>
-                          <MI name="drag_indicator" size={18} color="#C3C9D4" />
+                        <Box
+                          onMouseDown={onDrillGrab(drill.id)}
+                          title="Drag to reorder"
+                          sx={{
+                            pt: 1.5, flex: 'none', alignSelf: 'stretch',
+                            cursor: draggingId ? 'grabbing' : 'grab',
+                            '&:hover .grip-dots': { color: GREY100 },
+                          }}
+                        >
+                          <Box className="grip-dots" sx={{ color: '#C3C9D4', display: 'flex' }}>
+                            <MI name="drag_indicator" size={18} color="currentColor" />
+                          </Box>
                         </Box>
 
                         <PitchThumb />
