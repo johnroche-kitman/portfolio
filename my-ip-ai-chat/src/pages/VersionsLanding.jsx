@@ -7,6 +7,7 @@ const VERSIONS = [
     to: '/v1',
     title: 'Version 1 - launch from Main menu',
     description: 'Ask My iP opens from a dedicated icon in the left navigation rail.',
+    disabled: true,
   },
   {
     to: '/v2',
@@ -70,17 +71,23 @@ export default function VersionsLanding() {
         {VERSIONS.map((version) => (
           <Box
             key={version.to}
-            component={Link}
-            to={version.to}
+            // Disabled entries render as a plain Box rather than a Link, so
+            // there's no href to click, middle-click or tab into at all.
+            {...(version.disabled ? {} : { component: Link, to: version.to })}
+            aria-disabled={version.disabled || undefined}
             sx={{
               display: 'block',
               textDecoration: 'none',
               border: '1px solid var(--divider)',
               borderRadius: 1.5,
               p: 2.5,
-              backgroundColor: 'var(--white)',
+              backgroundColor: version.disabled ? 'var(--neutral-200)' : 'var(--white)',
+              opacity: version.disabled ? 0.55 : 1,
+              cursor: version.disabled ? 'not-allowed' : 'pointer',
               transition: 'border-color 0.15s, background-color 0.15s',
-              '&:hover': { borderColor: 'var(--color-primary)', backgroundColor: 'var(--background)' },
+              ...(version.disabled
+                ? {}
+                : { '&:hover': { borderColor: 'var(--color-primary)', backgroundColor: 'var(--background)' } }),
             }}
           >
             <Typography variant="h2" sx={{ color: 'var(--color-primary)', mb: 0.5 }}>
