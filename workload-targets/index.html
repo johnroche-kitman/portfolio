@@ -2525,43 +2525,6 @@
                     <Typography sx={{ fontSize: 28, fontWeight: 600, letterSpacing: -0.2 }}>Training</Typography>
 
                     <Stack direction="row" alignItems="center" spacing={2}>
-                      {/* Beside the workload toggle, because it is the same kind of
-                          control: both say who and what this page is showing, and
-                          both have to stay put while the values scroll. */}
-                      {byPosition && (
-                        <React.Fragment>
-                          <ButtonBase
-                            onClick={(e) => setPosAnchor(e.currentTarget)}
-                            aria-label="Show the session for a position"
-                            sx={{
-                              display: 'flex', alignItems: 'center', gap: 0.25,
-                              px: 0.75, py: 0.5, ml: -0.75, borderRadius: `${RADIUS}px`,
-                              '&:hover': { bgcolor: 'rgba(59,73,96,0.06)' },
-                            }}
-                          >
-                            <Typography sx={{ fontSize: 14, whiteSpace: 'nowrap' }}>
-                              {position === 'All' ? 'All positions' : position}
-                            </Typography>
-                            <MI name="arrow_drop_down" size={20} color={PRIMARY} />
-                          </ButtonBase>
-                          <Menu
-                            anchorEl={posAnchor}
-                            open={Boolean(posAnchor)}
-                            onClose={() => setPosAnchor(null)}
-                          >
-                            {SESSION_POSITIONS.map((p) => (
-                              <MenuItem
-                                key={p}
-                                selected={p === position}
-                                onClick={() => { setPosition(p); setPosAnchor(null); }}
-                              >
-                                {p === 'All' ? 'All positions' : p}
-                              </MenuItem>
-                            ))}
-                          </Menu>
-                        </React.Fragment>
-                      )}
-
                       <Stack
                         direction="row" alignItems="center" spacing={0.75}
                         onClick={() => setShowWorkload((v) => !v)}
@@ -2938,12 +2901,53 @@
                   width: cardWidth, flex: 'none', minWidth: 0, ...growSx,
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2,
                 }}>
-                  <Typography sx={{
-                    fontSize: 14, color: PRIMARY, whiteSpace: 'nowrap',
-                    overflow: 'hidden', textOverflow: 'ellipsis',
-                  }}>
-                    Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
-                  </Typography>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{
+                      fontSize: 14, color: PRIMARY, whiteSpace: 'nowrap',
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      Total duration: <Box component="span" sx={{ fontWeight: 600 }}>{formatDuration(totalMinutes)}</Box>
+                    </Typography>
+
+                    {/* Under the duration, with the numbers it changes, and inside
+                        the workload view: the eye governs everything that view puts
+                        on the page, and this is part of it. It gives its height
+                        back when hidden, so the bar closes up as it did before. */}
+                    {byPosition && (
+                      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.5, ...collapseSx }}>
+                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Position:</Typography>
+                        <ButtonBase
+                          onClick={(e) => setPosAnchor(e.currentTarget)}
+                          aria-label="Show the session for a position"
+                          sx={{
+                            display: 'flex', alignItems: 'center', gap: 0.25,
+                            px: 0.75, py: 0.25, ml: -0.75, borderRadius: `${RADIUS}px`,
+                            '&:hover': { bgcolor: 'rgba(59,73,96,0.08)' },
+                          }}
+                        >
+                          <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {position === 'All' ? 'All positions' : position}
+                          </Typography>
+                          <MI name="arrow_drop_down" size={20} color={PRIMARY} />
+                        </ButtonBase>
+                        <Menu
+                          anchorEl={posAnchor}
+                          open={Boolean(posAnchor)}
+                          onClose={() => setPosAnchor(null)}
+                        >
+                          {SESSION_POSITIONS.map((p) => (
+                            <MenuItem
+                              key={p}
+                              selected={p === position}
+                              onClick={() => { setPosition(p); setPosAnchor(null); }}
+                            >
+                              {p === 'All' ? 'All positions' : p}
+                            </MenuItem>
+                          ))}
+                        </Menu>
+                      </Stack>
+                    )}
+                  </Box>
 
                   {/* Labels and values are separate columns, so both are pinned to
                       the same row height or they drift out of line */}
