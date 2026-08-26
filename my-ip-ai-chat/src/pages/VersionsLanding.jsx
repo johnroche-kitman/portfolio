@@ -19,6 +19,7 @@ const VERSIONS = [
     title: 'Version 3 - Launch from App Bar',
     description:
       'Ask My iP opens from an icon in the top app bar, to the right of the user avatar. (John\'s preferred option)',
+    tag: 'Chosen',
   },
   {
     to: '/icon-options',
@@ -90,9 +91,30 @@ export default function VersionsLanding() {
                 : { '&:hover': { borderColor: 'var(--color-primary)', backgroundColor: 'var(--background)' } }),
             }}
           >
-            <Typography variant="h2" sx={{ color: 'var(--color-primary)', mb: 0.5 }}>
-              {version.title}
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 0.5 }}>
+              <Typography variant="h2" sx={{ color: 'var(--color-primary)' }}>
+                {version.title}
+              </Typography>
+              {version.tag && (
+                <Box
+                  component="span"
+                  sx={{
+                    flexShrink: 0,
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 100,
+                    backgroundColor: 'var(--color-accent)',
+                    color: 'var(--white)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    lineHeight: 1.5,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {version.tag}
+                </Box>
+              )}
+            </Box>
             <Typography variant="body1" sx={{ color: 'var(--grey-100)' }}>
               {version.description}
             </Typography>
