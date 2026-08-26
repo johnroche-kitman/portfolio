@@ -1933,6 +1933,8 @@
     const SCROLL_COL_W = 150;              // fixed column, the version that scrolls
     const TABLE_HEAD_H = 34;               // heading row, the version drawn as a table
     const MIN_COL_W = 96;                  // floor for a dragged table column
+    const MENU_ITEM_H = 33;                // a metric in the column menu
+    const MENU_VISIBLE_ITEMS = 6;          // shown before the list starts scrolling
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2912,10 +2914,13 @@
                     onClose={() => { setColAnchor(null); setMetricQuery(''); }}
                     // The search field takes the focus, not the first metric
                     autoFocus={false}
-                    MenuListProps={{ sx: { pt: 0 } }}
+                    MenuListProps={{ sx: { pt: 0, pb: 0 } }}
                   >
                     <MetricSearch value={metricQuery} onChange={setMetricQuery} />
 
+                    {/* The list scrolls, not the menu, so the field stays put at
+                        the top however far down the metrics you are. */}
+                    <Box sx={{ maxHeight: MENU_VISIBLE_ITEMS * MENU_ITEM_H, overflowY: 'auto', py: 1 }}>
                     {METRIC_LIBRARY_SESSION.filter((m) => metricMatches(m.name, metricQuery)).map((m) => {
                       const adding = colAnchor?.index == null;
                       const usedElsewhere = columns.includes(m.key) && (adding || columns[colAnchor?.index] !== m.key);
@@ -2947,6 +2952,7 @@
                         No metric by that name
                       </Typography>
                     )}
+                    </Box>
                   </Menu>
                 </Box>
               </Box>
