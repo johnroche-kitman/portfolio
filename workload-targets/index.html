@@ -1615,13 +1615,25 @@
               <MI name="download" size={24} />
               <MI name="filter_list" size={24} />
             </Stack>
-            <Box sx={{
-              bgcolor: NEUTRAL_200, borderBottom: `1px solid ${GREY100}`, borderRadius: `${RADIUS}px ${RADIUS}px 0 0`,
-              height: 38, width: 240, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1.5,
-            }}>
-              <Typography sx={{ fontSize: 14, color: PRIMARY }}>Search</Typography>
-              <MI name="search" size={22} color={PRIMARY} />
-            </Box>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Box sx={{
+                bgcolor: NEUTRAL_200, borderBottom: `1px solid ${GREY100}`, borderRadius: `${RADIUS}px ${RADIUS}px 0 0`,
+                height: 38, width: 240, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1.5,
+              }}>
+                <Typography sx={{ fontSize: 14, color: PRIMARY }}>Search</Typography>
+                <MI name="search" size={22} color={PRIMARY} />
+              </Box>
+
+              {/* Inert for now: it is here to hold the place a row gets added from */}
+              <Button
+                variant="contained"
+                color="secondary"
+                endIcon={<MI name="arrow_drop_down" size={20} color={PRIMARY} />}
+                sx={{ px: 2, whiteSpace: 'nowrap' }}
+              >
+                Add row(s)
+              </Button>
+            </Stack>
           </Stack>
 
           <Box sx={{ flex: 1, overflow: 'auto', px: 3 }}>
