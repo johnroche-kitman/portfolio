@@ -56,8 +56,12 @@ export default function AppShell({ title, children }) {
           position: 'sticky', top: 0, height: '100vh',
         }}
       >
-        <Box sx={{ mb: 1.5, width: 32, height: 32, borderRadius: '50%', bgcolor: colors.blue_500 || '#0828ff',
-          display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 15 }}>K</Box>
+        <Box
+          component="img"
+          src={`${import.meta.env.BASE_URL}kitman-logo.png`}
+          alt="Kitman Labs"
+          sx={{ width: 26, height: 26, mb: 1.5, mt: 0.5, display: 'block' }}
+        />
         <List sx={{ width: '100%', p: 0 }}>
           {NAV.map(item => {
             const active = pathname.startsWith(item.path.split('?')[0]) && !item.disabled
