@@ -1698,7 +1698,9 @@
       // Editing opens straight onto the table: there is no file to pick.
       const [step, setStep] = useState(edit ? 2 : 1);
       const [file, setFile] = useState(null);
-      const [instructionsOpen, setInstructionsOpen] = useState(true);
+      // Editing opens with the panel shut: it explains a file that is not being
+      // uploaded here. It is still there to open if it is wanted.
+      const [instructionsOpen, setInstructionsOpen] = useState(!edit);
       const source = mode === 'percent' ? PERCENT_CSV_ROWS : CSV_ROWS;
       const columns = mode === 'percent' ? PERCENT_CSV_COLUMNS : CSV_COLUMNS;
       const [rows, setRows] = useState(() => source.map((r) => ({ ...r, cells: [...r.cells] })));
