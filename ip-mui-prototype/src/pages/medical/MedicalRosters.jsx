@@ -1,15 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Chip, Divider, IconButton, Menu, MenuItem, Paper, Tab, Tabs,
-  Tooltip, Typography,
+  Box, Button, Chip, Divider, IconButton, Menu, MenuItem, Paper, Tab, Tabs, Typography,
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import DownloadIcon from '@mui/icons-material/FileDownloadOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import InfoIcon from '@mui/icons-material/InfoOutlined'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import AthleteCell from '../../components/AthleteCell'
@@ -98,12 +96,7 @@ export default function MedicalRosters() {
   return (
     <AppShell title="Medical">
       <Box sx={{ px: 3, pt: 2.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>Medical</Typography>
-          <Tooltip title="Squad medical overview">
-            <InfoIcon sx={{ fontSize: 18, color: colors.blue_100 }} />
-          </Tooltip>
-        </Box>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Medical</Typography>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto"
           sx={{ mt: 1, borderBottom: `1px solid ${colors.neutral_300}` }}>
