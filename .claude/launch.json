@@ -2,52 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "portfolio",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "8080", "."],
-      "port": 8080
-    },
-    {
-      "name": "play-on",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "3456", "."],
-      "port": 3456
-    },
-    {
-      "name": "perf-settings",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "-l", "5180", "performance-settings"],
-      "port": 5180
-    },
-    {
-      "name": "workload-dashboard",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "-l", "5181", "workload-dashboard"],
-      "port": 5181
-    },
-    {
-      "name": "workload-tracking",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "-l", "5182", "workload-tracking"],
-      "port": 5182
-    },
-    {
-      "name": "nfl-medical-ai",
+      "name": "ip-mui-prototype",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "nfl-medical-ai"],
-      "port": 5190
-    },
-    {
-      "name": "my-ip-ai-chat",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "my-ip-ai-chat"],
-      "port": 5191
-    },
-    {
-      "name": "workload-targets",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["-y", "serve", "-l", "5183", "workload-targets"],
-      "port": 5183
+      "runtimeArgs": ["run", "dev", "--prefix", "ip-mui-prototype"],
+      "port": 5210
     }
   ]
 }
