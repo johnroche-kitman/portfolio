@@ -1555,7 +1555,9 @@
             px: invalid ? 1 : 0, py: invalid ? 0.75 : 0, borderRadius: `${RADIUS}px`,
             border: invalid ? `1px solid ${AMBER}` : '1px solid transparent',
             bgcolor: invalid ? AMBER_BG : 'transparent',
-            display: 'flex', alignItems: 'center', gap: 0.75,
+            // An empty cell has nothing to give it height, which left a blank row
+            // with no target to double click. Every cell stands the same.
+            display: 'flex', alignItems: 'center', gap: 0.75, minHeight: 26, mr: 2,
             '&:hover': { borderColor: invalid ? AMBER : '#E0E2E6' },
           }}
         >
