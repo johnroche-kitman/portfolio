@@ -1092,7 +1092,7 @@
           },
           {
             hash: '#/planning-v7',
-            title: 'Version 7 - Switch the values and targets by position',
+            title: 'Version 7 - Switch the values and targets by group',
           },
         ],
       },
@@ -1938,17 +1938,24 @@
     const SESSION_SQUAD = '1st team';
     const SESSION_GD = 'GD−3';
 
-    // What a position does to a session. A goalkeeper covers a fraction of the
-    // ground an outfield player does and carries a target to match, but the two
-    // do not move in step: that is the whole reason to look position by position,
-    // since who is over target changes with who you are looking at.
-    const SESSION_POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
-    const POSITION_EFFECT = {
-      'All':        { value: 1,    target: 1 },
-      'Goalkeeper': { value: 0.42, target: 0.50 },
-      'Defender':   { value: 0.96, target: 1.00 },
-      'Midfielder': { value: 1.14, target: 1.06 },
-      'Forward':    { value: 1.06, target: 1.02 },
+    // What a group does to a session. A player in rehab covers a fraction of the
+    // ground and carries a target to match, but the two do not move in step: that
+    // is the whole reason to look group by group, since who is over target
+    // changes with who you are looking at. Somebody playing up is the clearest
+    // case, doing a senior session against an academy target.
+    const SESSION_GROUPS = [
+      'All', 'Starters', 'Non starters', 'Rehab', 'Return to play',
+      'Playing up', 'On loan', 'International duty',
+    ];
+    const GROUP_EFFECT = {
+      'All':                 { value: 1,    target: 1 },
+      'Starters':            { value: 0.98, target: 1.00 },
+      'Non starters':        { value: 1.22, target: 1.15 },
+      'Rehab':               { value: 0.35, target: 0.40 },
+      'Return to play':      { value: 0.62, target: 0.70 },
+      'Playing up':          { value: 1.08, target: 0.95 },
+      'On loan':             { value: 0.90, target: 0.95 },
+      'International duty':  { value: 0.55, target: 0.60 },
     };
 
     const SESSION_TARGETS = (() => {
@@ -2228,7 +2235,7 @@
     /* ── Session planning, version 1 ─────────────────────────────────── */
     function SessionPlanning({
       onHome, rowBars = 'target', footerBar = 'none', highlightOver = false,
-      scrollValues = false, table = false, manualEntry = false, byPosition = false,
+      scrollValues = false, table = false, manualEntry = false, byGroup = false,
     }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
@@ -2245,8 +2252,8 @@
       const [manualValues, setManualValues] = useState({});
       const [editingCell, setEditingCell] = useState(null); // { drillId, key }
       const [cellDraft, setCellDraft] = useState('');
-      const [position, setPosition] = useState('All');
-      const [posAnchor, setPosAnchor] = useState(null);
+      const [group, setGroup] = useState('All');
+      const [groupAnchor, setGroupAnchor] = useState(null);
       const [draggingId, setDraggingId] = useState(null);
       const rowRefs = React.useRef({});
       const [metricQuery, setMetricQuery] = useState('');
@@ -2258,7 +2265,7 @@
       const [scrollX, setScrollX] = useState(0);
 
       const metrics = columns.map(metricByKey);
-      const effect = POSITION_EFFECT[position] || POSITION_EFFECT.All;
+      const effect = GROUP_EFFECT[group] || GROUP_EFFECT.All;
 
       const targetFor = (metric) => {
         // A typed target is the figure the coach meant, so it stands as typed.
@@ -2266,7 +2273,7 @@
         if (custom != null && custom !== '') return Number(custom);
         const base = SESSION_TARGETS[metric.key];
         if (base == null) return null;
-        return byPosition ? Math.round(base * effect.target) : base;
+        return byGroup ? Math.round(base * effect.target) : base;
       };
 
       // Inside the padding, since that is where the columns actually start.
@@ -2373,7 +2380,7 @@
       };
       const valueFor = (drill, metric) => {
         const imported = drillValue(drill, metric);
-        if (imported != null) return byPosition ? Math.round(imported * effect.value) : imported;
+        if (imported != null) return byGroup ? Math.round(imported * effect.value) : imported;
         // Typed by hand, so it is already the figure for whoever is being shown.
         return manualEntry ? typedValue(drill, metric) : null;
       };
@@ -3086,12 +3093,12 @@
                         the workload view: the eye governs everything that view puts
                         on the page, and this is part of it. It gives its height
                         back when hidden, so the bar closes up as it did before. */}
-                    {byPosition && (
+                    {byGroup && (
                       <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.5, ...collapseSx }}>
-                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Position:</Typography>
+                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Group:</Typography>
                         <ButtonBase
-                          onClick={(e) => setPosAnchor(e.currentTarget)}
-                          aria-label="Show the session for a position"
+                          onClick={(e) => setGroupAnchor(e.currentTarget)}
+                          aria-label="Show the session for a group"
                           sx={{
                             display: 'flex', alignItems: 'center', gap: 0.25,
                             px: 0.75, py: 0.25, ml: -0.75, borderRadius: `${RADIUS}px`,
@@ -3099,22 +3106,22 @@
                           }}
                         >
                           <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                            {position === 'All' ? 'All positions' : position}
+                            {group}
                           </Typography>
                           <MI name="arrow_drop_down" size={20} color={PRIMARY} />
                         </ButtonBase>
                         <Menu
-                          anchorEl={posAnchor}
-                          open={Boolean(posAnchor)}
-                          onClose={() => setPosAnchor(null)}
+                          anchorEl={groupAnchor}
+                          open={Boolean(groupAnchor)}
+                          onClose={() => setGroupAnchor(null)}
                         >
-                          {SESSION_POSITIONS.map((p) => (
+                          {SESSION_GROUPS.map((g) => (
                             <MenuItem
-                              key={p}
-                              selected={p === position}
-                              onClick={() => { setPosition(p); setPosAnchor(null); }}
+                              key={g}
+                              selected={g === group}
+                              onClick={() => { setGroup(g); setGroupAnchor(null); }}
                             >
-                              {p === 'All' ? 'All positions' : p}
+                              {g}
                             </MenuItem>
                           ))}
                         </Menu>
@@ -3398,7 +3405,7 @@
         return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table manualEntry key="p6" />;
       }
       if (route === '#/planning-v7') {
-        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table byPosition key="p7" />;
+        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table byGroup key="p7" />;
       }
       return <VersionsLanding />;
     }
