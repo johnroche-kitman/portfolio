@@ -52,7 +52,8 @@ export default function AppShell({ title, children }) {
           </Toolbar>
         </AppBar>
 
-        <Box component="main" sx={{ flex: 1, width: '100%', overflowX: 'hidden' }}>{children}</Box>
+        {/* No overflow here — it would clip descendants out of position: sticky */}
+        <Box component="main" sx={{ flex: 1, width: '100%', minWidth: 0 }}>{children}</Box>
       </Box>
 
       {/* Player list — global drawer, 0.0% MUI in the live app */}

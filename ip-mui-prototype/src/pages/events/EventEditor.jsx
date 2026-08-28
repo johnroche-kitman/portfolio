@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  Autocomplete, Box, Button, Checkbox, Chip, Divider, FormControlLabel, IconButton,
+  Autocomplete, Box, Button, Checkbox, Chip, FormControlLabel, IconButton,
   MenuItem, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -192,11 +192,6 @@ export default function EventEditor() {
           </Section>
         )}
 
-        <Divider sx={{ my: 3 }} />
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, pb: 2 }}>
-          <Button variant="outlined" onClick={() => navigate(-1)}>Cancel</Button>
-          <Button onClick={() => navigate('/calendar')}>{isNew ? 'Create' : 'Save changes'}</Button>
-        </Box>
       </Box>
     </AppShell>
   )
