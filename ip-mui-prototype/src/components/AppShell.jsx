@@ -12,7 +12,7 @@ import MainNav, { RAIL_COLLAPSED } from './MainNav'
 import { athletes, squad, squads } from '../data/athletes'
 import AthleteCell from './AthleteCell'
 
-export default function AppShell({ title, children, fullHeight = false }) {
+export default function AppShell({ title, children, fullHeight = false, listLabel = 'Player list' }) {
   const [playerListOpen, setPlayerListOpen] = useState(false)
   const [navExpanded, setNavExpanded] = useState(false)
   const [currentSquad, setCurrentSquad] = useState(squad)
@@ -39,7 +39,7 @@ export default function AppShell({ title, children, fullHeight = false }) {
               endIcon={<KeyboardDoubleArrowRightIcon sx={{ fontSize: 16 }} />}
               onClick={() => setPlayerListOpen(true)}
             >
-              Player list
+              {listLabel}
             </Button>
             <Box sx={{ flex: 1 }} />
             <Avatar sx={{ width: 28, height: 28, bgcolor: colors.grey_300, fontSize: 12 }}>K</Avatar>

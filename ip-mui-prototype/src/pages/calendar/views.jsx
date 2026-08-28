@@ -1,34 +1,51 @@
 import { Box, Chip, Paper, Typography } from '@mui/material'
+import CheckBoxIcon from '@mui/icons-material/CheckBox'
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import colors from '../../theme/tokens'
-import { DAY_NAMES, TYPE_COLOR, gameDayMarker, toMinutes } from '../../data/events'
+import {
+  DAY_NAMES, EVENT_TYPES, TYPE_COLOR, gameDayMarker, gameweekLabel, gameweeksIn, toMinutes,
+} from '../../data/events'
 
 const TODAY_DATE = 28          // 28 Aug 2026
 const TODAY_DOW = 4            // Friday
+const WEEK_START = 24          // the week on screen runs Mon 24 – Sun 30 Aug
 const LONG_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const TODAY_BG = `${colors.blue_100}0f`
+
+// Gameweek band, lifted from the live calendar: a pale amber strip carrying the
+// fixture it belongs to, drawn across every day the gameweek covers.
+const GW_BG = '#FFF7E5'
 
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 6) // 06:00 – 22:00
 const ROW_H = 44
 
-/** Solid filled block: title, time range, squad — as the live calendar renders it. */
+/** Sessions and games carry a completion state; plain events do not. */
+const CompletionMark = ({ ev }) => {
+  if (ev.type === EVENT_TYPES.EVENT) return null
+  const Icon = ev.complete ? CheckBoxIcon : CheckBoxOutlineBlankIcon
+  return <Icon sx={{ fontSize: 13, color: TYPE_COLOR[ev.type], flexShrink: 0 }} />
+}
+
+/** Tinted block with a heavier left edge in the event type's colour. */
 const EventBlock = ({ ev, onOpen, style, dense }) => (
   <Box
     onClick={e => { e.stopPropagation(); onOpen(ev, e.currentTarget) }}
     sx={{
-      bgcolor: TYPE_COLOR[ev.type], color: colors.white, borderRadius: 0.5,
-      px: 0.75, py: dense ? 0.25 : 0.5, cursor: 'pointer', overflow: 'hidden',
-      '&:hover': { filter: 'brightness(0.94)' }, ...style,
+      bgcolor: `${TYPE_COLOR[ev.type]}1f`, borderLeft: `3px solid ${TYPE_COLOR[ev.type]}`,
+      borderRadius: '2px', px: 0.75, py: dense ? 0.125 : 0.5, cursor: 'pointer', overflow: 'hidden',
+      '&:hover': { bgcolor: `${TYPE_COLOR[ev.type]}33` }, ...style,
     }}
   >
-    <Typography variant="caption" noWrap sx={{ fontWeight: 700, display: 'block', color: 'inherit' }}>
-      {ev.title}
-    </Typography>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+      <CompletionMark ev={ev} />
+      <Typography variant="caption" noWrap sx={{ fontWeight: 700 }}>{ev.title}</Typography>
+    </Box>
     {!dense && (
       <>
-        <Typography variant="caption" noWrap sx={{ display: 'block', color: 'inherit', opacity: 0.9 }}>
+        <Typography variant="caption" noWrap sx={{ display: 'block', color: 'text.secondary' }}>
           {ev.start} - {ev.end}
         </Typography>
-        <Typography variant="caption" noWrap sx={{ display: 'block', color: 'inherit', opacity: 0.9 }}>
+        <Typography variant="caption" noWrap sx={{ display: 'block', color: 'text.secondary' }}>
           {ev.squad}
         </Typography>
       </>
@@ -36,9 +53,42 @@ const EventBlock = ({ ev, onOpen, style, dense }) => (
   </Box>
 )
 
+/**
+ * Bands for one span of days, laid on a grid so each starts and ends on the
+ * right day. `from` is the date sitting in column 1.
+ */
+const GameweekBands = ({ from, cols = 7 }) => {
+  const bands = gameweeksIn(from, from + cols - 1)
+  if (!bands.length) return null
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, rowGap: 0.25, px: 0.25, mb: 0.5 }}>
+      {bands.map(gw => (
+        <Box
+          key={gw.id}
+          title={gameweekLabel(gw)}
+          sx={{
+            gridColumn: `${gw.clipFrom - from + 1} / ${gw.clipTo - from + 2}`,
+            bgcolor: GW_BG, borderRadius: '3px', px: 0.75, py: 0.125, overflow: 'hidden',
+          }}
+        >
+          <Typography variant="caption" noWrap sx={{ display: 'block', fontWeight: 600, fontSize: 12 }}>
+            {gameweekLabel(gw)}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  )
+}
+
+const GameDay = ({ date }) => (
+  <Typography variant="caption" noWrap sx={{ color: colors.grey_150, fontSize: 11 }}>
+    {gameDayMarker(date)}
+  </Typography>
+)
+
 /* ---------------------------------------------------------------- Month */
-export function MonthView({ getEvents, onOpen, onSlot }) {
-  const cells = Array.from({ length: 42 }, (_, i) => i)
+export function MonthView({ getEvents, onOpen, onSlot, showGameweeks = true, showGameDay = true }) {
+  const weeks = Array.from({ length: 6 }, (_, w) => w)
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden' }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
@@ -47,60 +97,89 @@ export function MonthView({ getEvents, onOpen, onSlot }) {
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>{d}</Typography>
           </Box>
         ))}
-        {cells.map(i => {
-          const dow = i % 7
-          const dateNum = i - 3
-          const inMonth = dateNum >= 1 && dateNum <= 31
-          const isToday = inMonth && dateNum === TODAY_DATE
-          const evs = inMonth ? getEvents(dow) : []
-          const shown = evs.slice(0, 4)
-          return (
-            <Box
-              key={i}
-              onClick={e => inMonth && onSlot?.(`${LONG_DAYS[dow]} ${dateNum} August 2026`, e.currentTarget)}
-              sx={{
-                minHeight: 128, p: 1, cursor: inMonth ? 'pointer' : 'default',
-                borderRight: `1px solid ${colors.neutral_300}`, borderBottom: `1px solid ${colors.neutral_300}`,
-                bgcolor: isToday ? TODAY_BG : inMonth ? 'transparent' : colors.neutral_100,
-                opacity: inMonth ? 1 : 0.55,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                <Box sx={{
-                  width: 22, height: 22, display: 'grid', placeItems: 'center', borderRadius: '50%',
-                  bgcolor: isToday ? colors.grey_400 : 'transparent',
-                }}>
-                  <Typography variant="caption" sx={{
-                    fontWeight: isToday ? 700 : 600,
-                    color: isToday ? colors.white : inMonth ? 'text.primary' : 'text.secondary',
-                  }}>
-                    {inMonth ? dateNum : ''}
-                  </Typography>
-                </Box>
-                {inMonth && (
-                  <Typography variant="caption" sx={{ color: colors.grey_150, fontSize: 11 }}>
-                    {gameDayMarker(dow)}
-                  </Typography>
-                )}
+      </Box>
+
+      {weeks.map(w => {
+        const first = w * 7 - 3 // date sitting in the Monday column
+        return (
+          <Box key={w} sx={{ position: 'relative', borderBottom: `1px solid ${colors.neutral_300}` }}>
+            {/* Column washes and rules run the full height of the row, behind everything. */}
+            <Box sx={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+              {DAY_NAMES.map((_, i) => {
+                const date = first + i
+                const inMonth = date >= 1 && date <= 31
+                return (
+                  <Box key={i} sx={{
+                    borderRight: `1px solid ${colors.neutral_300}`,
+                    bgcolor: date === TODAY_DATE ? TODAY_BG : inMonth ? 'transparent' : colors.neutral_100,
+                  }} />
+                )
+              })}
+            </Box>
+
+            <Box sx={{ position: 'relative', minHeight: 128, pb: 1 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', px: 1, pt: 1, pb: 0.5 }}>
+                {DAY_NAMES.map((_, i) => {
+                  const date = first + i
+                  const inMonth = date >= 1 && date <= 31
+                  const isToday = date === TODAY_DATE
+                  return (
+                    <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      gap: 0.5, pr: 1, minWidth: 0 }}>
+                      <Box sx={{
+                        width: 22, height: 22, display: 'grid', placeItems: 'center', borderRadius: '50%',
+                        bgcolor: isToday ? colors.grey_400 : 'transparent', flexShrink: 0,
+                      }}>
+                        <Typography variant="caption" sx={{
+                          fontWeight: isToday ? 700 : 600,
+                          color: isToday ? colors.white : inMonth ? 'text.primary' : 'text.secondary',
+                        }}>
+                          {inMonth ? date : ''}
+                        </Typography>
+                      </Box>
+                      {inMonth && showGameDay && <GameDay date={date} />}
+                    </Box>
+                  )
+                })}
               </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.375 }}>
-                {shown.map(ev => <EventBlock key={ev.id} ev={ev} onOpen={onOpen} dense />)}
-                {evs.length > shown.length && (
-                  <Typography variant="caption" sx={{ color: colors.blue_100, cursor: 'pointer', pl: 0.5 }}>
-                    +{evs.length - shown.length} more
-                  </Typography>
-                )}
+
+              {showGameweeks && <GameweekBands from={first} />}
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', px: 0.75 }}>
+                {DAY_NAMES.map((_, i) => {
+                  const date = first + i
+                  const inMonth = date >= 1 && date <= 31
+                  const evs = inMonth ? getEvents(i) : []
+                  const shown = evs.slice(0, 4)
+                  return (
+                    <Box
+                      key={i}
+                      onClick={e => inMonth && onSlot?.(`${LONG_DAYS[i]} ${date} August 2026`, e.currentTarget)}
+                      sx={{
+                        display: 'flex', flexDirection: 'column', gap: 0.375, px: 0.25, minWidth: 0, minHeight: 60,
+                        cursor: inMonth ? 'pointer' : 'default', opacity: inMonth ? 1 : 0.55,
+                      }}
+                    >
+                      {shown.map(ev => <EventBlock key={ev.id} ev={ev} onOpen={onOpen} dense />)}
+                      {evs.length > shown.length && (
+                        <Typography variant="caption" sx={{ color: colors.blue_100, cursor: 'pointer', pl: 0.5 }}>
+                          +{evs.length - shown.length} more
+                        </Typography>
+                      )}
+                    </Box>
+                  )
+                })}
               </Box>
             </Box>
-          )
-        })}
-      </Box>
+          </Box>
+        )
+      })}
     </Paper>
   )
 }
 
 /* ------------------------------------------------- shared time-grid parts */
-const DayHeader = ({ dow, date, isToday }) => (
+const DayHeader = ({ dow, date, isToday, showGameDay }) => (
   <Box sx={{
     px: 1.5, py: 1, borderBottom: `1px solid ${colors.neutral_300}`,
     borderLeft: `1px solid ${colors.neutral_300}`, bgcolor: isToday ? TODAY_BG : colors.white,
@@ -110,7 +189,7 @@ const DayHeader = ({ dow, date, isToday }) => (
       <Typography variant="body2" sx={{ fontWeight: isToday ? 700 : 600 }}>
         {DAY_NAMES[dow]} {date}
       </Typography>
-      <Typography variant="caption" sx={{ color: colors.grey_150, fontSize: 11 }}>{gameDayMarker(dow)}</Typography>
+      {showGameDay && <GameDay date={date} />}
     </Box>
   </Box>
 )
@@ -122,6 +201,29 @@ const TimeGutter = () => (
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>{String(h).padStart(2, '0')}:00</Typography>
       </Box>
     ))}
+  </Box>
+)
+
+const AllDayLabel = () => (
+  <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, px: 1, py: 1.5, position: 'sticky', left: 0,
+    zIndex: 1, bgcolor: colors.white }}>
+    <Typography variant="caption" sx={{ color: 'text.secondary' }}>all-day</Typography>
+  </Box>
+)
+
+/** All-day lane: column washes and rules behind, gameweek bands on top. */
+const AllDayLane = ({ from, cols, todayCol, showGameweeks }) => (
+  <Box sx={{ gridColumn: '2 / -1', position: 'relative', borderBottom: `1px solid ${colors.neutral_300}`,
+    minHeight: 40 }}>
+    <Box sx={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+      {Array.from({ length: cols }, (_, i) => (
+        <Box key={i} sx={{ borderLeft: `1px solid ${colors.neutral_300}`,
+          bgcolor: i === todayCol ? TODAY_BG : 'transparent' }} />
+      ))}
+    </Box>
+    <Box sx={{ position: 'relative', pt: 0.75 }}>
+      {showGameweeks && <GameweekBands from={from} cols={cols} />}
+    </Box>
   </Box>
 )
 
@@ -145,29 +247,22 @@ const DayColumn = ({ dow, date, getEvents, onOpen, onSlot, isToday }) => (
 )
 
 /* ----------------------------------------------------------------- Week */
-export function WeekView({ getEvents, onOpen, onSlot }) {
+export function WeekView({ getEvents, onOpen, onSlot, showGameweeks = true, showGameDay = true }) {
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'auto', height: '100%' }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: '64px repeat(7, minmax(130px, 1fr))', minWidth: 980 }}>
         <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, position: 'sticky', top: 0, left: 0,
           zIndex: 3, bgcolor: colors.white }} />
         {DAY_NAMES.map((_, i) => (
-          <DayHeader key={i} dow={i} date={24 + i} isToday={i === TODAY_DOW} />
+          <DayHeader key={i} dow={i} date={WEEK_START + i} isToday={i === TODAY_DOW} showGameDay={showGameDay} />
         ))}
 
-        {/* all-day row */}
-        <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, px: 1, py: 1.5, position: 'sticky', left: 0,
-          zIndex: 1, bgcolor: colors.white }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>all-day</Typography>
-        </Box>
-        {DAY_NAMES.map((_, i) => (
-          <Box key={i} sx={{ borderBottom: `1px solid ${colors.neutral_300}`, borderLeft: `1px solid ${colors.neutral_300}`,
-            minHeight: 40, bgcolor: i === TODAY_DOW ? TODAY_BG : 'transparent' }} />
-        ))}
+        <AllDayLabel />
+        <AllDayLane from={WEEK_START} cols={7} todayCol={TODAY_DOW} showGameweeks={showGameweeks} />
 
         <TimeGutter />
         {DAY_NAMES.map((_, i) => (
-          <DayColumn key={i} dow={i} date={24 + i} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
+          <DayColumn key={i} dow={i} date={WEEK_START + i} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
             isToday={i === TODAY_DOW} />
         ))}
       </Box>
@@ -176,23 +271,21 @@ export function WeekView({ getEvents, onOpen, onSlot }) {
 }
 
 /* ------------------------------------------------------------------ Day */
-export function DayView({ getEvents, onOpen, onSlot, dayIndex = TODAY_DOW }) {
+export function DayView({ getEvents, onOpen, onSlot, dayIndex = TODAY_DOW, showGameweeks = true, showGameDay = true }) {
   const isToday = dayIndex === TODAY_DOW
+  const date = WEEK_START + dayIndex
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'auto', height: '100%' }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: '72px 1fr' }}>
         <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, position: 'sticky', top: 0, zIndex: 3,
           bgcolor: colors.white }} />
-        <DayHeader dow={dayIndex} date={24 + dayIndex} isToday={isToday} />
+        <DayHeader dow={dayIndex} date={date} isToday={isToday} showGameDay={showGameDay} />
 
-        <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, px: 1.5, py: 1.5 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>all-day</Typography>
-        </Box>
-        <Box sx={{ borderBottom: `1px solid ${colors.neutral_300}`, borderLeft: `1px solid ${colors.neutral_300}`,
-          minHeight: 40, bgcolor: isToday ? TODAY_BG : 'transparent' }} />
+        <AllDayLabel />
+        <AllDayLane from={date} cols={1} todayCol={isToday ? 0 : -1} showGameweeks={showGameweeks} />
 
         <TimeGutter />
-        <DayColumn dow={dayIndex} date={24 + dayIndex} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
+        <DayColumn dow={dayIndex} date={date} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
           isToday={isToday} />
       </Box>
     </Paper>
@@ -200,25 +293,33 @@ export function DayView({ getEvents, onOpen, onSlot, dayIndex = TODAY_DOW }) {
 }
 
 /* ----------------------------------------------------------------- List */
-export function ListView({ getEvents, onOpen }) {
+export function ListView({ getEvents, onOpen, showGameweeks = true, showGameDay = true }) {
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'auto', height: '100%' }}>
       {DAY_NAMES.map((d, i) => {
         const evs = getEvents(i)
         if (!evs.length) return null
+        const date = WEEK_START + i
         const isToday = i === TODAY_DOW
+        const bands = showGameweeks ? gameweeksIn(date, date) : []
         return (
           <Box key={d}>
             <Box sx={{
-              px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              px: 2, py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2,
               bgcolor: isToday ? TODAY_BG : colors.neutral_100,
               borderBottom: `1px solid ${colors.neutral_300}`,
               position: 'sticky', top: 0, zIndex: 1,
             }}>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                {d}, {24 + i} Aug{isToday ? ' · Today' : ''}
+              <Typography variant="body2" sx={{ fontWeight: 700, flexShrink: 0 }}>
+                {d}, {date} Aug{isToday ? ' · Today' : ''}
               </Typography>
-              <Typography variant="caption" sx={{ color: colors.grey_150 }}>{gameDayMarker(i)}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                {bands.map(gw => (
+                  <Chip key={gw.id} size="small" label={gameweekLabel(gw)}
+                    sx={{ bgcolor: GW_BG, height: 20, fontSize: 11, fontWeight: 600 }} />
+                ))}
+                {showGameDay && <GameDay date={date} />}
+              </Box>
             </Box>
             {evs.map(ev => (
               <Box
@@ -232,6 +333,7 @@ export function ListView({ getEvents, onOpen }) {
                   {ev.start} - {ev.end}
                 </Typography>
                 <Box sx={{ width: 10, height: 10, borderRadius: 0.25, bgcolor: TYPE_COLOR[ev.type], flexShrink: 0 }} />
+                <CompletionMark ev={ev} />
                 <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, minWidth: 0 }} noWrap>{ev.title}</Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }} noWrap>{ev.squad}</Typography>
                 <Chip size="small" label={ev.type} variant="outlined" sx={{ height: 20, fontSize: 11 }} />
@@ -243,3 +345,5 @@ export function ListView({ getEvents, onOpen }) {
     </Paper>
   )
 }
+
+export { CompletionMark, EventBlock, GameweekBands, GW_BG }

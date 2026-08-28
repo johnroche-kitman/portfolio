@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Badge, Box, Button, Checkbox, Divider, Drawer, FormControlLabel, IconButton, Link,
-  Menu, MenuItem, Paper, Switch, TextField, Tooltip, Typography,
+  Menu, MenuItem, Paper, TextField, Tooltip, Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
@@ -32,6 +32,11 @@ export default function CalendarPage() {
   const [addAnchor, setAddAnchor] = useState(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Applied on Save, as in the live drawer — `draft` is what the checkboxes edit.
+  const [markers, setMarkers] = useState({ gameweeks: true, gameDay: true })
+  const [draft, setDraft] = useState(markers)
+  const openSettings = () => { setDraft(markers); setSettingsOpen(true) }
 
   const [popEvent, setPopEvent] = useState(null)
   const [popAnchor, setPopAnchor] = useState(null)
@@ -95,7 +100,7 @@ export default function CalendarPage() {
         </Box>
 
         <Tooltip title="Calendar settings">
-          <IconButton size="small" onClick={() => setSettingsOpen(true)} aria-label="Calendar settings">
+          <IconButton size="small" onClick={openSettings} aria-label="Calendar settings">
             <SettingsIcon />
           </IconButton>
         </Tooltip>
@@ -111,10 +116,10 @@ export default function CalendarPage() {
         {filtersOpen && <CalendarFilters state={f} set={set} onClose={() => setFiltersOpen(false)} />}
 
         <Box sx={{ flex: 1, p: 3, minWidth: 0, overflow: 'auto' }}>
-          {view === 'Month' && <MonthView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
-          {view === 'Week' && <WeekView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
-          {view === 'Day' && <DayView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} dayIndex={2} />}
-          {view === 'List' && <ListView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Month' && <MonthView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Week' && <WeekView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Day' && <DayView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} dayIndex={2} />}
+          {view === 'List' && <ListView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
         </Box>
       </Box>
 
@@ -147,8 +152,12 @@ export default function CalendarPage() {
         <Divider />
         <Box sx={{ p: 3 }}>
           <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>SHOW / HIDE</Typography>
-          <FormControlLabel control={<Switch defaultChecked />} label="Gameweek markers" sx={{ display: 'flex', mt: 1, ml: 0 }} />
-          <FormControlLabel control={<Switch defaultChecked />} label="Gameday +/- markers" sx={{ display: 'flex', ml: 0 }} />
+          <FormControlLabel sx={{ display: 'flex', mt: 1, ml: 0 }} label="Gameweek markers"
+            control={<Checkbox checked={draft.gameweeks}
+              onChange={e => setDraft(d => ({ ...d, gameweeks: e.target.checked }))} />} />
+          <FormControlLabel sx={{ display: 'flex', ml: 0 }} label="Gameday +/- markers"
+            control={<Checkbox checked={draft.gameDay}
+              onChange={e => setDraft(d => ({ ...d, gameDay: e.target.checked }))} />} />
           <Divider sx={{ my: 2.5 }} />
           <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>CALENDAR INTEGRATION</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, mb: 1 }}>
@@ -166,7 +175,7 @@ export default function CalendarPage() {
             onClick={() => { setSettingsOpen(false); navigate('/administration/organisation/edit') }}>
             Advanced settings →
           </Link>
-          <Button onClick={() => setSettingsOpen(false)}>Save</Button>
+          <Button onClick={() => { setMarkers(draft); setSettingsOpen(false) }}>Save</Button>
         </Box>
       </Drawer>
 

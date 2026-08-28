@@ -16,7 +16,8 @@ import AthleteCell from '../../components/AthleteCell'
 import AvailabilityLabel from '../../components/AvailabilityLabel'
 import FilterBar from '../../components/FilterBar'
 import { athletes, AVAILABILITY, positions } from '../../data/athletes'
-import { TYPE_COLOR, EVENT_TYPES } from '../../data/events'
+import { TYPE_COLOR, EVENT_TYPES, events, gameDayMarker } from '../../data/events'
+import { CompletionMark, EventBlock, GameweekBands, GW_BG } from '../calendar/views'
 
 const TABS = ['Foundations', 'Inputs', 'Data display', 'Navigation', 'Feedback', 'iP components']
 
@@ -320,6 +321,35 @@ export default function ComponentLibrary() {
             <Item name="<AddPanel />" note="One drawer shell behind all eleven Medical creation panels, with the four-step injury wizard.">
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 See Medical → Add. Event authoring deliberately does not use this — those moved to a full page.
+              </Typography>
+            </Item>
+            <Item name="<EventBlock />" note="Calendar event pill: type-coloured left edge over a tint of the same colour, with the completion mark for sessions and games. MUI ships no scheduling grid, so the time grid these sit in is a composition of Box on CSS grid.">
+              <Box sx={{ width: 300, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                {events.slice(1, 4).map(ev => <EventBlock key={ev.id} ev={ev} onOpen={() => {}} />)}
+              </Box>
+            </Item>
+            <Item name="<CompletionMark />" note={`A session or game is complete once its details and reviews are all filled in. The Complete switch on the session page sets it, and the mark then shows on that event in every calendar view. Plain events have no completion state, so they carry no mark.`}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CompletionMark ev={{ type: EVENT_TYPES.SESSION, complete: false }} />
+                <Typography variant="body2">Not complete</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CompletionMark ev={{ type: EVENT_TYPES.SESSION, complete: true }} />
+                <Typography variant="body2">Complete</Typography>
+              </Box>
+            </Item>
+            <Item name="<GameweekBands />" note={`The amber bands running across the days a gameweek covers: ${GW_BG} fill, laid on a 7-column grid so each band starts and ends on the right day. Hidden from Calendar settings → Gameweek markers.`}>
+              <Box sx={{ width: '100%' }}><GameweekBands from={24} cols={7} /></Box>
+            </Item>
+            <Item name="Gameday +/- marker" note={`Days since the last game and days until the next, shown top-right of every day in every view. On a game day it collapses to GD 0. Hidden from Calendar settings → Gameday +/- markers.`}>
+              {[26, 28, 29, 30].map(d => (
+                <Chip key={d} size="small" variant="outlined" label={`${d} Aug — ${gameDayMarker(d)}`}
+                  sx={{ height: 22, fontSize: 11 }} />
+              ))}
+            </Item>
+            <Item name="<SessionDetail />" note="The page behind More details on an event: header with the Complete switch and Edit details, then six tabs. Owned by Coaching &amp; Performance.">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                See Calendar → click an event → More details.
               </Typography>
             </Item>
             <Item name="<EventEditor />" note="Full-page create and edit for games, sessions and events, replacing the side panels, which were too cramped.">

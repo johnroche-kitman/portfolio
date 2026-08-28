@@ -59,7 +59,7 @@ export default function EventPopover({ event, anchorEl, onClose }) {
         <Button variant="text" color="error" size="small" onClick={onClose}>Delete</Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="text" size="small" onClick={() => go(`/events/${event.id}`)}>Edit</Button>
-          <Button size="small" onClick={() => go(`/events/${event.id}`)}>More details</Button>
+          <Button size="small" onClick={() => go(`/sessions/${event.id}`)}>More details</Button>
         </Box>
       </Box>
     </Popover>
