@@ -23,10 +23,10 @@ const ALL_TYPES = [EVENT_TYPES.SESSION, EVENT_TYPES.GAME, EVENT_TYPES.EVENT]
 
 export default function CalendarPage() {
   const navigate = useNavigate()
-  const [view, setView] = useState('Month')
+  const [view, setView] = useState('Week')
   const [viewAnchor, setViewAnchor] = useState(null)
   const [addAnchor, setAddAnchor] = useState(null)
-  const [filtersOpen, setFiltersOpen] = useState(true)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const [types, setTypes] = useState(ALL_TYPES)
