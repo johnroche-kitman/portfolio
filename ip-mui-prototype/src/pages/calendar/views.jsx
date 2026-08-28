@@ -1,10 +1,10 @@
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import colors from '../../theme/tokens'
-import { DAY_NAMES, TYPE_COLOR, toMinutes } from '../../data/events'
+import { DAY_NAMES, TYPE_COLOR, gameDayMarker, toMinutes } from '../../data/events'
 
 const Pill = ({ ev, onClick, dense }) => (
   <Box
-    onClick={() => onClick(ev)}
+    onClick={e => onClick(ev, e.currentTarget)}
     sx={{
       display: 'flex', alignItems: 'center', gap: 0.75, cursor: 'pointer',
       px: 0.75, py: dense ? 0.25 : 0.5, borderRadius: 0.5, mb: 0.5,
@@ -52,9 +52,16 @@ export function MonthView({ getEvents, onOpen, monthLabel }) {
                 opacity: inMonth ? 1 : 0.55,
               }}
             >
-              <Typography variant="caption" sx={{ fontWeight: 600, color: inMonth ? 'text.primary' : 'text.secondary' }}>
-                {inMonth ? dateNum : ''}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: inMonth ? 'text.primary' : 'text.secondary' }}>
+                  {inMonth ? dateNum : ''}
+                </Typography>
+                {inMonth && (
+                  <Typography variant="caption" sx={{ color: colors.grey_150, fontSize: 11 }}>
+                    {gameDayMarker(dayOfWeek)}
+                  </Typography>
+                )}
+              </Box>
               <Box sx={{ mt: 0.5 }}>
                 {shown.map(ev => <Pill key={ev.id} ev={ev} onClick={onOpen} dense />)}
                 {evs.length > shown.length && (
@@ -106,7 +113,7 @@ export function WeekView({ getEvents, onOpen }) {
                 if (top < 0) return null
                 return (
                   <Box
-                    key={ev.id} onClick={() => onOpen(ev)}
+                    key={ev.id} onClick={e => onOpen(ev, e.currentTarget)}
                     sx={{
                       position: 'absolute', top, left: 3, right: 3, height, overflow: 'hidden',
                       px: 0.75, py: 0.25, borderRadius: 0.5, cursor: 'pointer',
@@ -148,7 +155,7 @@ export function DayView({ getEvents, onOpen, dayIndex = 0 }) {
             if (top < 0) return null
             return (
               <Box
-                key={ev.id} onClick={() => onOpen(ev)}
+                key={ev.id} onClick={e => onOpen(ev, e.currentTarget)}
                 sx={{
                   position: 'absolute', top, left: 8, right: 8, height, overflow: 'hidden',
                   px: 1.25, py: 0.5, borderRadius: 0.5, cursor: 'pointer',
@@ -183,7 +190,7 @@ export function ListView({ getEvents, onOpen }) {
             </Box>
             {evs.map(ev => (
               <Box
-                key={ev.id} onClick={() => onOpen(ev)}
+                key={ev.id} onClick={e => onOpen(ev, e.currentTarget)}
                 sx={{
                   display: 'flex', alignItems: 'center', gap: 2, px: 2, py: 1.25, cursor: 'pointer',
                   borderBottom: `1px solid ${colors.neutral_200}`, '&:hover': { bgcolor: colors.neutral_100 },

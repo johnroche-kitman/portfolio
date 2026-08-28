@@ -15,9 +15,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopyOutlined'
 import RefreshIcon from '@mui/icons-material/RefreshOutlined'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
-import { CALENDAR_VIEWS, EVENT_TYPES, SESSION_TYPES, eventsForDay } from '../../data/events'
+import { CALENDAR_VIEWS, EVENT_TYPES, eventsForDay } from '../../data/events'
 import { squads } from '../../data/athletes'
 import { MonthView, WeekView, DayView, ListView } from './views'
+import CalendarFilters from './CalendarFilters'
+import EventPopover from './EventPopover'
 
 const ALL_TYPES = [EVENT_TYPES.SESSION, EVENT_TYPES.GAME, EVENT_TYPES.EVENT]
 
@@ -29,15 +31,29 @@ export default function CalendarPage() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  const [types, setTypes] = useState(ALL_TYPES)
-  const [squadSel, setSquadSel] = useState([squads[0]])
-  const [sessionTypes, setSessionTypes] = useState([])
+  const [popEvent, setPopEvent] = useState(null)
+  const [popAnchor, setPopAnchor] = useState(null)
 
-  const filters = useMemo(() => ({ types }), [types])
-  const getEvents = day => eventsForDay(day, filters)
+  const [f, setF] = useState({
+    squads: [squads[0]],
+    types: ['Squad Sessions', 'Games', 'Events'],
+    sessionTypes: [], competitions: [], oppositions: [],
+    athletes: [], staff: [], venues: [], locations: [], labels: [],
+  })
+  const set = (k, v) => setF(prev => ({ ...prev, [k]: v }))
 
-  const toggle = (list, setList, value) =>
-    setList(list.includes(value) ? list.filter(v => v !== value) : [...list, value])
+  // Map the live app's four type checkboxes onto the three event kinds.
+  const activeKinds = useMemo(() => {
+    const k = []
+    if (f.types.includes('Squad Sessions') || f.types.includes('Individual Sessions')) k.push(EVENT_TYPES.SESSION)
+    if (f.types.includes('Games')) k.push(EVENT_TYPES.GAME)
+    if (f.types.includes('Events')) k.push(EVENT_TYPES.EVENT)
+    return k
+  }, [f.types])
+
+  const getEvents = day => eventsForDay(day, { types: activeKinds })
+
+  const openEvent = (ev, el) => { setPopEvent(ev); setPopAnchor(el) }
 
   const label =
     view === 'Month' ? 'August 2026'
@@ -45,7 +61,9 @@ export default function CalendarPage() {
       : '24 – 30 Aug 2026'
 
   const activeFilterCount =
-    (types.length !== ALL_TYPES.length ? 1 : 0) + (sessionTypes.length ? 1 : 0) + (squadSel.length !== 1 ? 1 : 0)
+    f.sessionTypes.length + f.competitions.length + f.oppositions.length + f.athletes.length +
+    f.staff.length + f.venues.length + f.locations.length + f.labels.length +
+    (f.types.length !== 4 ? 1 : 0) + (f.squads.length !== 1 ? 1 : 0)
 
   return (
     <AppShell title="Calendar">
@@ -83,65 +101,13 @@ export default function CalendarPage() {
       </Box>
 
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
-        {/* Filters rail — 2.3% MUI in the live app, 9 checkboxes and no MuiCheckbox */}
-        {filtersOpen && (
-          <Box
-            sx={{
-              width: 264, flexShrink: 0, p: 2, borderRight: `1px solid ${colors.neutral_300}`,
-              bgcolor: colors.white, alignSelf: 'stretch',
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 700 }}>Filters</Typography>
-              <IconButton size="small" onClick={() => setFiltersOpen(false)} aria-label="Close filters">
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Box>
-
-            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>SQUADS</Typography>
-            <Box sx={{ mb: 2, mt: 0.5 }}>
-              {squads.map(s => (
-                <FormControlLabel
-                  key={s}
-                  control={<Checkbox size="small" checked={squadSel.includes(s)} onChange={() => toggle(squadSel, setSquadSel, s)} />}
-                  label={<Typography variant="body2">{s}</Typography>}
-                  sx={{ display: 'flex', ml: 0 }}
-                />
-              ))}
-            </Box>
-            <Divider />
-
-            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mt: 2, display: 'block' }}>TYPES</Typography>
-            <Box sx={{ mb: 2, mt: 0.5 }}>
-              {ALL_TYPES.map(t => (
-                <FormControlLabel
-                  key={t}
-                  control={<Checkbox size="small" checked={types.includes(t)} onChange={() => toggle(types, setTypes, t)} />}
-                  label={<Typography variant="body2">{t}s</Typography>}
-                  sx={{ display: 'flex', ml: 0 }}
-                />
-              ))}
-            </Box>
-            <Divider />
-
-            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', mt: 2, display: 'block' }}>SESSIONS</Typography>
-            <Box sx={{ mt: 1 }}>
-              <TextField
-                select fullWidth label="Session types"
-                value={sessionTypes} onChange={e => setSessionTypes(e.target.value)}
-                SelectProps={{ multiple: true }}
-              >
-                {SESSION_TYPES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-              </TextField>
-            </Box>
-          </Box>
-        )}
+        {filtersOpen && <CalendarFilters state={f} set={set} onClose={() => setFiltersOpen(false)} />}
 
         <Box sx={{ flex: 1, p: 3, minWidth: 0 }}>
-          {view === 'Month' && <MonthView getEvents={getEvents} onOpen={ev => navigate(`/events/${ev.id}`)} />}
-          {view === 'Week' && <WeekView getEvents={getEvents} onOpen={ev => navigate(`/events/${ev.id}`)} />}
-          {view === 'Day' && <DayView getEvents={getEvents} onOpen={ev => navigate(`/events/${ev.id}`)} dayIndex={2} />}
-          {view === 'List' && <ListView getEvents={getEvents} onOpen={ev => navigate(`/events/${ev.id}`)} />}
+          {view === 'Month' && <MonthView getEvents={getEvents} onOpen={openEvent} />}
+          {view === 'Week' && <WeekView getEvents={getEvents} onOpen={openEvent} />}
+          {view === 'Day' && <DayView getEvents={getEvents} onOpen={openEvent} dayIndex={2} />}
+          {view === 'List' && <ListView getEvents={getEvents} onOpen={openEvent} />}
         </Box>
       </Box>
 
@@ -196,6 +162,9 @@ export default function CalendarPage() {
           <Button onClick={() => setSettingsOpen(false)}>Save</Button>
         </Box>
       </Drawer>
+
+      <EventPopover event={popEvent} anchorEl={popAnchor}
+        onClose={() => { setPopAnchor(null); setPopEvent(null) }} />
     </AppShell>
   )
 }
