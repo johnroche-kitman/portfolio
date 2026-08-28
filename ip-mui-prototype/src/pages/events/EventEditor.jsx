@@ -32,8 +32,11 @@ const Section = ({ title, action, children }) => (
   </Paper>
 )
 const Full = ({ children }) => <Box sx={{ gridColumn: '1 / -1' }}>{children}</Box>
+// fullWidth is explicit: TextField passes fullWidth={false} to its FormControl,
+// which overrides the theme default. Without it a select inside a plain Box
+// wrapper collapses to the width of its value — nothing, when it is empty.
 const Sel = ({ label, options, ...rest }) => (
-  <TextField select label={label} {...rest}>
+  <TextField select fullWidth label={label} {...rest}>
     {options.map(o => <MenuItem key={o} value={o}>{o}</MenuItem>)}
   </TextField>
 )
@@ -47,7 +50,7 @@ function CustomRepeatDialog({ open, onClose }) {
       <DialogContent>
         <FormLabel sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>Repeat every</FormLabel>
         <Box sx={{ display: 'flex', gap: 1.5, mt: 1, mb: 3 }}>
-          <TextField defaultValue="1" sx={{ width: 80 }} />
+          <TextField defaultValue="1" sx={{ width: 80 }} fullWidth={false} />
           <Sel label="" options={['day', 'week', 'month', 'year']} defaultValue="week" sx={{ width: 150 }} />
         </Box>
 
@@ -122,8 +125,8 @@ const AttendanceSection = ({ selected, setSelected, showVisibility }) => (
 
 const ConditionsFields = () => (
   <>
-    <Sel label="Surface Type" options={SURFACE_TYPES} defaultValue="" required
-      helperText="Required" />
+    {/* The asterisk carries the requirement — no need to repeat it in helper text. */}
+    <Sel label="Surface Type" options={SURFACE_TYPES} defaultValue="" required />
     <Sel label="Surface Quality" options={SURFACE_QUALITIES} defaultValue="" />
     <Sel label="Weather" options={WEATHER} defaultValue="" />
     <TextField label="Temperature"
@@ -151,7 +154,8 @@ function AttachmentsSection() {
         <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, alignItems: 'flex-start' }}>
           <TextField label="Title" value={title} onChange={e => setTitle(e.target.value)} sx={{ flex: 1 }} />
           <TextField label="Link" value={url} onChange={e => setUrl(e.target.value)} sx={{ flex: 2 }} />
-          <Button startIcon={<AddIcon />} sx={{ mt: 0.5 }}
+          {/* Secondary: one primary per view, and on this page that is Save in the header. */}
+          <Button variant="outlined" startIcon={<AddIcon />} sx={{ mt: 0.5 }}
             onClick={() => { if (title || url) { setLinks(l => [...l, { title, url }]); setTitle(''); setUrl('') } }}>
             Add
           </Button>

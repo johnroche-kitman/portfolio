@@ -8,6 +8,7 @@ import {
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
 import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/DeleteOutline'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
@@ -119,6 +120,15 @@ export default function ComponentLibrary() {
               <Button startIcon={<AddIcon />}>With icon</Button>
               <Button disabled>Disabled</Button>
               <Button color="error">Destructive</Button>
+            </Item>
+            <Item name="Button hierarchy"
+              note="One primary (contained) per view. Everything else is outlined, text or an icon button. On a form the primary is Save or Create in the sticky header, so in-form actions like Add link are outlined. Dialogs, drawers and popovers are their own view and get one primary each.">
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                <Button variant="text" color="error" startIcon={<DeleteIcon />}>Delete</Button>
+                <Button variant="outlined">Cancel</Button>
+                <Button variant="outlined" startIcon={<AddIcon />}>Add link</Button>
+                <Button>Save</Button>
+              </Box>
             </Item>
             <Item name="ButtonGroup"><ButtonGroup><Button>Day</Button><Button>Week</Button><Button>Month</Button></ButtonGroup></Item>
             <Item name="TextField" replaces="inputText" note="Filled variant, size small, no underline — matches rootTheme.">

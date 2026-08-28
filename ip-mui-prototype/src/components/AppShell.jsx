@@ -12,7 +12,7 @@ import MainNav, { RAIL_COLLAPSED } from './MainNav'
 import { athletes, squad, squads } from '../data/athletes'
 import AthleteCell from './AthleteCell'
 
-export default function AppShell({ title, children }) {
+export default function AppShell({ title, children, fullHeight = false }) {
   const [playerListOpen, setPlayerListOpen] = useState(false)
   const [navExpanded, setNavExpanded] = useState(false)
   const [currentSquad, setCurrentSquad] = useState(squad)
@@ -22,7 +22,9 @@ export default function AppShell({ title, children }) {
   const shown = athletes.filter(a => a.name.toLowerCase().includes(query.toLowerCase()))
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: colors.background }}>
+    <Box sx={{ display: 'flex', height: fullHeight ? '100vh' : undefined,
+      minHeight: fullHeight ? undefined : '100vh', overflow: fullHeight ? 'hidden' : undefined,
+      bgcolor: colors.background }}>
       <MainNav expanded={navExpanded} onToggle={() => setNavExpanded(v => !v)} />
 
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -52,8 +54,12 @@ export default function AppShell({ title, children }) {
           </Toolbar>
         </AppBar>
 
-        {/* No overflow here — it would clip descendants out of position: sticky */}
-        <Box component="main" sx={{ flex: 1, width: '100%', minWidth: 0 }}>{children}</Box>
+        {/* fullHeight: panes scroll, the page does not. Otherwise the page scrolls and
+            no overflow is set here — that would clip descendants out of position: sticky. */}
+        <Box component="main" sx={{
+          flex: 1, width: '100%', minWidth: 0,
+          ...(fullHeight ? { minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}),
+        }}>{children}</Box>
       </Box>
 
       {/* Player list — global drawer, 0.0% MUI in the live app */}

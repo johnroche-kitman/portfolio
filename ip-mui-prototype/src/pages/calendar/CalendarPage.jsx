@@ -20,6 +20,8 @@ import { squads } from '../../data/athletes'
 import { MonthView, WeekView, DayView, ListView } from './views'
 import CalendarFilters from './CalendarFilters'
 import EventPopover from './EventPopover'
+import DatePickerMenu from './DatePickerMenu'
+import QuickCreatePopover from './QuickCreatePopover'
 
 const ALL_TYPES = [EVENT_TYPES.SESSION, EVENT_TYPES.GAME, EVENT_TYPES.EVENT]
 
@@ -33,6 +35,8 @@ export default function CalendarPage() {
 
   const [popEvent, setPopEvent] = useState(null)
   const [popAnchor, setPopAnchor] = useState(null)
+  const [dateAnchor, setDateAnchor] = useState(null)
+  const [slot, setSlot] = useState(null)
 
   const [f, setF] = useState({
     squads: [squads[0]],
@@ -66,11 +70,11 @@ export default function CalendarPage() {
     (f.types.length !== 4 ? 1 : 0) + (f.squads.length !== 1 ? 1 : 0)
 
   return (
-    <AppShell title="Calendar">
+    <AppShell title="Calendar" fullHeight>
       {/* Toolbar */}
       <Box
         sx={{
-          display: 'flex', alignItems: 'center', gap: 1.5, px: 3, py: 1.5, flexWrap: 'wrap',
+          display: 'flex', alignItems: 'center', gap: 1.5, px: 3, py: 1.5, flexWrap: 'wrap', flexShrink: 0,
           borderBottom: `1px solid ${colors.neutral_300}`, bgcolor: colors.white,
         }}
       >
@@ -83,8 +87,11 @@ export default function CalendarPage() {
         <IconButton size="small" aria-label="Previous"><ChevronLeftIcon /></IconButton>
         <IconButton size="small" aria-label="Next"><ChevronRightIcon /></IconButton>
 
-        <Box sx={{ flex: 1, textAlign: 'center', minWidth: 160 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>{label}</Typography>
+        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 160 }}>
+          <Button variant="text" endIcon={<ArrowDropDownIcon />} onClick={e => setDateAnchor(e.currentTarget)}
+            sx={{ fontSize: 20, fontWeight: 700, color: 'text.primary' }}>
+            {label}
+          </Button>
         </Box>
 
         <Tooltip title="Calendar settings">
@@ -100,14 +107,14 @@ export default function CalendarPage() {
         </Button>
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0 }}>
+      <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {filtersOpen && <CalendarFilters state={f} set={set} onClose={() => setFiltersOpen(false)} />}
 
-        <Box sx={{ flex: 1, p: 3, minWidth: 0 }}>
-          {view === 'Month' && <MonthView getEvents={getEvents} onOpen={openEvent} />}
-          {view === 'Week' && <WeekView getEvents={getEvents} onOpen={openEvent} />}
-          {view === 'Day' && <DayView getEvents={getEvents} onOpen={openEvent} dayIndex={2} />}
-          {view === 'List' && <ListView getEvents={getEvents} onOpen={openEvent} />}
+        <Box sx={{ flex: 1, p: 3, minWidth: 0, overflow: 'auto' }}>
+          {view === 'Month' && <MonthView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Week' && <WeekView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Day' && <DayView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} dayIndex={2} />}
+          {view === 'List' && <ListView getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
         </Box>
       </Box>
 
@@ -165,6 +172,10 @@ export default function CalendarPage() {
 
       <EventPopover event={popEvent} anchorEl={popAnchor}
         onClose={() => { setPopAnchor(null); setPopEvent(null) }} />
+
+      <DatePickerMenu anchorEl={dateAnchor} onClose={() => setDateAnchor(null)} />
+
+      <QuickCreatePopover slot={slot} onClose={() => setSlot(null)} />
     </AppShell>
   )
 }
