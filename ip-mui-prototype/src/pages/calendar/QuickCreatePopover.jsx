@@ -12,11 +12,13 @@ export default function QuickCreatePopover({ slot, onClose }) {
 
   const pick = type => { onClose(); navigate(`/events/new?type=${type}`) }
 
+  // Beside the painted slot rather than over it, so you can still see what you picked.
   return (
     <Popover
       open={!!slot.el} anchorEl={slot.el} onClose={onClose}
-      anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      anchorOrigin={{ vertical: 'center', horizontal: 'right' }}
+      transformOrigin={{ vertical: 'center', horizontal: 'left' }}
+      marginThreshold={12}
       slotProps={{ paper: { sx: { width: 380, p: 2.5 } } }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>

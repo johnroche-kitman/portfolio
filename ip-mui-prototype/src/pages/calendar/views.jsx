@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
@@ -18,6 +19,12 @@ const GW_BG = '#FFF7E5'
 
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 6) // 06:00 – 22:00
 const ROW_H = 44
+const GRID_START = 6 * 60
+const SNAP = 15                // a drag snaps to quarter hours
+
+const minToY = m => ((m - GRID_START) / 60) * ROW_H
+const yToMin = y => GRID_START + Math.round((y / ROW_H) * 60 / SNAP) * SNAP
+const fmt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 
 /** Sessions and games carry a completion state; plain events do not. */
 const CompletionMark = ({ ev }) => {
@@ -227,27 +234,93 @@ const AllDayLane = ({ from, cols, todayCol, showGameweeks }) => (
   </Box>
 )
 
-const DayColumn = ({ dow, date, getEvents, onOpen, onSlot, isToday }) => (
-  <Box
-    onClick={e => onSlot?.(`${LONG_DAYS[dow]} ${date} August 2026 13:00 - 13:15`, e.currentTarget)}
-    sx={{ position: 'relative', borderLeft: `1px solid ${colors.neutral_300}`,
-      bgcolor: isToday ? TODAY_BG : 'transparent', cursor: 'pointer' }}
-  >
-    {HOURS.map(h => <Box key={h} sx={{ height: ROW_H, borderBottom: `1px solid ${colors.neutral_200}` }} />)}
-    {getEvents(dow).map(ev => {
-      const top = ((toMinutes(ev.start) - 6 * 60) / 60) * ROW_H
-      const height = Math.max(((toMinutes(ev.end) - toMinutes(ev.start)) / 60) * ROW_H, 30)
-      if (top < 0) return null
-      return (
-        <EventBlock key={ev.id} ev={ev} onOpen={onOpen}
-          style={{ position: 'absolute', top, left: 3, right: 3, height }} />
-      )
-    })}
-  </Box>
-)
+/**
+ * Dragging down the column paints the slot before anything opens, so you can see
+ * what you picked; the wash stays put while the create popover is up.
+ */
+const DayColumn = ({ dow, date, getEvents, onOpen, onSelect, isToday, selection }) => {
+  const ref = useRef(null)
+  const [drag, setDrag] = useState(null)
+
+  const minsAt = clientY => {
+    const r = ref.current.getBoundingClientRect()
+    return Math.min(Math.max(yToMin(clientY - r.top), GRID_START), 22 * 60)
+  }
+
+  // Finishing outside the column still ends the drag, so track it on the window.
+  useEffect(() => {
+    if (!drag) return undefined
+    const move = e => setDrag(d => (d ? { ...d, to: minsAt(e.clientY) } : d))
+    const up = () => {
+      setDrag(null)
+      const from = Math.min(drag.from, drag.to)
+      const to = Math.max(from + SNAP, Math.max(drag.from, drag.to))
+      const r = ref.current.getBoundingClientRect()
+      const top = r.top + minToY(from)
+      const height = minToY(to) - minToY(from)
+      // A virtual anchor, so the popover opens against the painted slot itself.
+      const anchor = {
+        nodeType: 1,
+        getBoundingClientRect: () => new DOMRect(r.left, top, r.width, height),
+      }
+      onSelect?.(dow, { from, to }, `${LONG_DAYS[dow]} ${date} August 2026 ${fmt(from)} - ${fmt(to)}`, anchor)
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
+  }, [drag])
+
+  const shown = drag
+    ? { from: Math.min(drag.from, drag.to), to: Math.max(drag.from, drag.to) }
+    : selection
+
+  return (
+    <Box
+      ref={ref}
+      onMouseDown={e => { if (e.button === 0) { const m = minsAt(e.clientY); setDrag({ from: m, to: m + SNAP }) } }}
+      sx={{ position: 'relative', borderLeft: `1px solid ${colors.neutral_300}`,
+        bgcolor: isToday ? TODAY_BG : 'transparent', cursor: 'pointer',
+        userSelect: drag ? 'none' : 'auto' }}
+    >
+      {HOURS.map(h => <Box key={h} sx={{ height: ROW_H, borderBottom: `1px solid ${colors.neutral_200}` }} />)}
+
+      {shown && (
+        <Box sx={{
+          position: 'absolute', left: 3, right: 3, pointerEvents: 'none',
+          top: minToY(shown.from), height: Math.max(minToY(shown.to) - minToY(shown.from), 14),
+          bgcolor: `${colors.blue_100}29`, border: `1px solid ${colors.blue_100}`, borderRadius: '2px',
+          px: 0.75, py: 0.125, overflow: 'hidden', zIndex: 3,
+        }}>
+          <Typography variant="caption" noWrap sx={{ display: 'block', fontWeight: 700, color: colors.blue_300 }}>
+            {fmt(shown.from)} - {fmt(Math.max(shown.to, shown.from + SNAP))}
+          </Typography>
+        </Box>
+      )}
+
+      {getEvents(dow).map(ev => {
+        const top = minToY(toMinutes(ev.start))
+        const height = Math.max(minToY(toMinutes(ev.end)) - minToY(toMinutes(ev.start)), 30)
+        if (top < 0) return null
+        return (
+          <EventBlock key={ev.id} ev={ev} onOpen={onOpen}
+            style={{ position: 'absolute', top, left: 3, right: 3, height, zIndex: 2 }} />
+        )
+      })}
+    </Box>
+  )
+}
+
+/** One painted slot at a time per grid, cleared when the create popover closes. */
+function useSlotSelection(onSlot, slotOpen) {
+  const [sel, setSel] = useState(null)
+  useEffect(() => { if (!slotOpen) setSel(null) }, [slotOpen])
+  const select = (dow, range, info, anchor) => { setSel({ dow, ...range }); onSlot?.(info, anchor) }
+  return [sel, select]
+}
 
 /* ----------------------------------------------------------------- Week */
-export function WeekView({ getEvents, onOpen, onSlot, showGameweeks = true, showGameDay = true }) {
+export function WeekView({ getEvents, onOpen, onSlot, slotOpen, showGameweeks = true, showGameDay = true }) {
+  const [sel, select] = useSlotSelection(onSlot, slotOpen)
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'auto', height: '100%' }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: '64px repeat(7, minmax(130px, 1fr))', minWidth: 980 }}>
@@ -262,8 +335,8 @@ export function WeekView({ getEvents, onOpen, onSlot, showGameweeks = true, show
 
         <TimeGutter />
         {DAY_NAMES.map((_, i) => (
-          <DayColumn key={i} dow={i} date={WEEK_START + i} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
-            isToday={i === TODAY_DOW} />
+          <DayColumn key={i} dow={i} date={WEEK_START + i} getEvents={getEvents} onOpen={onOpen}
+            onSelect={select} selection={sel?.dow === i ? sel : null} isToday={i === TODAY_DOW} />
         ))}
       </Box>
     </Paper>
@@ -271,7 +344,8 @@ export function WeekView({ getEvents, onOpen, onSlot, showGameweeks = true, show
 }
 
 /* ------------------------------------------------------------------ Day */
-export function DayView({ getEvents, onOpen, onSlot, dayIndex = TODAY_DOW, showGameweeks = true, showGameDay = true }) {
+export function DayView({ getEvents, onOpen, onSlot, slotOpen, dayIndex = TODAY_DOW, showGameweeks = true, showGameDay = true }) {
+  const [sel, select] = useSlotSelection(onSlot, slotOpen)
   const isToday = dayIndex === TODAY_DOW
   const date = WEEK_START + dayIndex
   return (
@@ -285,8 +359,8 @@ export function DayView({ getEvents, onOpen, onSlot, dayIndex = TODAY_DOW, showG
         <AllDayLane from={date} cols={1} todayCol={isToday ? 0 : -1} showGameweeks={showGameweeks} />
 
         <TimeGutter />
-        <DayColumn dow={dayIndex} date={date} getEvents={getEvents} onOpen={onOpen} onSlot={onSlot}
-          isToday={isToday} />
+        <DayColumn dow={dayIndex} date={date} getEvents={getEvents} onOpen={onOpen}
+          onSelect={select} selection={sel?.dow === dayIndex ? sel : null} isToday={isToday} />
       </Box>
     </Paper>
   )

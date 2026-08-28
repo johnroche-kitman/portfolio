@@ -347,6 +347,15 @@ export default function ComponentLibrary() {
                   sx={{ height: 22, fontSize: 11 }} />
               ))}
             </Item>
+            <Item name="Drag to create" note="Dragging down a day column paints the slot in primary at 16% with a solid border and its time range, snapped to quarter hours. The wash holds while the create popover is open, and the popover anchors beside it rather than over it.">
+              <Box sx={{ width: 150, height: 96, position: 'relative', border: `1px solid ${colors.neutral_300}`,
+                borderRadius: '2px' }}>
+                <Box sx={{ position: 'absolute', top: 20, left: 3, right: 3, height: 52, px: 0.75,
+                  bgcolor: `${colors.blue_100}29`, border: `1px solid ${colors.blue_100}`, borderRadius: '2px' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: colors.blue_300 }}>12:45 - 15:00</Typography>
+                </Box>
+              </Box>
+            </Item>
             <Item name="<SessionDetail />" note="The page behind More details on an event: header with the Complete switch and Edit details, then six tabs. Owned by Coaching &amp; Performance.">
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 See Calendar → click an event → More details.

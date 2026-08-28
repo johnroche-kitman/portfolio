@@ -117,8 +117,8 @@ export default function CalendarPage() {
 
         <Box sx={{ flex: 1, p: 3, minWidth: 0, overflow: 'auto' }}>
           {view === 'Month' && <MonthView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
-          {view === 'Week' && <WeekView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
-          {view === 'Day' && <DayView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} dayIndex={2} />}
+          {view === 'Week' && <WeekView slotOpen={!!slot} showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
+          {view === 'Day' && <DayView slotOpen={!!slot} showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} dayIndex={2} />}
           {view === 'List' && <ListView showGameweeks={markers.gameweeks} showGameDay={markers.gameDay} getEvents={getEvents} onOpen={openEvent} onSlot={(info, el) => setSlot({ info, el })} />}
         </Box>
       </Box>
