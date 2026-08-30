@@ -7,7 +7,10 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
+import AddPanel from '../../components/AddPanel'
+import { PANELS } from './AddPanels'
 import { ACTIONS_COL, DetailCard, FieldGrid, ListPanel, SearchField, SelectField } from './panels'
+import { CardAction } from '../admin/parts'
 import {
   DiagnosticsTab, DocumentsTab, MedicationsTab, ModificationsTab, NotesTab, TreatmentsTab,
 } from './tabs'
@@ -18,7 +21,7 @@ function Overview({ injury }) {
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1.6fr 1fr' }, gap: 3 }}>
       <Box>
-        <DetailCard title="Illness details" action={<Button variant="outlined" size="small">Edit</Button>}>
+        <DetailCard title="Illness details" action={<CardAction>Edit</CardAction>}>
           <FieldGrid columns={1} fields={[['Type', injury.details.Type]]} />
           <Box sx={{ mt: 1.5 }}>
             <FieldGrid columns={2}
@@ -26,16 +29,16 @@ function Overview({ injury }) {
           </Box>
         </DetailCard>
 
-        <DetailCard title="Primary Pathology" action={<Button variant="outlined" size="small">Edit</Button>}>
+        <DetailCard title="Primary Pathology" action={<CardAction>Edit</CardAction>}>
           <FieldGrid fields={injury.pathology} />
         </DetailCard>
       </Box>
 
       <Box>
-        <DetailCard title="Availability history" action={<Button variant="outlined" size="small">Add</Button>}>
+        <DetailCard title="Availability history" action={<CardAction>Add</CardAction>}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-            <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 700 }}>Current status</Typography>
-            <Button variant="outlined" size="small">Edit</Button>
+            <Typography variant="subtitle1">Current status</Typography>
+            <CardAction>Edit</CardAction>
           </Box>
           {injury.availability.map(a => (
             <Box key={a.n} sx={{ display: 'flex', gap: 1.5, mb: 1.5 }}>
@@ -56,15 +59,15 @@ function Overview({ injury }) {
             </Box>
           ))}
           <Divider sx={{ my: 2 }} />
-          <Typography variant="h6" sx={{ fontSize: 17, fontWeight: 700, mb: 1 }}>Availability summary</Typography>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>Availability summary</Typography>
           <FieldGrid columns={2} fields={injury.summary} />
         </DetailCard>
 
-        <DetailCard title="Associated issues" action={<Button variant="outlined" size="small">Add</Button>}>
+        <DetailCard title="Associated issues" action={<CardAction>Add</CardAction>}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>No associated issues.</Typography>
         </DetailCard>
 
-        <DetailCard title="Linked Chronic condition" action={<Button variant="outlined" size="small">Add</Button>}>
+        <DetailCard title="Linked Chronic condition" action={<CardAction>Add</CardAction>}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>No chronic injury/illness linked.</Typography>
         </DetailCard>
       </Box>
@@ -101,6 +104,7 @@ export default function InjuryRecord() {
   const navigate = useNavigate()
   const injury = injuryById(id)
   const [tab, setTab] = useState(0)
+  const [panel, setPanel] = useState(null)
   const [addEl, setAddEl] = useState(null)
 
   return (
@@ -115,7 +119,7 @@ export default function InjuryRecord() {
           </Box>
           <Menu anchorEl={addEl} open={!!addEl} onClose={() => setAddEl(null)}>
             {MEDICAL_ADD_ITEMS.map(m => (
-              <MenuItem key={m} sx={{ minWidth: 200 }} onClick={() => setAddEl(null)}>{m}</MenuItem>
+              <MenuItem key={m} sx={{ minWidth: 200 }} onClick={() => { setAddEl(null); setPanel(m) }}>{m}</MenuItem>
             ))}
           </Menu>
         </Box>
@@ -125,7 +129,7 @@ export default function InjuryRecord() {
             AO
           </Avatar>
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>{injury.athlete} - {injury.title}</Typography>
+            <Typography variant="h5">{injury.athlete} - {injury.title}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>{injury.dateLabel}</Typography>
           </Box>
         </Box>
@@ -146,6 +150,9 @@ export default function InjuryRecord() {
         {tab === 6 && <MedicationsTab scope="injury" />}
         {tab === 7 && <DocumentsTab scope="injury" />}
       </Box>
+
+      <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
+        onClose={() => setPanel(null)} scope="injury" />
     </AppShell>
   )
 }

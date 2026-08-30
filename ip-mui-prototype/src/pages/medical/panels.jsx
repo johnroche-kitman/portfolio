@@ -2,11 +2,11 @@ import { useState } from 'react'
 import {
   Avatar, Box, Button, Chip, IconButton, Menu, MenuItem, Paper, TextField, Typography,
 } from '@mui/material'
-import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import colors from '../../theme/tokens'
 import { AdminGrid, FilterRow } from '../admin/parts'
+import { DateRangeInput, SearchInput } from '../../components/form'
 
 /**
  * Every list tab in Medical is the same shape at all three levels — team,
@@ -14,24 +14,25 @@ import { AdminGrid, FilterRow } from '../admin/parts'
  * filter row, then a table. Building it once is the difference between eleven
  * near-identical pages and one component with eleven configurations.
  */
-export function ListPanel({ title, addLabel, addMenu, actions, filters, columns, rows, rowHeight = 56, empty }) {
+export function ListPanel({ title, addLabel, addMenu, onAdd, onRowClick, actions, filters, columns, rows, rowHeight = 56, empty }) {
   const [addEl, setAddEl] = useState(null)
 
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-        <Typography variant="h6" sx={{ fontSize: 20, fontWeight: 700 }}>{title}</Typography>
+        <Typography variant="h6">{title}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {addLabel && (addMenu
             ? <>
               <Button endIcon={<ArrowDropDownIcon />} onClick={e => setAddEl(e.currentTarget)}>{addLabel}</Button>
               <Menu anchorEl={addEl} open={!!addEl} onClose={() => setAddEl(null)}>
                 {addMenu.map(m => (
-                  <MenuItem key={m} sx={{ minWidth: 200 }} onClick={() => setAddEl(null)}>{m}</MenuItem>
+                  <MenuItem key={m} sx={{ minWidth: 200 }}
+                    onClick={() => { setAddEl(null); onAdd?.(m) }}>{m}</MenuItem>
                 ))}
               </Menu>
             </>
-            : <Button>{addLabel}</Button>)}
+            : <Button onClick={() => onAdd?.(addLabel)}>{addLabel}</Button>)}
           {actions}
         </Box>
       </Box>
@@ -40,6 +41,8 @@ export function ListPanel({ title, addLabel, addMenu, actions, filters, columns,
 
       {rows.length
         ? <AdminGrid rows={rows} columns={columns} rowHeight={rowHeight}
+            onRowClick={onRowClick ? p => onRowClick(p.row) : undefined}
+            sx={onRowClick ? { '& .MuiDataGrid-row': { cursor: 'pointer' } } : undefined}
             pageSizeOptions={[10, 25]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} />
         : (
           <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, py: 6, textAlign: 'center' }}>
@@ -50,10 +53,10 @@ export function ListPanel({ title, addLabel, addMenu, actions, filters, columns,
   )
 }
 
-/** Search field, used by every Medical filter row. */
+/* Filter controls come from the shared form kit. A Medical filter select always
+   carries an "All" option, which is the only thing the kit does not assume. */
 export const SearchField = ({ value, onChange, label = 'Search', width = 220 }) => (
-  <TextField label={label} value={value} onChange={e => onChange(e.target.value)} sx={{ width }}
-    InputProps={{ endAdornment: <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} /> }} />
+  <SearchInput label={label} value={value} onChange={e => onChange(e.target.value)} sx={{ width }} />
 )
 
 export const SelectField = ({ label, options, value, onChange, width = 180 }) => (
@@ -63,14 +66,7 @@ export const SelectField = ({ label, options, value, onChange, width = 180 }) =>
   </TextField>
 )
 
-/** The DD/MM/YYYY - DD/MM/YYYY control that sits in most Medical filter rows. */
-export const DateRangeField = () => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-    <TextField label="From" type="date" InputLabelProps={{ shrink: true }} sx={{ width: 165 }} />
-    <Typography variant="body2" sx={{ color: 'text.secondary' }}>–</Typography>
-    <TextField label="To" type="date" InputLabelProps={{ shrink: true }} sx={{ width: 165 }} />
-  </Box>
-)
+export const DateRangeField = DateRangeInput
 
 export const RowMenu = () => {
   const [el, setEl] = useState(null)
@@ -186,25 +182,6 @@ export const NoteCell = ({ note }) => {
 }
 
 /* ------------------------------------------------- injury record layout */
-/** Card with a title and a single right-hand action — the injury record's unit. */
-export const DetailCard = ({ title, action, children, sx }) => (
-  <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 3, mb: 2.5, ...sx }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-      <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700 }}>{title}</Typography>
-      {action}
-    </Box>
-    {children}
-  </Paper>
-)
-
-/** Label: value pairs on a grid — the injury record's Primary Pathology block. */
-export const FieldGrid = ({ fields, columns = 3 }) => (
-  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: `repeat(${columns}, 1fr)` }, gap: 2 }}>
-    {fields.map(([label, value]) => (
-      <Typography key={label} variant="body2">
-        <Box component="span" sx={{ fontWeight: 700 }}>{label}: </Box>
-        <Box component="span" sx={{ color: 'text.secondary' }}>{value}</Box>
-      </Typography>
-    ))}
-  </Box>
-)
+// The card and the field grid are the shared ones — see admin/parts.jsx. They are
+// re-exported here only so medical pages have a single import.
+export { SettingsCard as DetailCard, FieldGrid } from '../admin/parts'

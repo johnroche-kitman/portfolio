@@ -8,6 +8,8 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
+import AddPanel from '../../components/AddPanel'
+import { PANELS } from './AddPanels'
 import { DateRangeField, FieldGrid, IssueStatusChip, SearchField, SelectField } from './panels'
 import {
   DiagnosticsTab, DocumentsTab, FormsTab, MedicationsTab, ModificationsTab, NotesTab, TreatmentsTab,
@@ -17,34 +19,25 @@ import {
 } from '../../data/medical'
 import { MEDICAL_ADD_ITEMS } from '../../data/athletes'
 
-const Head = ({ children }) => (
-  <TableCell sx={{ fontSize: 12, fontWeight: 700, color: 'text.secondary', borderColor: colors.neutral_300 }}>
-    {children}
-  </TableCell>
-)
-const Cell = ({ children, ...r }) => (
-  <TableCell {...r} sx={{ fontSize: 14, borderColor: colors.neutral_200 }}>{children}</TableCell>
-)
-
 /** One of the three stacked tables on the Injury/ Illness tab. */
 const IssueSection = ({ title, columns, rows, empty, onOpen }) => (
   <Box sx={{ mb: 4 }}>
-    <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}>{title}</Typography>
+    <Typography variant="subtitle1" sx={{ mb: 1.5 }}>{title}</Typography>
     <Table size="small">
-      <TableHead><TableRow>{columns.map(c => <Head key={c}>{c}</Head>)}</TableRow></TableHead>
+      <TableHead><TableRow>{columns.map(c => <TableCell key={c}>{c}</TableCell>)}</TableRow></TableHead>
       <TableBody>
         {rows.length ? rows.map((r, i) => (
           <TableRow key={i} hover sx={{ cursor: onOpen ? 'pointer' : 'default' }} onClick={() => onOpen?.(r)}>
-            <Cell>{r.date}</Cell>
-            <Cell>{r.type || 'New'}</Cell>
-            <Cell sx={{ fontWeight: 600 }}>{r.title}</Cell>
-            <Cell>{r.status ? <IssueStatusChip value={r.status} /> : r.resolved || ''}</Cell>
+            <TableCell>{r.date}</TableCell>
+            <TableCell>{r.type || 'New'}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{r.title}</TableCell>
+            <TableCell>{r.status ? <IssueStatusChip value={r.status} /> : r.resolved || ''}</TableCell>
           </TableRow>
         )) : (
           <TableRow>
-            <Cell colSpan={columns.length} sx={{ textAlign: 'center', py: 5, color: 'text.secondary', fontWeight: 700 }}>
+            <TableCell colSpan={columns.length} sx={{ textAlign: 'center', py: 5, color: 'text.secondary', fontWeight: 700 }}>
               {empty}
-            </Cell>
+            </TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -52,16 +45,16 @@ const IssueSection = ({ title, columns, rows, empty, onOpen }) => (
   </Box>
 )
 
-function InjuryIllnessTab({ athlete, onOpen }) {
+function InjuryIllnessTab({ athlete, onOpen, onAdd }) {
   const [q, setQ] = useState('')
   const [addEl, setAddEl] = useState(null)
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2 }}>
-        <Typography variant="h6" sx={{ fontSize: 20, fontWeight: 700 }}>Injury/ Illness</Typography>
+        <Typography variant="h6">Injury/ Illness</Typography>
         <Button endIcon={<ArrowDropDownIcon />} onClick={e => setAddEl(e.currentTarget)}>Add</Button>
         <Menu anchorEl={addEl} open={!!addEl} onClose={() => setAddEl(null)}>
-          {MEDICAL_ADD_ITEMS.map(m => <MenuItem key={m} sx={{ minWidth: 200 }} onClick={() => setAddEl(null)}>{m}</MenuItem>)}
+          {MEDICAL_ADD_ITEMS.map(m => <MenuItem key={m} sx={{ minWidth: 200 }} onClick={() => { setAddEl(null); onAdd?.(m) }}>{m}</MenuItem>)}
         </Menu>
       </Box>
 
@@ -97,7 +90,7 @@ function InjuryIllnessTab({ athlete, onOpen }) {
 
 const DetailsTab = () => (
   <Box>
-    <Typography variant="h6" sx={{ fontSize: 20, fontWeight: 700, mb: 2 }}>Athlete details</Typography>
+    <Typography variant="h6" sx={{ mb: 2 }}>Athlete details</Typography>
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 3 }}>
       <FieldGrid fields={ATHLETE_DETAIL_FIELDS} />
     </Paper>
@@ -107,19 +100,19 @@ const DetailsTab = () => (
 const MaintenanceTab = () => (
   <Box>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-      <Typography variant="h6" sx={{ fontSize: 20, fontWeight: 700 }}>Maintenance</Typography>
+      <Typography variant="h6">Maintenance</Typography>
       <Button>Add maintenance</Button>
     </Box>
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300 }}>
       <Table size="small">
         <TableHead>
-          <TableRow>{['Item', 'Last completed', 'Next due', 'Status'].map(c => <Head key={c}>{c}</Head>)}</TableRow>
+          <TableRow>{['Item', 'Last completed', 'Next due', 'Status'].map(c => <TableCell key={c}>{c}</TableCell>)}</TableRow>
         </TableHead>
         <TableBody>
           {MAINTENANCE_ROWS.map(r => (
             <TableRow key={r.id}>
-              <Cell>{r.item}</Cell><Cell>{r.last}</Cell><Cell>{r.next}</Cell>
-              <Cell><IssueStatusChip value={r.status === 'Complete' ? 'Available - complete' : 'Unavailable - due'} /></Cell>
+              <TableCell>{r.item}</TableCell><TableCell>{r.last}</TableCell><TableCell>{r.next}</TableCell>
+              <TableCell><IssueStatusChip value={r.status === 'Complete' ? 'Available - complete' : 'Unavailable - due'} /></TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -133,6 +126,7 @@ export default function MedicalAthlete() {
   const navigate = useNavigate()
   const athlete = medicalAthleteById(id)
   const [tab, setTab] = useState(0)
+  const [panel, setPanel] = useState(null)
 
   return (
     <AppShell title="Medical">
@@ -148,7 +142,7 @@ export default function MedicalAthlete() {
             {athlete.name.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>{athlete.name}</Typography>
+            <Typography variant="h5">{athlete.name}</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mt: 1 }}>
               {athleteHeader(athlete).map(([label, value]) => (
                 <Box key={label}>
@@ -167,7 +161,7 @@ export default function MedicalAthlete() {
       <Divider />
 
       <Box sx={{ p: 3 }}>
-        {tab === 0 && <InjuryIllnessTab athlete={athlete}
+        {tab === 0 && <InjuryIllnessTab athlete={athlete} onAdd={setPanel}
           onOpen={() => navigate(`/medical/athletes/${athlete.id}/illnesses/18808`)} />}
         {tab === 1 && <NotesTab scope="athlete" />}
         {tab === 2 && <ModificationsTab scope="athlete" />}
@@ -179,6 +173,9 @@ export default function MedicalAthlete() {
         {tab === 8 && <MedicationsTab scope="athlete" />}
         {tab === 9 && <DocumentsTab scope="athlete" />}
       </Box>
+
+      <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
+        onClose={() => setPanel(null)} scope="athlete" />
     </AppShell>
   )
 }

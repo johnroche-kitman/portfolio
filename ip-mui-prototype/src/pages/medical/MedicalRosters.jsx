@@ -11,10 +11,12 @@ import {
 import {
   DiagnosticsTab, DocumentsTab, FormsTab, MedicalFlagsTab, ModificationsTab, NotesTab, TreatmentsTab,
 } from './tabs'
+import AddPanel from '../../components/AddPanel'
+import { PANELS } from './AddPanels'
 import { MEDICAL_ADD_ITEMS, MEDICAL_TABS, positions, squads } from '../../data/athletes'
 import { AVAILABILITY_STATUSES, dailyStatus, medicalTeam } from '../../data/medical'
 
-function TeamTab({ inactive = false, past = false, title = 'Team' }) {
+function TeamTab({ inactive = false, past = false, title = 'Team', onAdd }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [position, setPosition] = useState('')
@@ -28,7 +30,8 @@ function TeamTab({ inactive = false, past = false, title = 'Team' }) {
 
   return (
     <ListPanel
-      title={title} addLabel="Add" addMenu={MEDICAL_ADD_ITEMS}
+      title={title} addLabel="Add" addMenu={MEDICAL_ADD_ITEMS} onAdd={onAdd}
+      onRowClick={row => navigate(`/medical/athletes/${row.id}`)}
       actions={<Button variant="outlined" endIcon={<ArrowDropDownIcon />}>Download</Button>}
       filters={<>
         <SearchField value={q} onChange={setQ} label="Search athletes" />
@@ -83,11 +86,12 @@ function DailyStatusTab() {
 
 export default function MedicalRosters() {
   const [tab, setTab] = useState(0)
+  const [panel, setPanel] = useState(null)
 
   return (
     <AppShell title="Medical">
       <Box sx={{ px: 3, pt: 2.5 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>Medical</Typography>
+        <Typography variant="h5">Medical</Typography>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ mt: 1 }}>
           {MEDICAL_TABS.map(t => <Tab key={t} label={t} />)}
         </Tabs>
@@ -95,7 +99,7 @@ export default function MedicalRosters() {
       <Divider />
 
       <Box sx={{ p: 3 }}>
-        {tab === 0 && <TeamTab />}
+        {tab === 0 && <TeamTab onAdd={setPanel} />}
         {tab === 1 && <DailyStatusTab />}
         {tab === 2 && <NotesTab />}
         {tab === 3 && <ModificationsTab />}
@@ -103,10 +107,13 @@ export default function MedicalRosters() {
         {tab === 5 && <TreatmentsTab />}
         {tab === 6 && <DiagnosticsTab />}
         {tab === 7 && <MedicalFlagsTab />}
-        {tab === 8 && <TeamTab past title="Past Athletes" />}
-        {tab === 9 && <TeamTab inactive title="Inactive Athletes" />}
+        {tab === 8 && <TeamTab past title="Past Athletes" onAdd={setPanel} />}
+        {tab === 9 && <TeamTab inactive title="Inactive Athletes" onAdd={setPanel} />}
         {tab === 10 && <DocumentsTab />}
       </Box>
+
+      <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
+        onClose={() => setPanel(null)} scope="team" />
     </AppShell>
   )
 }

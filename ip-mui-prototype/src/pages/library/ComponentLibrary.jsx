@@ -20,8 +20,9 @@ import { TYPE_COLOR, EVENT_TYPES, events, gameDayMarker } from '../../data/event
 import { CompletionMark, EventBlock, GameweekBands, GW_BG } from '../calendar/views'
 import { ChipList, SectionLabel, SettingsCard } from '../admin/parts'
 import { LABEL_COLORS } from '../../data/admin'
+import { CUSTOM_CONTROLS, VERDICTS, customSummary } from '../../data/custom'
 
-const TABS = ['Foundations', 'Inputs', 'Data display', 'Navigation', 'Feedback', 'iP components']
+const TABS = ['Foundations', 'Inputs', 'Data display', 'Navigation', 'Feedback', 'iP components', 'Custom controls']
 
 /** One documented entry. `replaces` names the legacy component it retires. */
 function Item({ name, replaces, sites, note, children }) {
@@ -402,6 +403,77 @@ export default function ComponentLibrary() {
             </Item>
           </>
         )}
+
+        {/* ------------------------------------------- Custom controls */}
+        {tab === 6 && (() => {
+          const counts = customSummary()
+          const groups = [...new Set(CUSTOM_CONTROLS.map(c => c.group))]
+          return (
+            <>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2, maxWidth: '78ch' }}>
+                Every control here that is <strong>not</strong> a plain MUI component, with an honest verdict on
+                whether it should exist. The <em>iP components</em> tab is the showcase; this is the audit. Anything
+                marked Merge, Replace or Drop is work to remove, not work to keep.
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+                {Object.entries(VERDICTS).map(([k, v]) => (
+                  <Chip key={k} label={`${v.label}: ${counts[k] || 0}`} color={v.tone}
+                    variant={k === 'keep' ? 'filled' : 'outlined'} size="small" />
+                ))}
+                <Chip size="small" variant="outlined" label={`${CUSTOM_CONTROLS.length} total`} />
+              </Box>
+
+              {groups.map(g => (
+                <Paper key={g} variant="outlined" sx={{ borderColor: colors.neutral_300, mb: 2.5 }}>
+                  <Box sx={{ px: 2.5, py: 1.5, borderBottom: `1px solid ${colors.neutral_200}` }}>
+                    <Typography variant="subtitle2">{g}</Typography>
+                  </Box>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ width: '26%' }}>Control</TableCell>
+                        <TableCell sx={{ width: '20%' }}>Built from</TableCell>
+                        <TableCell>Why it exists</TableCell>
+                        <TableCell sx={{ width: 150 }}>Verdict</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {CUSTOM_CONTROLS.filter(c => c.group === g).map(c => (
+                        <TableRow key={c.name}>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700 }}>{c.name}</TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>{c.builtFrom}</TableCell>
+                          <TableCell>
+                            {c.why}
+                            {c.mergeWith && (
+                              <Typography variant="caption" sx={{ display: 'block', color: colors.orange_300, mt: 0.5 }}>
+                                Merge into {c.mergeWith}
+                              </Typography>
+                            )}
+                            {c.replaceWith && (
+                              <Typography variant="caption" sx={{ display: 'block', color: colors.red_200, mt: 0.5 }}>
+                                {c.replaceWith}
+                              </Typography>
+                            )}
+                            {c.note && (
+                              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+                                {c.note}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Chip size="small" label={VERDICTS[c.verdict].label} color={VERDICTS[c.verdict].tone}
+                              variant={c.verdict === 'keep' ? 'filled' : 'outlined'} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              ))}
+            </>
+          )
+        })()}
       </Box>
     </AppShell>
   )

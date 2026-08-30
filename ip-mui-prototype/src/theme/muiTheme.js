@@ -61,14 +61,16 @@ export const theme = createTheme({
     h2: { fontSize: 60 },
     h3: { fontSize: 48 },
     h4: { fontSize: 34 },
-    h5: { fontSize: 24 },
-    h6: { fontSize: 20 },
-    subtitle1: { fontSize: 16 },
-    subtitle2: { fontSize: 14 },
+    h5: { fontSize: 24, fontWeight: 700 },
+    h6: { fontSize: 20, fontWeight: 700 },
+    // subtitle1 is the card title across settings and detail pages; subtitle2 the
+    // sub-heading inside one. Weights live here so pages never restate them.
+    subtitle1: { fontSize: 16, fontWeight: 700 },
+    subtitle2: { fontSize: 14, fontWeight: 700 },
     body1: { fontSize: 16 },
     body2: { fontSize: 14 },
     caption: { fontSize: 12 },
-    overline: { fontSize: 12 },
+    overline: { fontSize: 12, fontWeight: 700, letterSpacing: '0.08em' },
     button: { textTransform: 'none' },
   },
 
@@ -110,6 +112,13 @@ export const theme = createTheme({
           '&:hover:not(.Mui-disabled, .Mui-error)::before': { borderBottom: `1px solid ${colors.grey_200}` },
           '&::after': { borderBottom: `2px solid ${colors.grey_200}` },
         },
+      },
+    },
+
+    MuiTableCell: {
+      styleOverrides: {
+        root: { fontSize: 14, borderColor: colors.neutral_200 },
+        head: { fontSize: 12, fontWeight: 700, color: colors.grey_150, borderColor: colors.neutral_300 },
       },
     },
 

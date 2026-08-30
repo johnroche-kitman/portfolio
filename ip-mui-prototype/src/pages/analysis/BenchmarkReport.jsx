@@ -8,7 +8,7 @@ import BarChartIcon from '@mui/icons-material/BarChartOutlined'
 import ErrorIcon from '@mui/icons-material/ErrorOutline'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
-import MultiSelectField, { SearchSelectField } from '../../components/MultiSelectField'
+import { MultiSelect, SearchSelect } from '../../components/form'
 import {
   AGE_GROUPS, BENCHMARK_ATHLETES, BENCHMARK_POSITIONS, BENCHMARK_TESTS, MATURATION_STATUSES,
   SEASONS, TESTING_WINDOWS, TEST_META, athletesFor, distributionFor,
@@ -194,12 +194,12 @@ export default function BenchmarkReport() {
             <Box>
               <SectionTitle>Select tests and time range</SectionTitle>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2.5 }}>
-                <MultiSelectField label="Benchmark test(s)" options={BENCHMARK_TESTS}
-                  value={tests} onChange={setTests} search selectAll />
-                <MultiSelectField label="Seasons (Max: 4)" options={SEASONS}
-                  value={seasons} onChange={setSeasons} search max={4} />
-                <MultiSelectField label="Testing window(s)" options={TESTING_WINDOWS}
-                  value={windows} onChange={setWindows} selectAll />
+                <MultiSelect label="Benchmark test(s)" options={BENCHMARK_TESTS}
+                  value={tests} onChange={setTests}  selectAll />
+                <MultiSelect label="Seasons (Max: 4)" options={SEASONS}
+                  value={seasons} onChange={setSeasons} max={4} />
+                <MultiSelect label="Testing window(s)" options={TESTING_WINDOWS}
+                  value={windows} onChange={setWindows}  selectAll />
               </Box>
             </Box>
 
@@ -220,7 +220,7 @@ export default function BenchmarkReport() {
           <SectionTitle>Select group demographics</SectionTitle>
           <Box sx={FIELD_GRID}>
             <Box>
-              <SearchSelectField label="Age group" options={AGE_GROUPS} value={ageGroup} onChange={setAgeGroup}
+              <SearchSelect label="Age group" options={AGE_GROUPS} value={ageGroup} onChange={setAgeGroup}
                 error={showAgeError} />
               {showAgeError && (
                 <Box sx={{ display: 'flex', gap: 0.75, mt: 0.75 }}>
@@ -233,10 +233,10 @@ export default function BenchmarkReport() {
               )}
             </Box>
             <BioBandField value={bioBand} onChange={setBioBand} />
-            <MultiSelectField label="Maturation status" options={MATURATION_STATUSES}
-              value={maturation} onChange={setMaturation} selectAll />
-            <MultiSelectField label="Position(s)" options={BENCHMARK_POSITIONS}
-              value={positions} onChange={setPositions} clear={false} />
+            <MultiSelect label="Maturation status" options={MATURATION_STATUSES}
+              value={maturation} onChange={setMaturation}  selectAll />
+            <MultiSelect label="Position(s)" options={BENCHMARK_POSITIONS}
+              value={positions} onChange={setPositions} />
           </Box>
 
           <Divider sx={{ my: 3 }} />
@@ -244,12 +244,12 @@ export default function BenchmarkReport() {
           {/* ------------------------ individual athlete comparison ------------------------ */}
           <SectionTitle>Compare against my individual athletes</SectionTitle>
           <Box sx={FIELD_GRID}>
-            <MultiSelectField label="Athlete(s)" options={BENCHMARK_ATHLETES}
-              value={athletes} onChange={setAthletes} search selectAll />
-            <MultiSelectField label="Seasons (Max: 4)" options={SEASONS}
-              value={athleteSeasons} onChange={setAthleteSeasons} search max={4} />
-            <MultiSelectField label="Testing window(s)" options={TESTING_WINDOWS}
-              value={athleteWindows} onChange={setAthleteWindows} selectAll />
+            <MultiSelect label="Athlete(s)" options={BENCHMARK_ATHLETES}
+              value={athletes} onChange={setAthletes}  selectAll />
+            <MultiSelect label="Seasons (Max: 4)" options={SEASONS}
+              value={athleteSeasons} onChange={setAthleteSeasons} max={4} />
+            <MultiSelect label="Testing window(s)" options={TESTING_WINDOWS}
+              value={athleteWindows} onChange={setAthleteWindows}  selectAll />
             <Link component="button" underline="hover" sx={{ fontSize: 14, justifySelf: 'start', alignSelf: 'center' }}
               onClick={() => { setAthletes([]); setAthleteSeasons([SEASONS[0]]); setAthleteWindows([...TESTING_WINDOWS]) }}>
               Clear

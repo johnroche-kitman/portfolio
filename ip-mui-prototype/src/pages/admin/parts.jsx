@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Chip, Divider, Paper, Skeleton, Typography } from '@mui/material'
+import {
+  Box, Button, Chip, Divider, IconButton, Paper, Skeleton, ToggleButton, ToggleButtonGroup, Typography,
+} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
 import { DataGrid } from '@mui/x-data-grid'
 import colors from '../../theme/tokens'
 
@@ -17,20 +20,26 @@ export const PageHeader = ({ title, info, actions, children }) => (
   </Box>
 )
 
-/** Grey caption above a dashed rule — the section divider used across settings. */
+/**
+ * Section divider. MUI's own Divider carries the label, rather than a caption
+ * stacked over a hand-drawn dashed rule.
+ */
 export const SectionLabel = ({ children }) => (
-  <Box sx={{ mt: 4, mb: 2 }}>
-    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{children}</Typography>
-    <Divider sx={{ mt: 1, borderStyle: 'dashed', borderColor: colors.neutral_400 }} />
-  </Box>
+  <Divider textAlign="left" sx={{ mt: 4, mb: 2 }}>
+    <Typography variant="overline" sx={{ color: 'text.secondary' }}>{children}</Typography>
+  </Divider>
 )
 
-/** White card with a bold title and an optional action cluster on the right. */
+/**
+ * The one card used by settings, the injury record and every detail page.
+ * Card-level actions are always secondary — the page's single primary lives in
+ * its header or its Save bar, never inside a card.
+ */
 export const SettingsCard = ({ title, action, description, children, sx }) => (
   <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 3, mb: 2.5, ...sx }}>
     {(title || action) && (
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: description ? 0.5 : 2 }}>
-        <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700 }}>{title}</Typography>
+        <Typography variant="subtitle1">{title}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>{action}</Box>
       </Box>
     )}
@@ -39,6 +48,50 @@ export const SettingsCard = ({ title, action, description, children, sx }) => (
     )}
     {children}
   </Paper>
+)
+
+/** Card-level action. Secondary by default, `low` for resets and undo-like actions. */
+export const CardAction = ({ low, ...props }) => (
+  <Button size="small" variant={low ? 'text' : 'outlined'} {...props} />
+)
+
+/** Label: value pairs on a grid — used by settings and the injury record alike. */
+export const FieldGrid = ({ fields, columns = 3 }) => (
+  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: `repeat(${columns}, 1fr)` }, gap: 2 }}>
+    {fields.map(([label, value]) => (
+      <Typography key={label} variant="body2">
+        <Box component="span" sx={{ fontWeight: 700 }}>{label}: </Box>
+        <Box component="span" sx={{ color: 'text.secondary' }}>{value}</Box>
+      </Typography>
+    ))}
+  </Box>
+)
+
+/**
+ * Colour swatch picker. ToggleButtonGroup gives keyboard access, focus rings and
+ * a selected state — all of which a div with role="button" has to fake badly.
+ */
+export const SwatchPicker = ({ value, onChange, options, label = 'Colour', size = 44, showAdd, onAdd }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+    <ToggleButtonGroup exclusive value={value} onChange={(_, v) => v && onChange(v)} aria-label={label}
+      sx={{ flexWrap: 'wrap', '& .MuiToggleButton-root': { p: 0, border: 0, borderRadius: 0 } }}>
+      {options.map(c => (
+        <ToggleButton key={c} value={c} aria-label={`${label} ${c}`}
+          sx={{ width: size, height: size, bgcolor: c,
+            '&:hover': { bgcolor: c, filter: 'brightness(0.92)' },
+            '&.Mui-selected': { bgcolor: c, outline: `2px solid ${colors.grey_200}`, outlineOffset: -3 },
+            '&.Mui-selected:hover': { bgcolor: c } }}>
+          <Typography variant="caption" sx={{ color: colors.white, fontWeight: 700 }}>Aa</Typography>
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+    {showAdd && (
+      <IconButton onClick={onAdd} aria-label={`Add ${label.toLowerCase()}`}
+        sx={{ width: size, height: size, borderRadius: 0, border: `1px solid ${colors.neutral_400}` }}>
+        <AddIcon fontSize="small" />
+      </IconButton>
+    )}
+  </Box>
 )
 
 /** Squad / label chips with the live list's "+N" overflow. */
