@@ -49,8 +49,8 @@ export const colors = {
   // Yellows
   yellow_100: '#ffab00',
 
-  // Backgrounds
-  background: '#fafafa',
+  // Backgrounds — the page sits on white, not a grey wash.
+  background: '#ffffff',
   s18: '#3f4448',
   p04: '#bec3c7',
 };

@@ -18,6 +18,8 @@ import FilterBar from '../../components/FilterBar'
 import { athletes, AVAILABILITY, positions } from '../../data/athletes'
 import { TYPE_COLOR, EVENT_TYPES, events, gameDayMarker } from '../../data/events'
 import { CompletionMark, EventBlock, GameweekBands, GW_BG } from '../calendar/views'
+import { ChipList, SectionLabel, SettingsCard } from '../admin/parts'
+import { LABEL_COLORS } from '../../data/admin'
 
 const TABS = ['Foundations', 'Inputs', 'Data display', 'Navigation', 'Feedback', 'iP components']
 
@@ -132,7 +134,7 @@ export default function ComponentLibrary() {
               </Box>
             </Item>
             <Item name="ButtonGroup"><ButtonGroup><Button>Day</Button><Button>Week</Button><Button>Month</Button></ButtonGroup></Item>
-            <Item name="TextField" replaces="inputText" note="Filled variant, size small, no underline — matches rootTheme.">
+            <Item name="TextField" replaces="inputText" note="Filled variant, size small, with the underline kept — measured off the live app: 4px 4px 0 0 radius, so only the top corners round, a 1px rule at rest and a 2px primary rule on focus. Every select and text field in iP reads this way.">
               <TextField label="Label" defaultValue="Value" />
               <TextField label="With helper" helperText="Helper text" />
               <TextField label="Error" error helperText="Something is wrong" />
@@ -321,6 +323,38 @@ export default function ComponentLibrary() {
             <Item name="<AddPanel />" note="One drawer shell behind all eleven Medical creation panels, with the four-step injury wizard.">
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 See Medical → Add. Event authoring deliberately does not use this — those moved to a full page.
+              </Typography>
+            </Item>
+            <Item name="<AdminGrid />" note="DataGrid resolves flex column widths against its container on first paint. Every administration table sits in a flex chain with minWidth: 0, so that measurement can be 0 — the body recovers, the header widths stay stuck. This measures first and mounts the grid once there is a width.">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Used by Manage Athletes, Manage Staff Users, Labels, Athlete Groups, Imports, Exports,
+                Manage Games and Stock Management.
+              </Typography>
+            </Item>
+            <Item name="<PageHeader /> · <SectionLabel /> · <SettingsCard />" note="The three shapes every administration page is built from: a title with its action cluster, a grey caption over a dashed rule, and a white card with a bold title and right-hand actions.">
+              <Box sx={{ width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Manage Athletes</Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button size="small">New Athlete</Button>
+                    <Button size="small" variant="outlined">Upload Athletes</Button>
+                  </Box>
+                </Box>
+                <SectionLabel>Naming</SectionLabel>
+                <SettingsCard title="Athlete Name" sx={{ mb: 0 }}>
+                  <TextField select fullWidth label="Display name" defaultValue="Last name, First name" sx={{ maxWidth: 320 }}>
+                    <MenuItem value="Last name, First name">Last name, First name</MenuItem>
+                  </TextField>
+                </SettingsCard>
+              </Box>
+            </Item>
+            <Item name="<ChipList />" note="Squad and label chips with the live list's overflow count.">
+              <ChipList values={['U16 (Test Kitman FC) (Primary)', 'U15', 'U21']} />
+              <ChipList values={['Central Players', '2002', '2003']} color={v => LABEL_COLORS[v] || colors.grey_150} />
+            </Item>
+            <Item name="Inline card edit" note="Settings cards swap Edit/Archive for Save/Cancel and turn their rows into fields in place, rather than opening a separate page. Event Types and Locations both work this way.">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                See Administration → Organisation settings → Calendar → Edit.
               </Typography>
             </Item>
             <Item name="<EventBlock />" note="Calendar event pill: type-coloured left edge over a tint of the same colour, with the completion mark for sessions and games. MUI ships no scheduling grid, so the time grid these sit in is a composition of Box on CSS grid.">

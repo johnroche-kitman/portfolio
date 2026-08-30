@@ -96,15 +96,19 @@ export const theme = createTheme({
     MuiAvatar: { defaultProps: { variant: 'circular' } },
     MuiBadge: { defaultProps: { color: 'default', variant: 'standard' } },
 
-    // Filled inputs in the real app sit on neutral_200 with no underline.
+    // Measured off the live app: filled inputs keep the underline, so the top two
+    // corners are rounded and the bottom edge is a rule — 1px at rest, 2px in
+    // primary on focus. Every select and text field in iP reads this way.
     MuiFilledInput: {
-      defaultProps: { disableUnderline: true },
       styleOverrides: {
         root: {
           backgroundColor: colors.neutral_200,
-          borderRadius: 4,
+          borderRadius: '4px 4px 0 0',
           '&:hover': { backgroundColor: colors.neutral_300 },
           '&.Mui-focused': { backgroundColor: colors.neutral_200 },
+          '&::before': { borderBottom: `1px solid ${colors.grey_150}` },
+          '&:hover:not(.Mui-disabled, .Mui-error)::before': { borderBottom: `1px solid ${colors.grey_200}` },
+          '&::after': { borderBottom: `2px solid ${colors.grey_200}` },
         },
       },
     },
