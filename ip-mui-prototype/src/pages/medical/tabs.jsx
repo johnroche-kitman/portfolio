@@ -9,6 +9,12 @@ import {
   medicalFlags, medicalForms, medicalMedications, medicalModifications, medicalNotes, medicalTreatments,
 } from '../../data/medical'
 import { squads } from '../../data/athletes'
+import { useOpenPanel } from './panels'
+
+const AllergyAction = () => {
+  const open = useOpenPanel()
+  return <Button variant="outlined" onClick={() => open('Allergy')}>Add allergy</Button>
+}
 
 /**
  * One definition per record type, reused wherever that record appears: on the
@@ -28,7 +34,7 @@ export function NotesTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Notes" addLabel="Add note"
+      title="Notes" addLabel="Add note" addPanel="Note"
       actions={<Button variant="outlined">View archive</Button>}
       filters={<>
         <SearchField value={q} onChange={setQ} />
@@ -59,7 +65,7 @@ export function ModificationsTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Modifications" addLabel="Add modification"
+      title="Modifications" addLabel="Add modification" addPanel="Modification"
       actions={<Button variant="outlined">View archive</Button>}
       filters={<>
         <SearchField value={q} onChange={setQ} />
@@ -88,7 +94,7 @@ export function TreatmentsTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Treatments" addLabel="Add treatment"
+      title="Treatments" addLabel="Add treatment" addPanel="Treatment"
       actions={<><Button variant="outlined">View archive</Button><Button variant="outlined">Export billing</Button></>}
       filters={<>
         <SearchField value={q} onChange={setQ} />
@@ -118,7 +124,7 @@ export function DiagnosticsTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Diagnostics" addLabel="Add diagnostic"
+      title="Diagnostics" addLabel="Add diagnostic" addPanel="Diagnostic"
       actions={<Button variant="outlined">Export billing</Button>}
       filters={<>
         <SearchField value={q} onChange={setQ} />
@@ -148,7 +154,7 @@ export function MedicationsTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Medications" addLabel="Add medication"
+      title="Medications" addLabel="Add medication" addPanel="Medication"
       filters={<>
         <SearchField value={q} onChange={setQ} />
         <SelectField label="Route" options={MEDICATION_ROUTES} value={route} onChange={setRoute} />
@@ -180,7 +186,7 @@ export function DocumentsTab({ scope = 'team' }) {
 
   return (
     <ListPanel
-      title="Documents" addLabel="Add document"
+      title="Documents" addLabel="Add document" addPanel="File"
       actions={<>
         <Button variant="outlined">Scan</Button>
         <Button variant="outlined" disabled>Export</Button>
@@ -239,8 +245,8 @@ export function MedicalFlagsTab() {
 
   return (
     <ListPanel
-      title="Medical Flags" addLabel="Add medical alert"
-      actions={<Button variant="outlined">Add allergy</Button>}
+      title="Medical Flags" addLabel="Add medical alert" addPanel="Medical Alert"
+      actions={<AllergyAction />}
       filters={<>
         <SearchField value={q} onChange={setQ} />
         <SelectField label="Roster" options={squads} value="" onChange={() => {}} width={200} />

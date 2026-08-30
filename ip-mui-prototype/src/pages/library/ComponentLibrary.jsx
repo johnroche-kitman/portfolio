@@ -14,7 +14,6 @@ import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import AthleteCell from '../../components/AthleteCell'
 import AvailabilityLabel from '../../components/AvailabilityLabel'
-import FilterBar from '../../components/FilterBar'
 import { athletes, AVAILABILITY, positions } from '../../data/athletes'
 import { TYPE_COLOR, EVENT_TYPES, events, gameDayMarker } from '../../data/events'
 import { CompletionMark, EventBlock, GameweekBands, GW_BG } from '../calendar/views'
@@ -309,11 +308,12 @@ export default function ComponentLibrary() {
               <AvailabilityLabel status={AVAILABILITY.UNAVAILABLE} days={1122} />
               <AvailabilityLabel status={AVAILABILITY.MODIFIED} days={947} />
             </Item>
-            <Item name="<FilterBar />" replaces="GenericActionBar / AthleteFilters"
-              note="Search plus N selects. The row above almost every list in the product.">
-              <Box sx={{ width: '100%' }}>
-                <FilterBar search={search} onSearch={setSearch}
-                  filters={[{ label: 'Position', value: positions[0], onChange: () => {}, options: positions }]} />
+            <Item name="<FilterRow /> + form kit" note="Search plus N selects — the row above almost every list. Was a bespoke <FilterBar />; that is now deleted in favour of FilterRow holding fields from components/form.jsx.">
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', width: '100%' }}>
+                <TextField label="Search" value={search} onChange={e => setSearch(e.target.value)} sx={{ width: 220 }} />
+                <TextField select label="Position" defaultValue={positions[0]} sx={{ width: 200 }}>
+                  {positions.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                </TextField>
               </Box>
             </Item>
             <Item name="<MainNav />" note="Left rail with expand/collapse and secondary flyouts. Out of redesign scope, reproduced for context.">

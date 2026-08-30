@@ -6,7 +6,8 @@ import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import { AdminGrid, FilterRow } from '../admin/parts'
 import {
-  ACTIONS_COL, AthleteNameCell, AvailabilityCell, IssuesCell, ListPanel, NoteCell, SearchField, SelectField,
+  ACTIONS_COL, AthleteNameCell, AvailabilityCell, IssuesCell, ListPanel, NoteCell, PanelProvider,
+  SearchField, SelectField,
 } from './panels'
 import {
   DiagnosticsTab, DocumentsTab, FormsTab, MedicalFlagsTab, ModificationsTab, NotesTab, TreatmentsTab,
@@ -98,6 +99,7 @@ export default function MedicalRosters() {
       </Box>
       <Divider />
 
+      <PanelProvider value={setPanel}>
       <Box sx={{ p: 3 }}>
         {tab === 0 && <TeamTab onAdd={setPanel} />}
         {tab === 1 && <DailyStatusTab />}
@@ -111,6 +113,7 @@ export default function MedicalRosters() {
         {tab === 9 && <TeamTab inactive title="Inactive Athletes" onAdd={setPanel} />}
         {tab === 10 && <DocumentsTab />}
       </Box>
+      </PanelProvider>
 
       <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
         onClose={() => setPanel(null)} scope="team" />

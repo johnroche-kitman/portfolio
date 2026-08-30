@@ -110,13 +110,36 @@ export const ChipList = ({ values = [], max = 1, color }) => {
   )
 }
 
-export const StatusChip = ({ value }) => (
-  <Chip size="small" label={value}
-    sx={{
-      height: 22, fontSize: 11, fontWeight: 600, color: colors.white,
-      bgcolor: value === 'Completed' ? colors.green_200 : value === 'Failed' ? colors.red_200 : colors.grey_150,
-    }} />
-)
+/**
+ * The one state chip. `tone` is derived from the value unless given, so a
+ * severity, an import status and an availability all read the same way.
+ */
+const TONES = {
+  positive: { bg: colors.green_200, fg: colors.white, soft: `${colors.green_200}22`, softFg: colors.green_300 },
+  negative: { bg: colors.red_200, fg: colors.white, soft: `${colors.red_200}22`, softFg: colors.red_200 },
+  caution: { bg: colors.orange_200, fg: colors.white, soft: `${colors.orange_200}22`, softFg: colors.orange_300 },
+  neutral: { bg: colors.neutral_300, fg: colors.grey_200, soft: colors.neutral_200, softFg: colors.grey_200 },
+}
+
+const toneFor = value => {
+  const v = String(value)
+  if (/^(Completed|Complete|Available|Resolved)/.test(v)) return 'positive'
+  if (/^(Failed|Unavailable|Severe|Overdue)/.test(v)) return 'negative'
+  if (/^(Moderate|Due|In progress|Pending|Mild)/.test(v)) return 'caution'
+  return 'neutral'
+}
+
+export const StateChip = ({ value, tone, soft = false }) => {
+  const t = TONES[tone || toneFor(value)]
+  return (
+    <Chip size="small" label={value}
+      sx={{ height: 22, fontSize: 11, fontWeight: 600,
+        bgcolor: soft ? t.soft : t.bg, color: soft ? t.softFg : t.fg }} />
+  )
+}
+
+/** Import and export status. Kept as a name because the tables read better for it. */
+export const StatusChip = StateChip
 
 /** The filter row that sits above every administration table. */
 export const FilterRow = ({ children }) => (

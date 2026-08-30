@@ -9,7 +9,7 @@ import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import AddPanel from '../../components/AddPanel'
 import { PANELS } from './AddPanels'
-import { ACTIONS_COL, DetailCard, FieldGrid, ListPanel, SearchField, SelectField } from './panels'
+import { ACTIONS_COL, DetailCard, FieldGrid, ListPanel, PanelProvider, SearchField, SelectField } from './panels'
 import { CardAction } from '../admin/parts'
 import {
   DiagnosticsTab, DocumentsTab, MedicationsTab, ModificationsTab, NotesTab, TreatmentsTab,
@@ -80,7 +80,7 @@ function RehabTab() {
   const rows = REHAB_ROWS.filter(r => r.session.toLowerCase().includes(q.toLowerCase()))
   return (
     <ListPanel
-      title="Rehab" addLabel="Add rehab session"
+      title="Rehab" addLabel="Add rehab session" addPanel="Rehab session"
       filters={<>
         <SearchField value={q} onChange={setQ} />
         <SelectField label="Phase" options={['Phase 1 — Protect', 'Phase 2 — Restore', 'Phase 3 — Return']}
@@ -140,6 +140,7 @@ export default function InjuryRecord() {
       </Box>
       <Divider />
 
+      <PanelProvider value={setPanel}>
       <Box sx={{ p: 3 }}>
         {tab === 0 && <Overview injury={injury} />}
         {tab === 1 && <RehabTab />}
@@ -150,6 +151,7 @@ export default function InjuryRecord() {
         {tab === 6 && <MedicationsTab scope="injury" />}
         {tab === 7 && <DocumentsTab scope="injury" />}
       </Box>
+      </PanelProvider>
 
       <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
         onClose={() => setPanel(null)} scope="injury" />

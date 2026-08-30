@@ -18,8 +18,13 @@ const initials = name =>
     .join('')
     .toUpperCase()
 
-/** Avatar with availability dot, name and position. Repeats across most list views. */
-export default function AthleteCell({ athlete, onClick }) {
+/**
+ * Avatar with availability dot, name and position. The one athlete cell —
+ * Medical passes its own status vocabulary through `status`, which is the only
+ * thing that used to justify a second component.
+ */
+export default function AthleteCell({ athlete, onClick, status, size = 34 }) {
+  const dot = DOT[status || athlete.availability] || colors.grey_150
   return (
     <Box
       onClick={onClick}
@@ -32,7 +37,7 @@ export default function AthleteCell({ athlete, onClick }) {
       }}
     >
       <Box sx={{ position: 'relative', flexShrink: 0 }}>
-        <Avatar sx={{ width: 34, height: 34, bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 13 }}>
+        <Avatar sx={{ width: size, height: size, bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 13 }}>
           {initials(athlete.name)}
         </Avatar>
         <Box
@@ -44,7 +49,7 @@ export default function AthleteCell({ athlete, onClick }) {
             height: 10,
             borderRadius: '50%',
             border: `2px solid ${colors.white}`,
-            bgcolor: DOT[athlete.availability] || colors.grey_150,
+            bgcolor: dot,
           }}
         />
       </Box>

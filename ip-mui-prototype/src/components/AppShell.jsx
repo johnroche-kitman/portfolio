@@ -10,9 +10,11 @@ import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArro
 import colors from '../theme/tokens'
 import MainNav, { RAIL_COLLAPSED } from './MainNav'
 import { athletes, squad, squads } from '../data/athletes'
+import { EVENT_LIST_TYPES, eventListItems } from '../data/session'
 import AthleteCell from './AthleteCell'
 
 export default function AppShell({ title, children, fullHeight = false, listLabel = 'Player list' }) {
+  const eventList = listLabel === 'Event list'
   const [playerListOpen, setPlayerListOpen] = useState(false)
   const [navExpanded, setNavExpanded] = useState(false)
   const [currentSquad, setCurrentSquad] = useState(squad)
@@ -62,31 +64,56 @@ export default function AppShell({ title, children, fullHeight = false, listLabe
         }}>{children}</Box>
       </Box>
 
-      {/* Player list — global drawer, 0.0% MUI in the live app */}
+      {/* Two different panels behind the same slot: Player list on most pages,
+          Select event in the planning hub. */}
       <Drawer anchor="left" open={playerListOpen} onClose={() => setPlayerListOpen(false)}
-        PaperProps={{ sx: { width: 320, ml: `${RAIL_COLLAPSED}px` } }}>
+        PaperProps={{ sx: { width: eventList ? 360 : 320, ml: `${RAIL_COLLAPSED}px` } }}>
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 600 }}>Select player</Typography>
+          <Typography variant="h6">{eventList ? 'Select event' : 'Select player'}</Typography>
           <IconButton size="small" onClick={() => setPlayerListOpen(false)} aria-label="Close player list">
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <Box sx={{ px: 2, pb: 1.5 }}>
-          <TextField fullWidth placeholder="Filter" value={query} onChange={e => setQuery(e.target.value)} />
-        </Box>
-        <Divider />
-        <Typography variant="caption" sx={{ px: 2, py: 1, color: 'text.secondary' }}>{currentSquad}</Typography>
-        <List sx={{ pt: 0, overflowY: 'auto' }}>
-          {shown.map(a => (
-            <ListItemButton key={a.id} onClick={() => { setPlayerListOpen(false); navigate(`/medical/athletes/${a.id}`) }}>
-              <ListItemText primary={<AthleteCell athlete={a} />} secondary={String(a.id)}
-                secondaryTypographyProps={{ variant: 'caption', sx: { pl: 6.5 } }} />
-            </ListItemButton>
-          ))}
-          {!shown.length && (
-            <Typography variant="body2" sx={{ px: 2, py: 3, color: 'text.secondary' }}>No players match “{query}”.</Typography>
-          )}
-        </List>
+        {eventList ? (
+          <>
+            <Box sx={{ px: 2, pb: 1.5, display: 'flex', gap: 1.5 }}>
+              <TextField select label="Type" defaultValue="Events" sx={{ width: 140 }}>
+                <MenuItem value="Events">Events</MenuItem>
+                {EVENT_LIST_TYPES.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+              </TextField>
+              <TextField label="Date range" defaultValue="15/05/2026 – 14/07/2026" sx={{ flex: 1 }} />
+            </Box>
+            <Divider />
+            <List sx={{ pt: 0, overflowY: 'auto' }}>
+              {eventListItems.map(e => (
+                <ListItemButton key={e.id} onClick={() => setPlayerListOpen(false)}
+                  sx={{ display: 'block', borderBottom: `1px solid ${colors.neutral_200}` }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{e.name}</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{e.when}</Typography>
+                </ListItemButton>
+              ))}
+            </List>
+          </>
+        ) : (
+          <>
+            <Box sx={{ px: 2, pb: 1.5 }}>
+              <TextField fullWidth placeholder="Filter" value={query} onChange={e => setQuery(e.target.value)} />
+            </Box>
+            <Divider />
+            <Typography variant="caption" sx={{ px: 2, py: 1, color: 'text.secondary' }}>{currentSquad}</Typography>
+            <List sx={{ pt: 0, overflowY: 'auto' }}>
+              {shown.map(a => (
+                <ListItemButton key={a.id} onClick={() => { setPlayerListOpen(false); navigate(`/medical/athletes/${a.id}`) }}>
+                  <ListItemText primary={<AthleteCell athlete={a} />} secondary={String(a.id)}
+                    secondaryTypographyProps={{ variant: 'caption', sx: { pl: 6.5 } }} />
+                </ListItemButton>
+              ))}
+              {!shown.length && (
+                <Typography variant="body2" sx={{ px: 2, py: 3, color: 'text.secondary' }}>No players match “{query}”.</Typography>
+              )}
+            </List>
+          </>
+        )}
       </Drawer>
     </Box>
   )

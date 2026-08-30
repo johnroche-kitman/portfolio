@@ -5,6 +5,7 @@ import InjuryRecord from './pages/medical/InjuryRecord'
 import CalendarPage from './pages/calendar/CalendarPage'
 import EventEditor from './pages/events/EventEditor'
 import SessionDetail from './pages/events/SessionDetail'
+import SessionImporter from './pages/events/SessionImporter'
 import ComponentLibrary from './pages/library/ComponentLibrary'
 import BenchmarkReport from './pages/analysis/BenchmarkReport'
 import ManageAthletes from './pages/admin/ManageAthletes'
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/events/new" element={<EventEditor />} />
       <Route path="/events/:id" element={<EventEditor />} />
       <Route path="/sessions/:id" element={<SessionDetail />} />
+      <Route path="/mass_upload/event_data" element={<SessionImporter />} />
       <Route path="/medical/rosters" element={<MedicalRosters />} />
       <Route path="/medical/athletes/:id" element={<MedicalAthlete />} />
       <Route path="/medical/athletes/:athleteId/illnesses/:id" element={<InjuryRecord />} />

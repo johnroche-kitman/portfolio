@@ -5,6 +5,7 @@
  * entries have earned their place. `verdict` is the honest call:
  *
  *  keep    — no MUI equivalent, or a genuine product concept worth owning
+ *  done    — was on this list and has since been merged away or deleted
  *  merge   — duplicates something else here; the two should become one
  *  replace — MUI already does this and we should be using it
  *  drop    — thin enough that it adds a name without adding anything else
@@ -12,6 +13,7 @@
 
 export const VERDICTS = {
   keep: { label: 'Keep', tone: 'success' },
+  done: { label: 'Removed', tone: 'info' },
   merge: { label: 'Merge', tone: 'warning' },
   replace: { label: 'Replace with MUI', tone: 'error' },
   drop: { label: 'Drop', tone: 'default' },
@@ -31,8 +33,8 @@ export const CUSTOM_CONTROLS = [
     why: 'Carries the explicit fullWidth that TextField otherwise overrides, and maps a plain string list.',
     verdict: 'keep' },
   { group: 'Form kit', name: '<TextInput />', builtFrom: 'TextField',
-    why: 'Only adds fullWidth. A name for almost nothing — use TextField directly.',
-    verdict: 'drop' },
+    why: 'Carries the same explicit fullWidth as SelectField, for the same reason. Listed as a drop on the first pass; that was wrong, it earns its place.',
+    verdict: 'keep' },
   { group: 'Form kit', name: '<DateInput />', builtFrom: 'TextField type=date',
     why: 'Adds the shrink label every date field needs.',
     verdict: 'replace', replaceWith: '@mui/x-date-pickers DatePicker, once that dependency is in.' },
@@ -87,8 +89,8 @@ export const CUSTOM_CONTROLS = [
     why: 'The row above every table.',
     verdict: 'keep' },
   { group: 'Page parts', name: '<FilterBar />', builtFrom: 'Box, TextField',
-    why: 'Search plus N selects. Predates FilterRow and the form kit and now duplicates both.',
-    verdict: 'merge', mergeWith: '<FilterRow /> + the form kit' },
+    why: 'Search plus N selects. Duplicated FilterRow and the form kit.',
+    verdict: 'done', note: 'Deleted. Pages use FilterRow with fields from the form kit.' },
   { group: 'Page parts', name: '<AdminGrid />', builtFrom: 'DataGrid + ResizeObserver',
     why: 'Mounts DataGrid only once its container has a width, or flex column headers stick at 0px.',
     verdict: 'keep' },
@@ -103,19 +105,18 @@ export const CUSTOM_CONTROLS = [
   { group: 'Cells', name: '<AthleteCell />', builtFrom: 'Avatar, Typography',
     why: 'Avatar, name, position. Repeats across nearly every list in the product.',
     verdict: 'keep' },
-  { group: 'Cells', name: '<AthleteNameCell />', builtFrom: 'Avatar, Typography',
-    why: 'Does the same job as AthleteCell with a status dot. Two components, one concept.',
-    verdict: 'merge', mergeWith: '<AthleteCell />' },
+  { group: 'Cells', name: '<AthleteNameCell />', builtFrom: 'AthleteCell',
+    why: 'Did the same job as AthleteCell with a different status vocabulary.',
+    verdict: 'done', note: 'Now a two-line alias of AthleteCell, which took a status prop.' },
   { group: 'Cells', name: '<AvailabilityLabel />', builtFrom: 'Box, Typography',
     why: 'Dot, status, day count. The playbook already ships a version of this.',
     verdict: 'keep' },
-  { group: 'Cells', name: '<AvailabilityCell />', builtFrom: 'Box, Typography',
+  { group: 'Cells', name: '<AvailabilityCell />', builtFrom: 'AvailabilityLabel',
     why: 'Same thing again, for the medical roster.',
-    verdict: 'merge', mergeWith: '<AvailabilityLabel />' },
-  { group: 'Cells', name: '<StatusChip /> · <SeverityChip /> · <IssueStatusChip />',
-    builtFrom: 'Chip',
-    why: 'Three chips with three colour maps for one idea: a state, rendered in a tone.',
-    verdict: 'merge', mergeWith: 'one <StateChip tone="…" />' },
+    verdict: 'done', note: 'Now an alias of AvailabilityLabel, which already handled days and sublabel.' },
+  { group: 'Cells', name: '<StateChip />', builtFrom: 'Chip',
+    why: 'Was three chips with three colour maps for one idea: a state, rendered in a tone.',
+    verdict: 'done', note: 'StatusChip, SeverityChip and IssueStatusChip are now aliases of it.' },
   { group: 'Cells', name: '<ChipList />', builtFrom: 'Chip',
     why: 'Chips with the "+N" overflow used by squad and label columns.',
     verdict: 'keep' },

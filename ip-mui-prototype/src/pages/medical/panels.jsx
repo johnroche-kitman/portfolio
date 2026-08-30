@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 import {
   Avatar, Box, Button, Chip, IconButton, Menu, MenuItem, Paper, TextField, Typography,
 } from '@mui/material'
@@ -7,6 +7,16 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import colors from '../../theme/tokens'
 import { AdminGrid, FilterRow } from '../admin/parts'
 import { DateRangeInput, SearchInput } from '../../components/form'
+import AthleteCell from '../../components/AthleteCell'
+import AvailabilityLabel from '../../components/AvailabilityLabel'
+
+/**
+ * Medical tabs are nested three deep, so the Add buttons reach their panel
+ * through context rather than being threaded through every tab component.
+ */
+const PanelContext = createContext(() => {})
+export const PanelProvider = PanelContext.Provider
+export const useOpenPanel = () => useContext(PanelContext)
 
 /**
  * Every list tab in Medical is the same shape at all three levels — team,
@@ -14,8 +24,10 @@ import { DateRangeInput, SearchInput } from '../../components/form'
  * filter row, then a table. Building it once is the difference between eleven
  * near-identical pages and one component with eleven configurations.
  */
-export function ListPanel({ title, addLabel, addMenu, onAdd, onRowClick, actions, filters, columns, rows, rowHeight = 56, empty }) {
+export function ListPanel({ title, addLabel, addPanel, addMenu, onAdd, onRowClick, actions, filters, columns, rows, rowHeight = 56, empty }) {
   const [addEl, setAddEl] = useState(null)
+  const openPanel = useOpenPanel()
+  const open = onAdd || openPanel
 
   return (
     <Box>
@@ -28,11 +40,11 @@ export function ListPanel({ title, addLabel, addMenu, onAdd, onRowClick, actions
               <Menu anchorEl={addEl} open={!!addEl} onClose={() => setAddEl(null)}>
                 {addMenu.map(m => (
                   <MenuItem key={m} sx={{ minWidth: 200 }}
-                    onClick={() => { setAddEl(null); onAdd?.(m) }}>{m}</MenuItem>
+                    onClick={() => { setAddEl(null); open(m) }}>{m}</MenuItem>
                 ))}
               </Menu>
             </>
-            : <Button onClick={() => onAdd?.(addLabel)}>{addLabel}</Button>)}
+            : <Button onClick={() => open(addPanel || addLabel)}>{addLabel}</Button>)}
           {actions}
         </Box>
       </Box>
@@ -90,65 +102,24 @@ export const ACTIONS_COL = {
 }
 
 /* --------------------------------------------------------------- atoms */
-const SEVERITY_COLOR = {
-  Severe: colors.red_200, Moderate: colors.orange_200, Mild: colors.yellow_100, 'Not Specified': colors.neutral_300,
-}
-
-export const SeverityChip = ({ value }) => (
-  <Chip size="small" label={value}
-    sx={{
-      height: 22, fontSize: 11, fontWeight: 600,
-      bgcolor: SEVERITY_COLOR[value] || colors.neutral_300,
-      color: value === 'Not Specified' ? colors.grey_200 : colors.white,
-    }} />
-)
+// One chip for every state in Medical, tone chosen from the value. Was three
+// components with three colour maps for the same idea.
+export { StateChip as SeverityChip, StateChip as IssueStatusChip } from '../admin/parts'
 
 const STATUS_DOT = { Available: colors.green_200, Unavailable: colors.red_200, 'Injured/Ill': colors.orange_200 }
 
-/** Availability chip used on issue rows: red for time-loss, green for available. */
-export const IssueStatusChip = ({ value }) => (
-  <Chip size="small" label={value}
-    sx={{
-      height: 20, fontSize: 11,
-      bgcolor: value.startsWith('Unavailable') ? `${colors.red_200}22` : `${colors.green_200}22`,
-      color: value.startsWith('Unavailable') ? colors.red_200 : colors.green_300,
-    }} />
-)
-
+/* AthleteCell and AvailabilityLabel are the shared components — Medical adds no
+   behaviour of its own, only its status vocabulary. */
 export const AthleteNameCell = ({ name, position, status }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 1 }}>
-    <Box sx={{ position: 'relative' }}>
-      <Avatar sx={{ width: 32, height: 32, bgcolor: colors.neutral_300, color: colors.grey_150, fontSize: 12 }}>
-        {name.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
-      </Avatar>
-      {status && (
-        <Box sx={{
-          position: 'absolute', bottom: -1, left: -1, width: 10, height: 10, borderRadius: '50%',
-          bgcolor: STATUS_DOT[status] || colors.neutral_400, border: `2px solid ${colors.white}`,
-        }} />
-      )}
-    </Box>
-    <Box sx={{ minWidth: 0 }}>
-      <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{name}</Typography>
-      {position && <Typography variant="caption" noWrap sx={{ display: 'block', color: 'text.secondary' }}>{position}</Typography>}
-    </Box>
-  </Box>
+  <AthleteCell athlete={{ name, position }} status={status} size={32} />
 )
 
-/** Availability status: coloured dot, label, and the running day count beneath. */
 export const AvailabilityCell = ({ status, days }) => (
-  <Box sx={{ py: 1 }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: STATUS_DOT[status] || colors.neutral_400 }} />
-      <Typography variant="body2">{status === 'Injured/Ill' ? 'Available' : status}</Typography>
-    </Box>
-    {status === 'Injured/Ill' && (
-      <Typography variant="caption" sx={{ display: 'block', color: colors.orange_300, pl: 2 }}>Injured/Ill</Typography>
-    )}
-    {days != null && (
-      <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', pl: 2 }}>{days} days</Typography>
-    )}
-  </Box>
+  <AvailabilityLabel
+    status={status === 'Injured/Ill' ? 'Available' : status}
+    sublabel={status === 'Injured/Ill' ? 'Injured/Ill' : undefined}
+    days={days}
+  />
 )
 
 /** Open issues stacked in one cell, each with a coloured spine and its status. */

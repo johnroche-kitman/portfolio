@@ -238,6 +238,76 @@ export const PANELS = {
     ),
   },
 
+  Medication: {
+    title: 'Add medication',
+    body: ({ scope }) => (
+      <>
+        {athleteField(scope)}
+        <TextInput label="Medication" />
+        <FieldRow>
+          <TextInput label="Dose" />
+          <SelectField label="Route" options={MEDICATION_ROUTES} />
+        </FieldRow>
+        <FieldRow>
+          <DateInput label="Start" />
+          <DateInput label="End" />
+        </FieldRow>
+        <TextInput label="Prescribed by" />
+        <TextInput label="Notes" multiline minRows={2} />
+      </>
+    ),
+  },
+
+  'Rehab session': {
+    title: 'Add rehab session',
+    body: () => (
+      <>
+        <FieldRow>
+          <DateInput label="Date" />
+          <SelectField label="Phase" options={['Phase 1 — Protect', 'Phase 2 — Restore', 'Phase 3 — Return']} />
+        </FieldRow>
+        <TextInput label="Session" />
+        <FieldRow>
+          <TextInput label="Led by" />
+          <SelectField label="Status" options={['Planned', 'Complete', 'Missed']} />
+        </FieldRow>
+        <TextInput label="Exercises" multiline minRows={4} />
+      </>
+    ),
+  },
+
+  Maintenance: {
+    title: 'Add maintenance',
+    body: ({ scope }) => (
+      <>
+        {athleteField(scope)}
+        <SelectField label="Item"
+          options={['Cardiac screening', 'Concussion baseline', 'Vaccination', 'Medical review', 'Other']} />
+        <FieldRow>
+          <DateInput label="Last completed" />
+          <DateInput label="Next due" />
+        </FieldRow>
+        <SelectField label="Status" options={['Complete', 'Due', 'Overdue']} />
+        <TextInput label="Notes" multiline minRows={2} />
+      </>
+    ),
+  },
+
+  'Development goal': {
+    title: 'Add development goal',
+    body: ({ scope }) => (
+      <>
+        {athleteField(scope)}
+        <TextInput label="Goal" />
+        <FieldRow>
+          <SelectField label="Type" options={['Individual Session', 'Tactical', 'Technical', 'Physical']} />
+          <DateInput label="Target date" />
+        </FieldRow>
+        <TextInput label="Description" multiline minRows={3} />
+      </>
+    ),
+  },
+
   TUE: {
     title: 'Add TUE',
     body: ({ scope }) => (

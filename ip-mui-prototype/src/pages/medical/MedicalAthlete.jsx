@@ -10,7 +10,7 @@ import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import AddPanel from '../../components/AddPanel'
 import { PANELS } from './AddPanels'
-import { DateRangeField, FieldGrid, IssueStatusChip, SearchField, SelectField } from './panels'
+import { DateRangeField, FieldGrid, IssueStatusChip, PanelProvider, SearchField, SelectField, useOpenPanel } from './panels'
 import {
   DiagnosticsTab, DocumentsTab, FormsTab, MedicationsTab, ModificationsTab, NotesTab, TreatmentsTab,
 } from './tabs'
@@ -97,11 +97,13 @@ const DetailsTab = () => (
   </Box>
 )
 
-const MaintenanceTab = () => (
+const MaintenanceTab = () => {
+  const open = useOpenPanel()
+  return (
   <Box>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
       <Typography variant="h6">Maintenance</Typography>
-      <Button>Add maintenance</Button>
+      <Button onClick={() => open('Maintenance')}>Add maintenance</Button>
     </Box>
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300 }}>
       <Table size="small">
@@ -119,7 +121,8 @@ const MaintenanceTab = () => (
       </Table>
     </Paper>
   </Box>
-)
+  )
+}
 
 export default function MedicalAthlete() {
   const { id } = useParams()
@@ -160,6 +163,7 @@ export default function MedicalAthlete() {
       </Box>
       <Divider />
 
+      <PanelProvider value={setPanel}>
       <Box sx={{ p: 3 }}>
         {tab === 0 && <InjuryIllnessTab athlete={athlete} onAdd={setPanel}
           onOpen={() => navigate(`/medical/athletes/${athlete.id}/illnesses/18808`)} />}
@@ -173,6 +177,7 @@ export default function MedicalAthlete() {
         {tab === 8 && <MedicationsTab scope="athlete" />}
         {tab === 9 && <DocumentsTab scope="athlete" />}
       </Box>
+      </PanelProvider>
 
       <AddPanel open={!!panel} definition={panel ? PANELS[panel] : null}
         onClose={() => setPanel(null)} scope="athlete" />

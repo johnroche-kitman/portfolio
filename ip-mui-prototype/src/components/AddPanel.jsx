@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Box, Button, Divider, Drawer, IconButton, Step, StepLabel, Stepper, Typography,
+  Box, Button, Chip, Divider, Drawer, IconButton, Step, StepLabel, Stepper, Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
@@ -21,7 +21,10 @@ export default function AddPanel({ open, definition, onClose, width = 640, ...bo
     <Drawer anchor="right" open={!!open} onClose={close}
       PaperProps={{ sx: { width: { xs: '100%', sm: width }, display: 'flex' } }}>
       <Box sx={{ px: 3, py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6">{definition?.title || ''}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography variant="h6">{definition?.title || ''}</Typography>
+          {definition?.chip && <Chip size="small" label={definition.chip} sx={{ height: 22, fontSize: 11 }} />}
+        </Box>
         <IconButton size="small" onClick={close} aria-label="Close"><CloseIcon fontSize="small" /></IconButton>
       </Box>
       <Divider />
