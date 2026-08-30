@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import {
-  Box, Button, Divider, Drawer, FormControlLabel, IconButton, Checkbox, Menu, MenuItem, Paper,
-  TextField, Tooltip, Typography,
+  Box, Button, Checkbox, Divider, Drawer, FormControlLabel, IconButton, Menu, MenuItem, Paper,
+  TextField, Typography,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import InfoIcon from '@mui/icons-material/InfoOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
@@ -45,7 +44,6 @@ export default function StockManagement() {
     <AppShell title="Stock Management">
       <PageHeader
         title="Stock Management"
-        info={<Tooltip title="Medication held by the medical team, by lot and expiry."><InfoIcon fontSize="small" sx={{ color: colors.blue_100 }} /></Tooltip>}
         actions={<><Button onClick={() => setDrawer(true)}>Add Stock</Button><Button variant="outlined">Print</Button></>}
       />
 

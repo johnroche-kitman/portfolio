@@ -182,12 +182,7 @@ function Planning() {
   const pair = { display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 2.5, mb: 2.5 }
   return (
     <>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>Planning</Typography>
-        <Tooltip title="Shared vocabulary for sessions: principles, goal types, activities and drill labels.">
-          <InfoIcon fontSize="small" sx={{ color: colors.blue_100 }} />
-        </Tooltip>
-      </Box>
+      <Typography variant="h5" sx={{ fontWeight: 700, mt: 1, mb: 2 }}>Planning</Typography>
 
       <SettingsCard
         title="Principles"
