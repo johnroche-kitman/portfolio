@@ -25,14 +25,8 @@ const FLYOUT = 246
 export const NAV_ITEMS = [
   {
     key: 'analysis', label: 'Analysis', icon: <BarChartIcon />,
+    // Analysis is being sunset; League Benchmark Reporting is the one surface carried over.
     children: [
-      ['/analysis/dashboard', 'Dashboard'],
-      ['/analysis/template_dashboards/coaching_summary', 'Coaching Summary'],
-      ['/analysis/graph/builder', 'Graph Builder'],
-      ['/analysis/template_dashboards/medical', 'Medical Summary'],
-      ['/analysis/template_dashboards/growth_and_maturation', 'Growth & Maturation Report'],
-      ['/analysis/template_dashboards/staff_development', 'Staff Development'],
-      ['/dashboards/show', 'Athlete Metrics'],
       ['/analysis/benchmark_report', 'League Benchmark Reporting'],
     ],
   },

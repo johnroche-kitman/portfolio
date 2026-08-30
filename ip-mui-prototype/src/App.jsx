@@ -4,6 +4,7 @@ import CalendarPage from './pages/calendar/CalendarPage'
 import EventEditor from './pages/events/EventEditor'
 import SessionDetail from './pages/events/SessionDetail'
 import ComponentLibrary from './pages/library/ComponentLibrary'
+import BenchmarkReport from './pages/analysis/BenchmarkReport'
 import ManageAthletes from './pages/admin/ManageAthletes'
 import NewAthlete from './pages/admin/NewAthlete'
 import ManageStaffUsers from './pages/admin/ManageStaffUsers'
@@ -26,6 +27,8 @@ export default function App() {
       <Route path="/events/:id" element={<EventEditor />} />
       <Route path="/sessions/:id" element={<SessionDetail />} />
       <Route path="/medical/rosters" element={<MedicalRosters />} />
+
+      <Route path="/analysis/benchmark_report" element={<BenchmarkReport />} />
 
       {/* Administration */}
       <Route path="/administration/athletes" element={<ManageAthletes />} />
