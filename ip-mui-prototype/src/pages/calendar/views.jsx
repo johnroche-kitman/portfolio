@@ -37,6 +37,9 @@ const CompletionMark = ({ ev }) => {
 const EventBlock = ({ ev, onOpen, style, dense }) => (
   <Box
     onClick={e => { e.stopPropagation(); onOpen(ev, e.currentTarget) }}
+    // An existing event swallows the interaction: pressing on one must not also
+    // start a drag-to-create on the column underneath, as it does in the live app.
+    onMouseDown={e => e.stopPropagation()}
     sx={{
       bgcolor: `${TYPE_COLOR[ev.type]}1f`, borderLeft: `3px solid ${TYPE_COLOR[ev.type]}`,
       borderRadius: '2px', px: 0.75, py: dense ? 0.125 : 0.5, cursor: 'pointer', overflow: 'hidden',
