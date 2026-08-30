@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import MedicalRosters from './pages/medical/MedicalRosters'
+import MedicalAthlete from './pages/medical/MedicalAthlete'
+import InjuryRecord from './pages/medical/InjuryRecord'
 import CalendarPage from './pages/calendar/CalendarPage'
 import EventEditor from './pages/events/EventEditor'
 import SessionDetail from './pages/events/SessionDetail'
@@ -27,6 +29,8 @@ export default function App() {
       <Route path="/events/:id" element={<EventEditor />} />
       <Route path="/sessions/:id" element={<SessionDetail />} />
       <Route path="/medical/rosters" element={<MedicalRosters />} />
+      <Route path="/medical/athletes/:id" element={<MedicalAthlete />} />
+      <Route path="/medical/athletes/:athleteId/illnesses/:id" element={<InjuryRecord />} />
 
       <Route path="/analysis/benchmark_report" element={<BenchmarkReport />} />
 
