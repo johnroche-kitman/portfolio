@@ -60,7 +60,7 @@ export default function AthleteCell({ athlete, onClick, status, size = 34 }) {
         >
           {athlete.name}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
           {athlete.position}
         </Typography>
       </Box>

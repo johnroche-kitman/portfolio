@@ -153,9 +153,16 @@ export const GRID_SX = {
   border: 0,
   '& .MuiDataGrid-columnHeaders': { borderBottom: `1px solid ${colors.neutral_300}` },
   '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
-  // Cells are display: block, so plain text rides on the row's line-height while
-  // anything from renderCell sits at the top. Flex centres both the same way.
-  '& .MuiDataGrid-cell': { borderColor: colors.neutral_200, display: 'flex', alignItems: 'center' },
+  // DataGrid gives cells display: block and a line-height equal to the row height,
+  // so plain text rides centred. Flex centring replaces that, and the line-height
+  // has to be reset with it: inherited into a renderCell it gives any inline child
+  // a line box the height of the whole row, which pushes the rest of the cell out.
+  '& .MuiDataGrid-cell': {
+    borderColor: colors.neutral_200,
+    display: 'flex',
+    alignItems: 'center',
+    lineHeight: 'normal',
+  },
 }
 
 /**
@@ -169,10 +176,17 @@ export function AdminGrid({ sx, ...props }) {
   const [width, setWidth] = useState(0)
 
   useEffect(() => {
-    if (!ref.current) return undefined
-    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width))
-    ro.observe(ref.current)
-    return () => ro.disconnect()
+    const el = ref.current
+    if (!el) return undefined
+    // Seed from the element itself: a ResizeObserver that first fires at 0 (a
+    // hidden or not-yet-laid-out pane) would otherwise leave the grid unmounted
+    // even after the container has a width.
+    const measure = () => setWidth(w => (el.offsetWidth > 0 ? el.offsetWidth : w))
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    window.addEventListener('resize', measure)
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
   }, [])
 
   return (
