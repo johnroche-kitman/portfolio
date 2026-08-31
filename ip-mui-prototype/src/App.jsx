@@ -7,6 +7,7 @@ import EventEditor from './pages/events/EventEditor'
 import SessionDetail from './pages/events/SessionDetail'
 import SessionImporter from './pages/events/SessionImporter'
 import ComponentLibrary from './pages/library/ComponentLibrary'
+import BuildGuide from './pages/help/BuildGuide'
 import BenchmarkReport from './pages/analysis/BenchmarkReport'
 import ManageAthletes from './pages/admin/ManageAthletes'
 import NewAthlete from './pages/admin/NewAthlete'
@@ -53,6 +54,7 @@ export default function App() {
       <Route path="/stock_management" element={<StockManagement />} />
 
       <Route path="/library" element={<ComponentLibrary />} />
+      <Route path="/help" element={<BuildGuide />} />
       <Route path="*" element={<CalendarPage />} />
     </Routes>
   )
