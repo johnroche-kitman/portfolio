@@ -152,7 +152,7 @@ export default function MainNav({ expanded, onToggle }) {
         <List sx={{ p: 0, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,.12)' }}>
           {/* Prototype-only: the component library. Not part of iP. */}
           {row({ key: 'library', label: 'Components', icon: <WidgetsIcon />, path: '/library' })}
-          {row({ key: 'help', label: 'Help', icon: <HelpIcon />, path: '/help' })}
+          {row({ key: 'help', label: 'Surface build info', icon: <HelpIcon />, path: '/help' })}
           <ListItemButton
             onClick={onToggle}
             sx={{ minHeight: 40, px: expanded ? 2 : 0, justifyContent: expanded ? 'flex-start' : 'center' }}

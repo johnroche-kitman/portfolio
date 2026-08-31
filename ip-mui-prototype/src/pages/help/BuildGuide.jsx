@@ -74,8 +74,8 @@ function Surface({ s }) {
 
 export default function BuildGuide() {
   return (
-    <AppShell title="Help">
-      <PageHeader title="Build reference" />
+    <AppShell title="Surface build info">
+      <PageHeader title="Surface build info" />
 
       <Box sx={{ px: 3, pb: 6, maxWidth: 1040 }}>
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, mb: 3 }}>
