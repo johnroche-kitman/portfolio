@@ -2044,12 +2044,6 @@
       };
     });
 
-    // Three ways to read one player, named as short as they will go.
-    const VALUE_BASES = [
-      { key: 'own', label: 'Self' },
-      { key: 'position', label: 'Position' },
-      { key: 'group', label: 'Group' },
-    ];
 
     const SESSION_TARGETS = (() => {
       const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
@@ -2349,7 +2343,7 @@
       const [cohort, setCohort] = useState('Whole squad');
       const [cohortAnchor, setCohortAnchor] = useState(null);
       const [cohortQuery, setCohortQuery] = useState('');
-      const [basis, setBasis] = useState('own');
+      const [basis, setBasis] = useState('Self');
       const [basisAnchor, setBasisAnchor] = useState(null);
       const [draggingId, setDraggingId] = useState(null);
       const rowRefs = React.useRef({});
@@ -2365,8 +2359,17 @@
       // An athlete can be read as themselves, as their position or as their
       // group; anyone else is only ever themselves.
       const athlete = ATHLETE_OF[cohort];
-      const readAs = !athlete || basis === 'own' ? cohort : athlete[basis];
-      const effect = COHORT_EFFECT[readAs] || COHORT_EFFECT['Whole squad'];
+      // The two pickers do what they say: the targets come from whoever is named
+      // under Targets for, the drill values from whoever is named beside them.
+      const readAs = !athlete || basis === 'Self' ? cohort : basis;
+      const valueEffect = COHORT_EFFECT[readAs] || COHORT_EFFECT['Whole squad'];
+      const targetEffect = COHORT_EFFECT[cohort] || COHORT_EFFECT['Whole squad'];
+
+      // Values can be read as anybody; only the athlete gets the choice.
+      const basisSections = [
+        { items: ['Self', 'Whole squad'] },
+        ...COHORT_SECTIONS.filter((s) => s.header === 'Positions' || s.header === 'Groups'),
+      ];
 
       // Headings drop away with the last of their items when a search narrows it.
       const cohortSections = COHORT_SECTIONS
@@ -2382,8 +2385,8 @@
         if (!byCohort) return base;
         // No target of their own means no target: the bar shows the values and
         // leaves the target blank rather than holding them to somebody else's.
-        if (!COHORT_WITH_TARGET.has(readAs)) return null;
-        return Math.round(base * effect.target);
+        if (!COHORT_WITH_TARGET.has(cohort)) return null;
+        return Math.round(base * targetEffect.target);
       };
 
       // Inside the padding, since that is where the columns actually start.
@@ -2490,7 +2493,7 @@
       };
       const valueFor = (drill, metric) => {
         const imported = drillValue(drill, metric);
-        if (imported != null) return byCohort ? Math.round(imported * effect.value) : imported;
+        if (imported != null) return byCohort ? Math.round(imported * valueEffect.value) : imported;
         // Typed by hand, so it is already the figure for whoever is being shown.
         return manualEntry ? typedValue(drill, metric) : null;
       };
@@ -3249,7 +3252,7 @@
                                     selected={item === cohort}
                                     onClick={() => {
                                       setCohort(item);
-                                      setBasis('own');
+                                      setBasis('Self');
                                       setCohortAnchor(null);
                                       setCohortQuery('');
                                     }}
@@ -3289,12 +3292,9 @@
                                 '&:hover': { bgcolor: 'rgba(59,73,96,0.08)' },
                               }}
                             >
-                              {/* The position or group by name, since "Drill
-                                  values for: Position" says less than the position
-                                  does. The player's own reads Self rather than
-                                  repeating the name already beside it. */}
+                              {/* Self rather than the name already beside it */}
                               <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {basis === 'own' ? 'Self' : readAs}
+                                {basis}
                               </Typography>
                               <MI name="arrow_drop_down" size={20} color={PRIMARY} />
                             </ButtonBase>
@@ -3303,21 +3303,26 @@
                               open={Boolean(basisAnchor)}
                               onClose={() => setBasisAnchor(null)}
                             >
-                              {VALUE_BASES.map((b) => (
-                                <MenuItem
-                                  key={b.key}
-                                  selected={b.key === basis}
-                                  onClick={() => { setBasis(b.key); setBasisAnchor(null); }}
-                                >
-                                  <Stack direction="row" alignItems="baseline" spacing={1}>
-                                    <span>{b.label}</span>
-                                    {b.key !== 'own' && (
-                                      <Box component="span" sx={{ fontSize: 12, color: GREY100 }}>
-                                        {athlete[b.key]}
-                                      </Box>
-                                    )}
-                                  </Stack>
-                                </MenuItem>
+                              {basisSections.map((section) => (
+                                <React.Fragment key={section.header || 'top'}>
+                                  {section.header && (
+                                    <Typography sx={{
+                                      px: 2, pt: 1, pb: 0.5, fontSize: 12, fontWeight: 700,
+                                      letterSpacing: '0.06em', textTransform: 'uppercase', color: GREY100,
+                                    }}>
+                                      {section.header}
+                                    </Typography>
+                                  )}
+                                  {section.items.map((item) => (
+                                    <MenuItem
+                                      key={item}
+                                      selected={item === basis}
+                                      onClick={() => { setBasis(item); setBasisAnchor(null); }}
+                                    >
+                                      {item}
+                                    </MenuItem>
+                                  ))}
+                                </React.Fragment>
                               ))}
                             </Menu>
                           </React.Fragment>
