@@ -204,7 +204,7 @@ export const AREAS = [
   {
     id: 'event-editor',
     name: 'Create and edit an event',
-    blurb: 'One page authors all three event types. In the live product these are three separate sliding panels off the calendar Add menu; here they are a single page with conditional sections, because the game form alone runs to four sections and twenty-odd fields. The shell entry covers everything the three share, and the three after it cover only what differs.',
+    blurb: 'One page authors all three event types. In the live product these are three separate sliding panels off the calendar Add menu; here they are a single page with conditional sections, because the game form alone runs to four sections and twenty-odd fields. Read the shared block first: it is most of the work. The three surfaces after it list only what each type adds on top.',
     shared: {
       title: 'What all three share',
       mui: ['Paper', 'TextField', 'Autocomplete', 'Checkbox', 'Chip', 'Divider', 'IconButton', 'Button', 'Box', 'Typography'],
