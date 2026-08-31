@@ -2014,9 +2014,9 @@
       'On loan':             { value: 0.90, target: 0.95 },
     };
 
-    // Who has targets of their own. Everyone else is measured against the squad's,
-    // which is what the list says when it marks them, and why their target does
-    // not move with them: only their values do.
+    // Who has targets of their own. The list marks everybody else "no target",
+    // and the page follows through: their values are shown against nothing, since
+    // holding them to a target somebody else was set would be a fiction.
     const COHORT_WITH_TARGET = new Set([
       'Whole squad', 'Goalkeeper', 'Midfielder', 'Rehab', 'Return to play',
       'Jordan Pierce', 'Alex Romero', 'Kofi Mensah',
@@ -2031,6 +2031,25 @@
         target: Math.round((0.90 + (i % 5) * 0.05) * 100) / 100,
       };
     });
+
+    // Where each player sits, so their session can be read as their position or
+    // their group instead of as themselves.
+    const ATHLETE_POSITIONS = ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
+    const ATHLETE_GROUPS = ['Starters', 'Non starters', 'Rehab', 'Return to play', 'Playing up', 'On loan'];
+    const ATHLETE_OF = {};
+    SQUAD_ATHLETES.forEach((name, i) => {
+      ATHLETE_OF[name] = {
+        position: ATHLETE_POSITIONS[i % 4 === 0 && i > 8 ? 0 : (i % 3) + 1],
+        group: ATHLETE_GROUPS[i % ATHLETE_GROUPS.length],
+      };
+    });
+
+    // Three ways to read one player, named as short as they will go.
+    const VALUE_BASES = [
+      { key: 'own', label: 'Own' },
+      { key: 'position', label: 'Position' },
+      { key: 'group', label: 'Group' },
+    ];
 
     const SESSION_TARGETS = (() => {
       const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
@@ -2330,6 +2349,8 @@
       const [cohort, setCohort] = useState('Whole squad');
       const [cohortAnchor, setCohortAnchor] = useState(null);
       const [cohortQuery, setCohortQuery] = useState('');
+      const [basis, setBasis] = useState('own');
+      const [basisAnchor, setBasisAnchor] = useState(null);
       const [draggingId, setDraggingId] = useState(null);
       const rowRefs = React.useRef({});
       const [metricQuery, setMetricQuery] = useState('');
@@ -2341,7 +2362,11 @@
       const [scrollX, setScrollX] = useState(0);
 
       const metrics = columns.map(metricByKey);
-      const effect = COHORT_EFFECT[cohort] || COHORT_EFFECT['Whole squad'];
+      // An athlete can be read as themselves, as their position or as their
+      // group; anyone else is only ever themselves.
+      const athlete = ATHLETE_OF[cohort];
+      const readAs = !athlete || basis === 'own' ? cohort : athlete[basis];
+      const effect = COHORT_EFFECT[readAs] || COHORT_EFFECT['Whole squad'];
 
       // Headings drop away with the last of their items when a search narrows it.
       const cohortSections = COHORT_SECTIONS
@@ -2354,9 +2379,10 @@
         if (custom != null && custom !== '') return Number(custom);
         const base = SESSION_TARGETS[metric.key];
         if (base == null) return null;
-        // Without a target of their own they are held to the squad's, so the
-        // number stays where it is while their values move.
-        if (!byCohort || !COHORT_WITH_TARGET.has(cohort)) return base;
+        if (!byCohort) return base;
+        // No target of their own means no target: the bar shows the values and
+        // leaves the target blank rather than holding them to somebody else's.
+        if (!COHORT_WITH_TARGET.has(readAs)) return null;
         return Math.round(base * effect.target);
       };
 
@@ -3221,7 +3247,12 @@
                                   <MenuItem
                                     key={item}
                                     selected={item === cohort}
-                                    onClick={() => { setCohort(item); setCohortAnchor(null); setCohortQuery(''); }}
+                                    onClick={() => {
+                                      setCohort(item);
+                                      setBasis('own');
+                                      setCohortAnchor(null);
+                                      setCohortQuery('');
+                                    }}
                                   >
                                     <Stack direction="row" alignItems="baseline" spacing={1}>
                                       <span>{item}</span>
@@ -3241,6 +3272,50 @@
                             )}
                           </Box>
                         </Menu>
+
+                        {/* One player can be read three ways. Only they can: a
+                            position has no position of its own to fall back on. */}
+                        {athlete && (
+                          <React.Fragment>
+                            <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>as</Typography>
+                            <ButtonBase
+                              onClick={(e) => setBasisAnchor(e.currentTarget)}
+                              aria-label="Read this athlete as"
+                              sx={{
+                                display: 'flex', alignItems: 'center', gap: 0.25,
+                                px: 0.75, py: 0.25, borderRadius: `${RADIUS}px`,
+                                '&:hover': { bgcolor: 'rgba(59,73,96,0.08)' },
+                              }}
+                            >
+                              <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                {VALUE_BASES.find((b) => b.key === basis).label}
+                              </Typography>
+                              <MI name="arrow_drop_down" size={20} color={PRIMARY} />
+                            </ButtonBase>
+                            <Menu
+                              anchorEl={basisAnchor}
+                              open={Boolean(basisAnchor)}
+                              onClose={() => setBasisAnchor(null)}
+                            >
+                              {VALUE_BASES.map((b) => (
+                                <MenuItem
+                                  key={b.key}
+                                  selected={b.key === basis}
+                                  onClick={() => { setBasis(b.key); setBasisAnchor(null); }}
+                                >
+                                  <Stack direction="row" alignItems="baseline" spacing={1}>
+                                    <span>{b.label}</span>
+                                    {b.key !== 'own' && (
+                                      <Box component="span" sx={{ fontSize: 12, color: GREY100 }}>
+                                        {athlete[b.key]}
+                                      </Box>
+                                    )}
+                                  </Stack>
+                                </MenuItem>
+                              ))}
+                            </Menu>
+                          </React.Fragment>
+                        )}
                       </Stack>
                     )}
                   </Box>
