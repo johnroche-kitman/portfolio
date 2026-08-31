@@ -111,20 +111,6 @@ function Option({ o }) {
   )
 }
 
-/** Material common to every surface in an area, so each surface lists only its own. */
-function Shared({ sh }) {
-  return (
-    <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 3, mb: 2.5 }}>
-      <Typography variant="subtitle1" sx={{ mb: 2 }}>{sh.title}</Typography>
-      <ChipRow label="MUI" items={sh.mui} />
-      {sh.icons && <ChipRow label="Icons" items={sh.icons.map(i => `${i}Icon`)} tone="icon" />}
-      <Divider sx={{ my: 2 }} />
-      <Box component="ul" sx={{ m: 0, pl: 2.5, '& li': { mb: 1 } }}>
-        {sh.notes.map((n, i) => <Typography key={i} component="li" variant="body2">{n}</Typography>)}
-      </Box>
-    </Paper>
-  )
-}
 
 export default function BuildGuide() {
   return (
@@ -177,7 +163,6 @@ export default function BuildGuide() {
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{area.blurb}</Typography>
 
             {area.option && <Option o={area.option} />}
-            {area.shared && <Shared sh={area.shared} />}
 
             <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2, mb: 2.5 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>Where it lives</Typography>
