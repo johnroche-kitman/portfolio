@@ -3205,7 +3205,7 @@
                         back when hidden, so the bar closes up as it did before. */}
                     {byCohort && (
                       <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.5, ...collapseSx }}>
-                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Cohort:</Typography>
+                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Targets for:</Typography>
                         <ButtonBase
                           onClick={(e) => { setCohortQuery(''); setCohortAnchor(e.currentTarget); }}
                           aria-label="Show the session for a cohort"
@@ -3277,7 +3277,9 @@
                             position has no position of its own to fall back on. */}
                         {athlete && (
                           <React.Fragment>
-                            <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>as</Typography>
+                            <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap', pl: 1 }}>
+                              Drill values for:
+                            </Typography>
                             <ButtonBase
                               onClick={(e) => setBasisAnchor(e.currentTarget)}
                               aria-label="Read this athlete as"
@@ -3287,8 +3289,10 @@
                                 '&:hover': { bgcolor: 'rgba(59,73,96,0.08)' },
                               }}
                             >
+                              {/* The thing itself rather than the word for it:
+                                  "Drill values for: Defender" says what it means. */}
                               <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {VALUE_BASES.find((b) => b.key === basis).label}
+                                {readAs}
                               </Typography>
                               <MI name="arrow_drop_down" size={20} color={PRIMARY} />
                             </ButtonBase>
