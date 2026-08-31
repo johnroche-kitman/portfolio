@@ -76,7 +76,7 @@ export default function DailyStatusReport() {
   const [q, setQ] = useState('')
   const [squad, setSquad] = useState('U16 (Test Kitman FC)')
   const [injured, setInjured] = useState('Injured')
-  const [pos, setPos] = useState([positions[0], positions[1]])
+  const [pos, setPos] = useState([])
   const [dateAnchor, setDateAnchor] = useState(null)
   const [selected, setSelected] = useState([])
   const [editing, setEditing] = useState(null)   // row id with the inline editor open

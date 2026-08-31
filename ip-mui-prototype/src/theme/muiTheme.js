@@ -118,7 +118,9 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: { fontSize: 14, borderColor: colors.neutral_200 },
-        head: { fontSize: 12, fontWeight: 700, color: colors.grey_150, borderColor: colors.neutral_300 },
+        // Measured off the live app: table headers are the navy ink at body size and
+        // regular weight, not a small grey caption.
+        head: { fontSize: 14, fontWeight: 400, color: colors.grey_200, borderColor: colors.neutral_300 },
       },
     },
 
