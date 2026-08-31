@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Chip, Paper, Typography } from '@mui/material'
+import { lighten } from '@mui/material/styles'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import colors from '../../theme/tokens'
@@ -23,6 +24,44 @@ const GRID_START = 6 * 60
 const SNAP = 15                // a drag snaps to quarter hours
 
 const minToY = m => ((m - GRID_START) / 60) * ROW_H
+
+/**
+ * Side-by-side placement for events that share a time span. Events are grouped
+ * into clusters that overlap, each event takes the first free column in its
+ * cluster, and the cluster's column count sets every member's width. Without
+ * this every block sits at the same left and right and they simply cover
+ * each other.
+ */
+function layoutDay(list) {
+  const sorted = [...list].sort((a, b) => toMinutes(a.start) - toMinutes(b.start))
+  const out = []
+  let cluster = []
+  let clusterEnd = -1
+
+  const flush = () => {
+    const cols = cluster.reduce((n, c) => Math.max(n, c.col + 1), 0)
+    cluster.forEach(c => out.push({ ...c, cols }))
+    cluster = []
+    clusterEnd = -1
+  }
+
+  sorted.forEach(ev => {
+    const start = toMinutes(ev.start)
+    const end = toMinutes(ev.end)
+    if (cluster.length && start >= clusterEnd) flush()
+
+    // First column whose previous event has already finished.
+    const taken = new Set(cluster.filter(c => toMinutes(c.ev.end) > start).map(c => c.col))
+    let col = 0
+    while (taken.has(col)) col += 1
+
+    cluster.push({ ev, col })
+    clusterEnd = Math.max(clusterEnd, end)
+  })
+  if (cluster.length) flush()
+
+  return out
+}
 const yToMin = y => GRID_START + Math.round((y / ROW_H) * 60 / SNAP) * SNAP
 const fmt = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
 
@@ -33,7 +72,12 @@ const CompletionMark = ({ ev }) => {
   return <Icon sx={{ fontSize: 13, color: TYPE_COLOR[ev.type], flexShrink: 0 }} />
 }
 
-/** Tinted block with a heavier left edge in the event type's colour. */
+/**
+ * Tinted block with a heavier left edge in the event type's colour.
+ *
+ * The tint is an opaque blend, not an alpha. With alpha, two overlapping blocks
+ * show through each other and the text of one reads over the other.
+ */
 const EventBlock = ({ ev, onOpen, style, dense }) => (
   <Box
     onClick={e => { e.stopPropagation(); onOpen(ev, e.currentTarget) }}
@@ -41,9 +85,9 @@ const EventBlock = ({ ev, onOpen, style, dense }) => (
     // start a drag-to-create on the column underneath, as it does in the live app.
     onMouseDown={e => e.stopPropagation()}
     sx={{
-      bgcolor: `${TYPE_COLOR[ev.type]}1f`, borderLeft: `3px solid ${TYPE_COLOR[ev.type]}`,
+      bgcolor: lighten(TYPE_COLOR[ev.type], 0.88), borderLeft: `3px solid ${TYPE_COLOR[ev.type]}`,
       borderRadius: '2px', px: 0.75, py: dense ? 0.125 : 0.5, cursor: 'pointer', overflow: 'hidden',
-      '&:hover': { bgcolor: `${TYPE_COLOR[ev.type]}33` }, ...style,
+      '&:hover': { bgcolor: lighten(TYPE_COLOR[ev.type], 0.8) }, ...style,
     }}
   >
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
@@ -300,13 +344,17 @@ const DayColumn = ({ dow, date, getEvents, onOpen, onSelect, isToday, selection 
         </Box>
       )}
 
-      {getEvents(dow).map(ev => {
+      {layoutDay(getEvents(dow)).map(({ ev, col, cols }) => {
         const top = minToY(toMinutes(ev.start))
         const height = Math.max(minToY(toMinutes(ev.end)) - minToY(toMinutes(ev.start)), 30)
         if (top < 0) return null
+        const width = `calc((100% - 6px) / ${cols})`
         return (
           <EventBlock key={ev.id} ev={ev} onOpen={onOpen}
-            style={{ position: 'absolute', top, left: 3, right: 3, height, zIndex: 2 }} />
+            style={{
+              position: 'absolute', top, height, zIndex: 2,
+              left: `calc(3px + ${col} * ${width})`, width,
+            }} />
         )
       })}
     </Box>
