@@ -118,9 +118,9 @@ export const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: { fontSize: 14, borderColor: colors.neutral_200 },
-        // Measured off the live app: table headers are the navy ink at body size and
-        // regular weight, not a small grey caption.
-        head: { fontSize: 14, fontWeight: 400, color: colors.grey_200, borderColor: colors.neutral_300 },
+        // Matches the DataGrid column header exactly, so a plain Table and a grid
+        // read as the same table. Was a 12px #c4c4c4 caption, which matched neither.
+        head: { fontSize: 13, fontWeight: 700, color: colors.grey_200, borderColor: colors.neutral_300 },
       },
     },
 
