@@ -597,7 +597,7 @@
     const metricMatches = (name, query) =>
       !query.trim() || name.toLowerCase().includes(query.trim().toLowerCase());
 
-    function MetricSearch({ value, onChange }) {
+    function MetricSearch({ value, onChange, placeholder = 'Search metrics' }) {
       return (
         <Box
           sx={{ px: 1.5, py: 1, bgcolor: '#fff' }}
@@ -606,7 +606,7 @@
           <TextField
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Search metrics"
+            placeholder={placeholder}
             autoFocus
             fullWidth
             size="small"
@@ -1092,7 +1092,7 @@
           },
           {
             hash: '#/planning-v7',
-            title: 'Version 7 - Switch the values and targets by group',
+            title: 'Version 7 - Switch the values and targets by cohort',
           },
         ],
       },
@@ -1973,17 +1973,35 @@
     const SESSION_SQUAD = '1st team';
     const SESSION_GD = 'GD−3';
 
-    // What a group does to a session. A player in rehab covers a fraction of the
+    // What a cohort does to a session. A player in rehab covers a fraction of the
     // ground and carries a target to match, but the two do not move in step: that
-    // is the whole reason to look group by group, since who is over target
+    // is the whole reason to look cohort by cohort, since who is over target
     // changes with who you are looking at. Somebody playing up is the clearest
     // case, doing a senior session against an academy target.
-    const SESSION_GROUPS = [
-      'All', 'Starters', 'Non starters', 'Rehab', 'Return to play',
-      'Playing up', 'On loan', 'International duty',
+    const SQUAD_ATHLETES = [
+      'Jordan Pierce', 'Sam Whitfield', 'Alex Romero', 'Chris Doyle',
+      'Marco Bellini', 'Tobias Lang', 'Danny Okafor', 'Reece Sutherland',
+      'Kofi Mensah', 'Luca Ferraro', 'Owen Bradley', 'Nathan Ellis',
+      'Diego Salas', 'Finn Gallagher', 'Yusuf Karim', 'Mateo Duarte',
+      'Harvey Nolan', 'Ilias Bakker', 'Rory Kavanagh', 'Andre Nkemba',
     ];
-    const GROUP_EFFECT = {
-      'All':                 { value: 1,    target: 1 },
+
+    const COHORT_SECTIONS = [
+      { items: ['Whole squad'] },
+      { header: 'Positions', items: ['Goalkeeper', 'Defender', 'Midfielder', 'Forward'] },
+      {
+        header: 'Groups',
+        items: ['Starters', 'Non starters', 'Rehab', 'Return to play', 'Playing up', 'On loan', 'International duty'],
+      },
+      { header: 'Athletes', items: SQUAD_ATHLETES },
+    ];
+
+    const COHORT_EFFECT = {
+      'Whole squad':         { value: 1,    target: 1 },
+      'Goalkeeper':          { value: 0.42, target: 0.50 },
+      'Defender':            { value: 0.96, target: 1.00 },
+      'Midfielder':          { value: 1.14, target: 1.06 },
+      'Forward':             { value: 1.06, target: 1.02 },
       'Starters':            { value: 0.98, target: 1.00 },
       'Non starters':        { value: 1.22, target: 1.15 },
       'Rehab':               { value: 0.35, target: 0.40 },
@@ -1992,6 +2010,16 @@
       'On loan':             { value: 0.90, target: 0.95 },
       'International duty':  { value: 0.55, target: 0.60 },
     };
+
+    // One player is not the squad average, so each carries a spread of their own.
+    // Standing figures rather than random ones: the same name reads the same way
+    // every time the page is opened.
+    SQUAD_ATHLETES.forEach((name, i) => {
+      COHORT_EFFECT[name] = {
+        value: Math.round((0.80 + (i % 9) * 0.06) * 100) / 100,
+        target: Math.round((0.90 + (i % 5) * 0.05) * 100) / 100,
+      };
+    });
 
     const SESSION_TARGETS = (() => {
       const dayIndex = GD_DEFAULT.indexOf(SESSION_GD);
@@ -2045,6 +2073,7 @@
     const MIN_COL_W = 96;                  // floor for a dragged table column
     const MENU_ITEM_H = 33;                // a metric in the column menu
     const MENU_VISIBLE_ITEMS = 6;          // shown before the list starts scrolling
+    const COHORT_MENU_H = 320;             // the cohort list, headings and all
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
     // The + Metric button reaches the keyline: its cell sits over the panel gutter
@@ -2270,7 +2299,7 @@
     /* ── Session planning, version 1 ─────────────────────────────────── */
     function SessionPlanning({
       onHome, rowBars = 'target', footerBar = 'none', highlightOver = false,
-      scrollValues = false, table = false, manualEntry = false, byGroup = false,
+      scrollValues = false, table = false, manualEntry = false, byCohort = false,
     }) {
       const [drills, setDrills] = useState(() => SESSION_DRILLS.map((d) => ({ ...d })));
       const [showWorkload, setShowWorkload] = useState(true);
@@ -2287,8 +2316,9 @@
       const [manualValues, setManualValues] = useState({});
       const [editingCell, setEditingCell] = useState(null); // { drillId, key }
       const [cellDraft, setCellDraft] = useState('');
-      const [group, setGroup] = useState('All');
-      const [groupAnchor, setGroupAnchor] = useState(null);
+      const [cohort, setCohort] = useState('Whole squad');
+      const [cohortAnchor, setCohortAnchor] = useState(null);
+      const [cohortQuery, setCohortQuery] = useState('');
       const [draggingId, setDraggingId] = useState(null);
       const rowRefs = React.useRef({});
       const [metricQuery, setMetricQuery] = useState('');
@@ -2300,7 +2330,12 @@
       const [scrollX, setScrollX] = useState(0);
 
       const metrics = columns.map(metricByKey);
-      const effect = GROUP_EFFECT[group] || GROUP_EFFECT.All;
+      const effect = COHORT_EFFECT[cohort] || COHORT_EFFECT['Whole squad'];
+
+      // Headings drop away with the last of their items when a search narrows it.
+      const cohortSections = COHORT_SECTIONS
+        .map((s) => ({ ...s, items: s.items.filter((i) => metricMatches(i, cohortQuery)) }))
+        .filter((s) => s.items.length);
 
       const targetFor = (metric) => {
         // A typed target is the figure the coach meant, so it stands as typed.
@@ -2308,7 +2343,7 @@
         if (custom != null && custom !== '') return Number(custom);
         const base = SESSION_TARGETS[metric.key];
         if (base == null) return null;
-        return byGroup ? Math.round(base * effect.target) : base;
+        return byCohort ? Math.round(base * effect.target) : base;
       };
 
       // Inside the padding, since that is where the columns actually start.
@@ -2415,7 +2450,7 @@
       };
       const valueFor = (drill, metric) => {
         const imported = drillValue(drill, metric);
-        if (imported != null) return byGroup ? Math.round(imported * effect.value) : imported;
+        if (imported != null) return byCohort ? Math.round(imported * effect.value) : imported;
         // Typed by hand, so it is already the figure for whoever is being shown.
         return manualEntry ? typedValue(drill, metric) : null;
       };
@@ -3128,12 +3163,12 @@
                         the workload view: the eye governs everything that view puts
                         on the page, and this is part of it. It gives its height
                         back when hidden, so the bar closes up as it did before. */}
-                    {byGroup && (
+                    {byCohort && (
                       <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mt: 0.5, ...collapseSx }}>
-                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Group:</Typography>
+                        <Typography sx={{ fontSize: 14, color: GREY100, whiteSpace: 'nowrap' }}>Cohort:</Typography>
                         <ButtonBase
-                          onClick={(e) => setGroupAnchor(e.currentTarget)}
-                          aria-label="Show the session for a group"
+                          onClick={(e) => { setCohortQuery(''); setCohortAnchor(e.currentTarget); }}
+                          aria-label="Show the session for a cohort"
                           sx={{
                             display: 'flex', alignItems: 'center', gap: 0.25,
                             px: 0.75, py: 0.25, ml: -0.75, borderRadius: `${RADIUS}px`,
@@ -3141,24 +3176,51 @@
                           }}
                         >
                           <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                            {group}
+                            {cohort}
                           </Typography>
                           <MI name="arrow_drop_down" size={20} color={PRIMARY} />
                         </ButtonBase>
+
+                        {/* Positions, groups and athletes in one list, each under
+                            its own heading, with the search held at the top. */}
                         <Menu
-                          anchorEl={groupAnchor}
-                          open={Boolean(groupAnchor)}
-                          onClose={() => setGroupAnchor(null)}
+                          anchorEl={cohortAnchor}
+                          open={Boolean(cohortAnchor)}
+                          onClose={() => { setCohortAnchor(null); setCohortQuery(''); }}
+                          autoFocus={false}
+                          MenuListProps={{ sx: { pt: 0, pb: 0 } }}
                         >
-                          {SESSION_GROUPS.map((g) => (
-                            <MenuItem
-                              key={g}
-                              selected={g === group}
-                              onClick={() => { setGroup(g); setGroupAnchor(null); }}
-                            >
-                              {g}
-                            </MenuItem>
-                          ))}
+                          <MetricSearch value={cohortQuery} onChange={setCohortQuery} placeholder="Search" />
+
+                          <Box sx={{ maxHeight: COHORT_MENU_H, overflowY: 'auto', py: 1, minWidth: 232 }}>
+                            {cohortSections.map((section) => (
+                              <React.Fragment key={section.header || 'top'}>
+                                {section.header && (
+                                  <Typography sx={{
+                                    px: 2, pt: 1, pb: 0.5, fontSize: 12, fontWeight: 700,
+                                    letterSpacing: '0.06em', textTransform: 'uppercase', color: GREY100,
+                                  }}>
+                                    {section.header}
+                                  </Typography>
+                                )}
+                                {section.items.map((item) => (
+                                  <MenuItem
+                                    key={item}
+                                    selected={item === cohort}
+                                    onClick={() => { setCohort(item); setCohortAnchor(null); setCohortQuery(''); }}
+                                  >
+                                    {item}
+                                  </MenuItem>
+                                ))}
+                              </React.Fragment>
+                            ))}
+
+                            {cohortSections.length === 0 && (
+                              <Typography sx={{ px: 2, py: 1.5, fontSize: 14, color: GREY100 }}>
+                                Nothing by that name
+                              </Typography>
+                            )}
+                          </Box>
                         </Menu>
                       </Stack>
                     )}
@@ -3440,7 +3502,7 @@
         return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table manualEntry key="p6" />;
       }
       if (route === '#/planning-v7') {
-        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table byGroup key="p7" />;
+        return <SessionPlanning onHome={goHome} rowBars="none" footerBar="total" scrollValues table byCohort key="p7" />;
       }
       return <VersionsLanding />;
     }
