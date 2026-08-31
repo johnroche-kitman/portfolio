@@ -205,19 +205,11 @@ export const AREAS = [
     id: 'event-editor',
     name: 'Create and edit an event',
     blurb: 'One page authors all three event types. In the live product these are three separate sliding panels off the calendar Add menu; here they are a single page with conditional sections, because the game form alone runs to four sections and twenty-odd fields. The shell entry covers everything the three share, and the three after it cover only what differs.',
-    files: [
-      ['pages/events/EventEditor.jsx', 'The whole thing — shell and all three type variants. 359 lines.'],
-      ['data/events.js', 'Event types, repeat options, competitions, formats, venues, surfaces and the rest of the option lists.'],
-      ['components/AthleteCell.jsx', 'Rendered per option inside the attendance Autocomplete.'],
-    ],
-    surfaces: [
-      {
-        title: 'Create / edit — the shared shell',
-        route: '/events/new?type=Game|Session|Event, /events/:id',
-        what: 'One page serves all three types. Everything below is common to Game, Session and Event; the three entries after this one cover only what differs.',
-        mui: ['Paper', 'TextField', 'Autocomplete', 'Checkbox', 'Chip', 'Divider', 'IconButton', 'Button', 'Box', 'Typography'],
-        icons: ['ArrowBack', 'Delete', 'Upload', 'Add'],
-        notes: [
+    shared: {
+      title: 'What all three share',
+      mui: ['Paper', 'TextField', 'Autocomplete', 'Checkbox', 'Chip', 'Divider', 'IconButton', 'Button', 'Box', 'Typography'],
+      icons: ['ArrowBack', 'Delete', 'Upload', 'Add'],
+      notes: [
           'In the live product these are three sliding panels off the calendar Add menu. Here it is a full page, deliberately: the game form alone runs to four sections and twenty-odd fields, which is more than a drawer should hold. If you keep the panel, you inherit the reason it scores badly today.',
           'Build it as ONE component with conditional sections keyed off `type`, not three forms. The shared surface is large — squad, date, start time, duration, timezone, repeats, location, attendance, attachments, notifications — and the differences are small enough to read at a glance.',
           '`type` comes from `?type=` when creating and from the loaded event when editing. `isNew` drives the heading ("New session" against the event title) and whether Delete renders.',
@@ -228,8 +220,14 @@ export const AREAS = [
           'Attendance is an `Autocomplete multiple` rendering a `Checkbox` and the shared `AthleteCell` per option, with `disableCloseOnSelect` and `isOptionEqualToValue` comparing ids. Selected athletes render as `Chip`s through `renderTags`.',
           'Attachments is a dashed drop zone plus a Title/Link pair with an outlined Add button; added links become deletable `Chip`s.',
           'Notifications is three rows of Email/Push checkboxes plus a reminder select. Identical across all three types.',
-        ],
-      },
+      ],
+    },
+    files: [
+      ['pages/events/EventEditor.jsx', 'The whole thing — shell and all three type variants. 359 lines.'],
+      ['data/events.js', 'Event types, repeat options, competitions, formats, venues, surfaces and the rest of the option lists.'],
+      ['components/AthleteCell.jsx', 'Rendered per option inside the attendance Autocomplete.'],
+    ],
+    surfaces: [
       {
         title: 'Create / edit — Session',
         route: '/events/new?type=Session',
