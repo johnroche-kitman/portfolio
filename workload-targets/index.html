@@ -2046,7 +2046,7 @@
 
     // Three ways to read one player, named as short as they will go.
     const VALUE_BASES = [
-      { key: 'own', label: 'Own' },
+      { key: 'own', label: 'Self' },
       { key: 'position', label: 'Position' },
       { key: 'group', label: 'Group' },
     ];
@@ -3289,10 +3289,12 @@
                                 '&:hover': { bgcolor: 'rgba(59,73,96,0.08)' },
                               }}
                             >
-                              {/* The thing itself rather than the word for it:
-                                  "Drill values for: Defender" says what it means. */}
+                              {/* The position or group by name, since "Drill
+                                  values for: Position" says less than the position
+                                  does. The player's own reads Self rather than
+                                  repeating the name already beside it. */}
                               <Typography sx={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                {readAs}
+                                {basis === 'own' ? 'Self' : readAs}
                               </Typography>
                               <MI name="arrow_drop_down" size={20} color={PRIMARY} />
                             </ButtonBase>
