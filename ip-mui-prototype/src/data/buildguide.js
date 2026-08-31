@@ -35,6 +35,25 @@ export const AREAS = [
     id: 'calendar',
     name: 'Calendar',
     blurb: 'Ten surfaces. The calendar grid itself is the one part of the product MUI does not give you — there is no MUI calendar component, so the month, week and day views are laid out by hand over Box and Paper. Everything hung off the grid is stock MUI.',
+    option: {
+      title: 'Before you build any of this: MUI X Scheduler',
+      status: 'Beta — v9.0.0-beta.10 at the time of writing',
+      intro: 'MUI now ships a scheduler, which would replace the month, week, day and agenda views outright rather than hand-laying them out. It is a genuine candidate and worth a timeboxed spike, but it is not a decision to take on paper. Checked August 2026.',
+      points: [
+        ['Recurring events are Premium-only', 'The Community package (@mui/x-scheduler, MIT) gives you the four views, resources, drag and drop, resizing and theming. Recurrence, exception dates and DST-aware recurrence are all in @mui/x-scheduler-premium. iP\'s calendar is built on recurrence — the live schedule is wall-to-wall "Every day, until 31st October". So the free tier is effectively out, and Premium is a per-developer annual licence somebody has to price.'],
+        ['Spike the gameweek bands first', 'This is the question that decides it. The bands span several day columns and are drawn in the all-day lane, and the GD+/- marker is per day. There is a slots API and most slots take a callback slotProps carrying the current state, so it may be reachable — but a decoration spanning multiple columns is exactly what a scheduler tends not to expose. If it cannot be done, the idea fails, because those markers are why coaches use this calendar.'],
+        ['Drag to create is not documented', 'The drag-interactions page covers dragging to reschedule, resizing, and dragging between the calendar and external containers. Creating an event by dragging empty space is not mentioned. iP has it and people use it.'],
+        ['The event editor is not customisable yet', 'The docs say so directly. iP creates events on a full page with squads, type, location, recurrence and athlete and staff selection, so you would need to suppress the built-in form and route to your own. Probably possible, unproven.'],
+        ['Filtering is marked Planned, and that is fine', 'iP\'s filter rail can filter the events array before it is handed to the calendar. This one is not a blocker.'],
+        ['Weigh the actual saving', 'The Calendar is already one of the more converted areas in the audit and the version in this prototype works. You would be trading working code for lower maintenance and things you do not have today: timezone and DST handling, virtualisation, resources. Those are real, but they are an upgrade rather than a conversion saving. The 0% areas are Medical and the session drawers, and the scheduler does nothing for those.'],
+      ],
+      verdict: 'Do not write it into the plan yet. One spike answers it: can you draw a multi-day band and a per-day GD marker through the slots API? A day or two settles it. If yes, it is a strong option for a later phase once it leaves beta. If no, keep the hand-built grid — it is about 470 lines and already does everything.',
+      links: [
+        ['Scheduler overview', 'https://mui.com/x/react-scheduler/'],
+        ['Drag interactions', 'https://mui.com/x/react-scheduler/event-calendar/drag-interactions/'],
+        ['Custom slots and subcomponents', 'https://mui.com/x/common-concepts/custom-components/'],
+      ],
+    },
     files: [
       ['pages/calendar/CalendarPage.jsx', 'Toolbar, view switching, settings drawer, and the state every view reads.'],
       ['pages/calendar/views.jsx', 'Month, Week, Day and List, plus the grid maths and the drag selection.'],

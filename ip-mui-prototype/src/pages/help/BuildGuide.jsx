@@ -1,6 +1,6 @@
 import {
   Accordion, AccordionDetails, AccordionSummary, Box, Chip, Divider, Paper,
-  Table, TableBody, TableCell, TableHead, TableRow, Typography,
+  Link, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import colors from '../../theme/tokens'
@@ -72,6 +72,45 @@ function Surface({ s }) {
   )
 }
 
+/**
+ * An alternative worth weighing before building the area by hand. Sits above the
+ * surfaces because the decision comes first.
+ */
+function Option({ o }) {
+  return (
+    <Paper
+      variant="outlined"
+      sx={{ borderColor: colors.neutral_300, borderLeft: `3px solid ${colors.orange_200}`, p: 3, mb: 2.5 }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, flexWrap: 'wrap', mb: 1 }}>
+        <Typography variant="subtitle1">{o.title}</Typography>
+        <Chip size="small" label={o.status}
+          sx={{ height: 20, fontSize: 11, bgcolor: colors.orange_200, color: colors.white }} />
+      </Box>
+      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{o.intro}</Typography>
+
+      <Box component="dl" sx={{ m: 0 }}>
+        {o.points.map(([term, def]) => (
+          <Box key={term} sx={{ mb: 1.5 }}>
+            <Typography component="dt" variant="subtitle2">{term}</Typography>
+            <Typography component="dd" variant="body2" sx={{ m: 0, color: 'text.secondary' }}>{def}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="body2" sx={{ mb: 1.5 }}>
+        <Box component="span" sx={{ fontWeight: 700 }}>Verdict. </Box>{o.verdict}
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {o.links.map(([label, href]) => (
+          <Link key={href} href={href} target="_blank" rel="noopener" variant="body2">{label}</Link>
+        ))}
+      </Box>
+    </Paper>
+  )
+}
+
 export default function BuildGuide() {
   return (
     <AppShell title="Surface build info">
@@ -121,6 +160,8 @@ export default function BuildGuide() {
           <Box key={area.id}>
             <SectionLabel>{area.name}</SectionLabel>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{area.blurb}</Typography>
+
+            {area.option && <Option o={area.option} />}
 
             <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2, mb: 2.5 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>Where it lives</Typography>
