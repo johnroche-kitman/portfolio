@@ -12,10 +12,11 @@ import {
 import {
   DiagnosticsTab, DocumentsTab, FormsTab, MedicalFlagsTab, ModificationsTab, NotesTab, TreatmentsTab,
 } from './tabs'
+import DailyStatusReport from './DailyStatusReport'
 import AddPanel from '../../components/AddPanel'
 import { PANELS } from './AddPanels'
 import { MEDICAL_ADD_ITEMS, MEDICAL_TABS, positions, squads } from '../../data/athletes'
-import { AVAILABILITY_STATUSES, dailyStatus, medicalTeam } from '../../data/medical'
+import { medicalTeam } from '../../data/medical'
 
 function TeamTab({ inactive = false, past = false, title = 'Team', onAdd }) {
   const navigate = useNavigate()
@@ -59,32 +60,6 @@ function TeamTab({ inactive = false, past = false, title = 'Team', onAdd }) {
   )
 }
 
-function DailyStatusTab() {
-  const [q, setQ] = useState('')
-  const rows = dailyStatus.filter(r => r.athlete.toLowerCase().includes(q.toLowerCase()))
-  return (
-    <ListPanel
-      title="Daily Status Report"
-      actions={<Button variant="outlined" endIcon={<ArrowDropDownIcon />}>Download</Button>}
-      filters={<>
-        <SearchField value={q} onChange={setQ} label="Search athletes" />
-        <SelectField label="Squad" options={squads} value="" onChange={() => {}} width={210} />
-        <SelectField label="Availability status" options={AVAILABILITY_STATUSES} value="" onChange={() => {}} width={230} />
-      </>}
-      columns={[
-        { field: 'athlete', headerName: 'Athlete', flex: 1, minWidth: 190 },
-        { field: 'status', headerName: 'Availability status', width: 170 },
-        { field: 'issue', headerName: 'Open Injury/ Illness', flex: 1.2, minWidth: 220 },
-        { field: 'note', headerName: 'Note', flex: 1, minWidth: 170 },
-        { field: 'modification', headerName: 'Modification/Absence', width: 190 },
-        { field: 'modificationDetail', headerName: 'Modification/Absence Details', width: 230 },
-        { field: 'updatedBy', headerName: 'Updated by', width: 160 },
-      ]}
-      rows={rows}
-    />
-  )
-}
-
 export default function MedicalRosters() {
   const [tab, setTab] = useState(0)
   const [panel, setPanel] = useState(null)
@@ -102,7 +77,7 @@ export default function MedicalRosters() {
       <PanelProvider value={setPanel}>
       <Box sx={{ p: 3 }}>
         {tab === 0 && <TeamTab onAdd={setPanel} />}
-        {tab === 1 && <DailyStatusTab />}
+        {tab === 1 && <DailyStatusReport />}
         {tab === 2 && <NotesTab />}
         {tab === 3 && <ModificationsTab />}
         {tab === 4 && <FormsTab />}

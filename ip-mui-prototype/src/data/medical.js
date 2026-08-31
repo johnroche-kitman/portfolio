@@ -99,12 +99,11 @@ export const medicalForms = [
   { id: 2, athlete: 'Athlete, Max', form: 'Concussion', status: 'Complete', date: '4 Aug 2023', by: 'ST Test' },
 ]
 
+// The Daily Status Report shows the same athletes as the Team tab plus the
+// report's own columns, so it carries the whole row rather than a flattened copy.
 export const dailyStatus = medicalTeam.map((a, i) => ({
-  id: a.id,
+  ...a,
   athlete: a.name,
-  status: a.status,
-  issue: a.issues[0]?.title || '',
-  note: a.note?.title || '',
   modification: i % 3 === 0 ? 'Modified training' : '',
   modificationDetail: i % 3 === 0 ? 'No contact work' : '',
   updatedBy: i % 2 ? 'ST Test' : 'John Roche Test',
