@@ -1092,7 +1092,7 @@
           },
           {
             hash: '#/planning-v7',
-            title: 'Version 7 - Switch the values and targets by cohort',
+            title: 'Version 7 - Switch targets and values by position, Label/group or individual athlete',
           },
         ],
       },
@@ -1126,7 +1126,7 @@
       },
       {
         title: 'Individual athlete targets',
-        body: 'In the future we might want to set targets for individuals, so we will also need a way to visualise that player’s budget against their own target on the session planning page.',
+        body: 'In the future we might want to set targets for individuals, so we will also need a way to visualise that player’s budget against their own target on the session planning page (see version 7).',
       },
       {
         title: 'Future enhancements and pitch density considerations',
@@ -2014,6 +2014,14 @@
       'On loan':             { value: 0.90, target: 0.95 },
     };
 
+    // Who has targets of their own. Everyone else is measured against the squad's,
+    // which is what the list says when it marks them, and why their target does
+    // not move with them: only their values do.
+    const COHORT_WITH_TARGET = new Set([
+      'Whole squad', 'Goalkeeper', 'Midfielder', 'Rehab', 'Return to play',
+      'Jordan Pierce', 'Alex Romero', 'Kofi Mensah',
+    ]);
+
     // One player is not the squad average, so each carries a spread of their own.
     // Standing figures rather than random ones: the same name reads the same way
     // every time the page is opened.
@@ -2346,7 +2354,10 @@
         if (custom != null && custom !== '') return Number(custom);
         const base = SESSION_TARGETS[metric.key];
         if (base == null) return null;
-        return byCohort ? Math.round(base * effect.target) : base;
+        // Without a target of their own they are held to the squad's, so the
+        // number stays where it is while their values move.
+        if (!byCohort || !COHORT_WITH_TARGET.has(cohort)) return base;
+        return Math.round(base * effect.target);
       };
 
       // Inside the padding, since that is where the columns actually start.
@@ -3212,7 +3223,12 @@
                                     selected={item === cohort}
                                     onClick={() => { setCohort(item); setCohortAnchor(null); setCohortQuery(''); }}
                                   >
-                                    {item}
+                                    <Stack direction="row" alignItems="baseline" spacing={1}>
+                                      <span>{item}</span>
+                                      {!COHORT_WITH_TARGET.has(item) && (
+                                        <Box component="span" sx={{ fontSize: 12, color: GREY100 }}>no target</Box>
+                                      )}
+                                    </Stack>
                                   </MenuItem>
                                 ))}
                               </React.Fragment>
