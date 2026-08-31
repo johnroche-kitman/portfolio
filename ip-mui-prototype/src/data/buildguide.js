@@ -34,7 +34,7 @@ export const AREAS = [
   {
     id: 'calendar',
     name: 'Calendar',
-    blurb: 'Ten surfaces. The calendar grid itself is the one part of the product MUI does not give you — there is no MUI calendar component, so the month, week and day views are laid out by hand over Box and Paper. Everything hung off the grid is stock MUI.',
+    blurb: 'Twelve surfaces. MUI does have a calendar — the X Scheduler, covered directly below — but this prototype predates the decision to use it, so the month, week and day grids are laid out by hand over Box and Paper. Read the Scheduler note before building any of them by hand. Everything hung off the grid is stock MUI either way.',
     option: {
       title: 'Before you build any of this: MUI X Scheduler',
       status: 'Beta — v9.0.0-beta.10 at the time of writing',
@@ -82,7 +82,7 @@ export const AREAS = [
         what: 'Six week rows of day cells, each listing that day’s events compactly.',
         mui: ['Box', 'Paper', 'Typography', 'Chip'],
         notes: [
-          'CSS Grid, seven columns, over `Box`. There is no MUI calendar — do not go looking for one.',
+          'CSS Grid, seven columns, over `Box`. This is hand-laid-out because the prototype does not use the X Scheduler, not because MUI lacks a calendar — see the Scheduler note at the top of this section before rebuilding it this way.',
           'Events render as the shared `EventBlock` in `dense` mode: one line, no times.',
           'Day cells carry the gameweek band and the GD+/- marker when those settings are on.',
         ],
