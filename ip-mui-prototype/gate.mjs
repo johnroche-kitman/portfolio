@@ -52,31 +52,36 @@ const page = `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
-<style>
-  :root { --navy:#3b4960; --rule:#dde0e5; --ink:#171e29; --dim:#7c8797; --blue:#2a6ebb; }
-  * { box-sizing:border-box }
-  body { margin:0; font-family:'Open Sans',system-ui,sans-serif; color:var(--ink); background:#f7f8f9 }
-  #gate { min-height:100vh; display:grid; place-items:center; padding:24px }
-  form { width:100%; max-width:380px; background:#fff; border:1px solid var(--rule);
-         border-radius:6px; padding:32px }
-  .eyebrow { margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:.08em;
-             text-transform:uppercase; color:var(--dim) }
-  h1 { margin:0 0 8px; font-size:22px; font-weight:700 }
-  .sub { margin:0 0 22px; font-size:14px; line-height:1.5; color:var(--dim) }
-  label { display:block; margin-bottom:6px; font-size:13px; font-weight:600 }
-  input { width:100%; padding:10px 12px; font:inherit; font-size:14px; color:var(--ink);
-          background:#f1f2f3; border:0; border-bottom:1px solid #c4c4c4; border-radius:4px 4px 0 0 }
-  input:focus { outline:none; border-bottom:2px solid var(--navy) }
-  button { width:100%; margin-top:18px; padding:10px 16px; font:inherit; font-size:14px; font-weight:600;
-           color:#fff; background:var(--navy); border:0; border-radius:4px; cursor:pointer }
-  button:hover { filter:brightness(1.12) }
-  button:disabled { opacity:.6; cursor:default }
-  .err, .busy { margin:14px 0 0; font-size:13px }
-  .err { color:#b3402f }
-  .busy { color:var(--dim) }
+<style id="gatecss">
+  /* Every rule is scoped to #gate. Bare element selectors here leak into the app
+     once it loads: an unscoped button rule set to full width stretches every MUI
+     button and stacks the toolbars. The block is also removed on unlock. */
+  #gate { --navy:#3b4960; --rule:#dde0e5; --ink:#171e29; --dim:#7c8797;
+          min-height:100vh; display:grid; place-items:center; padding:24px;
+          font-family:'Open Sans',system-ui,sans-serif; color:var(--ink) }
+  #gate * { box-sizing:border-box }
+  #gate form { width:100%; max-width:380px; background:#fff; border:1px solid var(--rule);
+               border-radius:6px; padding:32px }
+  #gate .eyebrow { margin:0 0 6px; font-size:12px; font-weight:700; letter-spacing:.08em;
+                   text-transform:uppercase; color:var(--dim) }
+  #gate h1 { margin:0 0 8px; font-size:22px; font-weight:700 }
+  #gate .sub { margin:0 0 22px; font-size:14px; line-height:1.5; color:var(--dim) }
+  #gate label { display:block; margin-bottom:6px; font-size:13px; font-weight:600 }
+  #gate input { width:100%; padding:10px 12px; font:inherit; font-size:14px; color:var(--ink);
+                background:#f1f2f3; border:0; border-bottom:1px solid #c4c4c4; border-radius:4px 4px 0 0 }
+  #gate input:focus { outline:none; border-bottom:2px solid var(--navy) }
+  #gate button { width:100%; margin-top:18px; padding:10px 16px; font:inherit; font-size:14px;
+                 font-weight:600; color:#fff; background:var(--navy); border:0; border-radius:4px;
+                 cursor:pointer }
+  #gate button:hover { filter:brightness(1.12) }
+  #gate button:disabled { opacity:.6; cursor:default }
+  #gate .err, #gate .busy { margin:14px 0 0; font-size:13px }
+  #gate .err { color:#b3402f }
+  #gate .busy { color:var(--dim) }
+  body.gated { margin:0; background:#f7f8f9 }
 </style>
 </head>
-<body>
+<body class="gated">
 <div id="gate">
   <form id="f" autocomplete="off">
     <p class="eyebrow">iP: Intelligence Platform</p>
@@ -108,7 +113,8 @@ const page = `<!doctype html>
     var s=document.createElement('script'); s.type='module'; s.src=url;
     document.body.appendChild(s);
     var g=document.getElementById('gate'); if(g) g.remove();
-    document.body.style.background='#fff';
+    var st=document.getElementById('gatecss'); if(st) st.remove();
+    document.body.className='';
     try{ sessionStorage.setItem(KEY,phrase); }catch(e){}
   }
   f.addEventListener('submit',function(e){
