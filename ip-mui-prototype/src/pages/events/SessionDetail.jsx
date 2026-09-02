@@ -491,12 +491,14 @@ const AddDrillBody = ({ onPick }) => {
 function DrillDetailBody({ drill }) {
   const [principles, setPrinciples] = useState(['Creating Space', 'Ball Retention'])
   const [labels, setLabels] = useState(['Dribbling'])
-  const [squads, setSquads] = useState(SQUAD_PICKER.slice(0, 3))
+  // SQUAD_PICKER carries { squad, athletes }; the multi-select wants strings.
+  const squadNames = SQUAD_PICKER.map(s => s.squad)
+  const [squads, setSquads] = useState(squadNames)
 
   const sections = [
     ['Available principle(s)', principleOptions, principles, setPrinciples],
     ['Available drill label(s)', DRILL_LABELS, labels, setLabels],
-    ['Drill visible to the following squads...', SQUAD_PICKER, squads, setSquads],
+    ['Drill visible to the following squads...', squadNames, squads, setSquads],
   ]
 
   return (
