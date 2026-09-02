@@ -347,6 +347,11 @@
     const squadHasContent = (squadCfg) => Boolean(squadCfg) &&
       Object.values(squadCfg.byPosition).some((combo) => combo.metrics.some(isFilled));
 
+    const squadHasTarget = (squadCfg) => Boolean(squadCfg) &&
+      Object.values(squadCfg.byPosition).some((combo) =>
+        combo.metrics.some((slot) => isFilled(slot) && Object.values(slot.targets).some((t) => t !== '' && t != null))
+      );
+
     const hasAnyTarget = (config) => Object.values(config).some((squadCfg) =>
       Object.values(squadCfg.byPosition).some((combo) =>
         combo.metrics.some((slot) => isFilled(slot) && Object.values(slot.targets).some((t) => t !== '' && t != null))
@@ -675,7 +680,7 @@
     }
 
     /* ── Edit view ───────────────────────────────────────────────────── */
-    function FilledSelect({ label, value, options, onChange, width, disabledOptions = [] }) {
+    function FilledSelect({ label, value, options, onChange, width, disabledOptions = [], optionNote }) {
       return (
         <TextField
           select
@@ -689,11 +694,17 @@
             '& .MuiSelect-select':    { pt: '24px', pb: '6px', fontSize: 15, color: PRIMARY, minHeight: 0 },
           }}
         >
-          {options.map((option) => (
-            <MenuItem key={option} value={option} disabled={disabledOptions.includes(option)}>
-              {option}
-            </MenuItem>
-          ))}
+          {options.map((option) => {
+            const note = optionNote && optionNote(option);
+            return (
+              <MenuItem key={option} value={option} disabled={disabledOptions.includes(option)}>
+                <Stack direction="row" alignItems="baseline" spacing={1}>
+                  <span>{option}</span>
+                  {note && <Box component="span" sx={{ fontSize: 12, color: GREY100 }}>{note}</Box>}
+                </Stack>
+              </MenuItem>
+            );
+          })}
         </TextField>
       );
     }
@@ -701,6 +712,7 @@
     function EditView({
       draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel,
       allowPercent = false, showPosition = true, showImports = true, requireInput = false,
+      markSquads = false,
     }) {
       const [dayAnchor, setDayAnchor] = useState(null);
       // One field is enough: only one metric dropdown is ever open.
@@ -847,7 +859,15 @@
 
           {/* These two filter what the grid shows. */}
           <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
-            <FilledSelect label="Squad"       value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
+            <FilledSelect
+              label="Squad"
+              value={squad}
+              options={SQUADS}
+              onChange={setSquad}
+              width={251}
+              // Which squads are already done, on a page that starts with none.
+              optionNote={markSquads ? ((sq) => (squadHasTarget(draft[sq]) ? 'targets set' : '')) : undefined}
+            />
             {showPosition && (
               <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={240} />
             )}
@@ -1455,6 +1475,7 @@
                     showPosition={false}
                     showImports={false}
                     requireInput
+                    markSquads
                   />
                 ) : (
                   <ReadOnlyView
