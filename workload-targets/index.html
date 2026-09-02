@@ -72,7 +72,7 @@
       createTheme, ThemeProvider, CssBaseline,
       Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
       Tabs, Tab, List, ListItemButton, ListItemText,
-      TextField, MenuItem, Menu, ListSubheader, Checkbox, Avatar, ButtonBase,
+      TextField, MenuItem, Menu, ListSubheader, Checkbox, Autocomplete, Avatar, ButtonBase,
       Snackbar, Alert, AlertTitle,
       ToggleButton, ToggleButtonGroup, InputAdornment, Switch,
     } from '@mui/material';
@@ -232,6 +232,8 @@
     ];
 
     const METRIC_LIBRARY = METRIC_GROUPS.flatMap((g) => g.items);
+    const METRIC_GROUP_OF = {};
+    METRIC_GROUPS.forEach((g) => g.items.forEach((m) => { METRIC_GROUP_OF[m] = g.header; }));
 
     const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
 
@@ -756,7 +758,7 @@
     function EditView({
       draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel,
       allowPercent = false, showPosition = true, showImports = true, requireInput = false,
-      markSquads = false,
+      markSquads = false, metricAutocomplete = false,
     }) {
       const [dayAnchor, setDayAnchor] = useState(null);
       // One field is enough: only one metric dropdown is ever open.
@@ -1047,6 +1049,42 @@
                 }}
               >
                 <Box sx={{ width: COL_METRIC, flex: 'none', pl: '18px' }}>
+                  {/* Typing in the field itself, rather than a search sat at the
+                      head of a menu. The list opens under it and scrolls. */}
+                  {metricAutocomplete ? (
+                    <Autocomplete
+                      options={METRIC_LIBRARY}
+                      groupBy={(option) => METRIC_GROUP_OF[option]}
+                      value={slot.metric || null}
+                      onChange={(e, picked) => setMetric(index, picked || '')}
+                      getOptionDisabled={(option) => usedMetrics.includes(option) && slot.metric !== option}
+                      noOptionsText="No metric by that name"
+                      // The list renders in a portal, so its own styling has to
+                      // travel with it rather than sit on the field's sx.
+                      ListboxProps={{
+                        sx: {
+                          maxHeight: METRIC_LIST_H,
+                          '& .MuiAutocomplete-groupLabel': {
+                            fontSize: 12, fontWeight: 700, lineHeight: 2.4, color: GREY100,
+                            letterSpacing: '0.06em', textTransform: 'uppercase',
+                          },
+                        },
+                      }}
+                      sx={{
+                        width: IN_METRIC,
+                        '& .MuiFilledInput-root': { height: 52, py: 0 },
+                        '& .MuiFilledInput-input': { fontSize: 15, color: PRIMARY },
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="filled"
+                          hiddenLabel
+                          placeholder="Select a metric"
+                        />
+                      )}
+                    />
+                  ) : (
                   <TextField
                     select
                     value={slot.metric}
@@ -1101,6 +1139,7 @@
                       </Typography>
                     )}
                   </TextField>
+                  )}
                 </Box>
 
                 {cfg.days.map((day) => (
@@ -1544,6 +1583,7 @@
                     showImports={false}
                     requireInput
                     markSquads
+                    metricAutocomplete
                   />
                 ) : (
                   <ReadOnlyView
@@ -2678,6 +2718,7 @@
     const MIN_COL_W = 96;                  // floor for a dragged table column
     const MENU_ITEM_H = 33;                // a metric in the column menu
     const MENU_VISIBLE_ITEMS = 6;          // shown before the list starts scrolling
+    const METRIC_LIST_H = 280;             // the metric list, before it scrolls
     const COHORT_MENU_H = 320;             // the cohort list, headings and all
     const VALUES_GUTTER = 24;              // keeps the last bar off the right edge
     const VALUES_MIN = 492 + VALUES_GUTTER;
