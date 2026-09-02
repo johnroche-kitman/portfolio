@@ -3,6 +3,7 @@ import {
   Box, Button, Chip, Divider, Drawer, IconButton, Step, StepLabel, Stepper, Typography,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import ErrorBoundary from './ErrorBoundary'
 
 /**
  * The one drawer shell behind every creation panel in the product — the eleven
@@ -38,7 +39,10 @@ export default function AddPanel({ open, definition, onClose, width = 640, ...bo
       )}
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'grid', gap: 2.5, alignContent: 'start' }}>
-        {definition?.body({ step, ...bodyProps })}
+        {/* Keyed on the panel so opening a different one clears a caught error. */}
+        <ErrorBoundary resetKey={definition?.title} label="this panel" compact>
+          {definition?.body({ step, ...bodyProps })}
+        </ErrorBoundary>
       </Box>
 
       <Divider />

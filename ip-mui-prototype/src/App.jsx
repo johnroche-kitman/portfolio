@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import MedicalRosters from './pages/medical/MedicalRosters'
 import MedicalAthlete from './pages/medical/MedicalAthlete'
 import InjuryRecord from './pages/medical/InjuryRecord'
@@ -29,9 +29,13 @@ import NewAthleteGroup from './pages/admin/NewAthleteGroup'
 import StockManagement from './pages/admin/StockManagement'
 import { Exports, Imports } from './pages/admin/Transfers'
 import { benchmarkSubmissions, importerSubmissions } from './data/forms'
+import ErrorBoundary from './components/ErrorBoundary'
 
 export default function App() {
+  // Keyed on the path so moving to another route clears a caught error.
+  const { pathname } = useLocation()
   return (
+    <ErrorBoundary resetKey={pathname}>
     <Routes>
       <Route path="/" element={<Navigate to="/calendar" replace />} />
       <Route path="/calendar" element={<CalendarPage />} />
@@ -79,5 +83,6 @@ export default function App() {
       <Route path="/help" element={<BuildGuide />} />
       <Route path="*" element={<CalendarPage />} />
     </Routes>
+    </ErrorBoundary>
   )
 }
