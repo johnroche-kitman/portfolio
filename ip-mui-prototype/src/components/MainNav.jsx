@@ -21,6 +21,26 @@ export const RAIL_COLLAPSED = 60
 export const RAIL_EXPANDED = 240
 const FLYOUT = 246
 
+
+/**
+ * Routes the prototype actually has. Anything in the nav that is not here is
+ * shown greyed and does not navigate, so it is obvious what is built and what is
+ * only listed for completeness. Keep in step with App.jsx.
+ */
+const BUILT = new Set([
+  '/calendar', '/medical/rosters',
+  '/analysis/benchmark_report',
+  '/benchmark/test_validation', '/benchmark/league_benchmarking',
+  '/data_importer', '/growth_and_maturation',
+  '/planning_hub/coaching_library', '/planning_hub/settings',
+  '/administration/athletes', '/users', '/fixtures',
+  '/administration/organisation/edit', '/administration/exports',
+  '/administration/imports', '/stock_management',
+  '/administration/labels/manage', '/administration/groups',
+  '/library', '/help',
+])
+const isBuilt = path => BUILT.has(path)
+
 export const AUDIT_URL = 'https://johnroche-kitman.github.io/portfolio/ip-audit/'
 
 // Mirrors mainNavBarDesktop in the live app: same items, same order, same routes.
@@ -100,18 +120,27 @@ export default function MainNav({ expanded, onToggle }) {
     item.path ? pathname.startsWith(item.path)
       : (item.children || []).some(([p]) => pathname === p || pathname.startsWith(p + '/'))
 
+  const enabled = item => (item.children
+    ? item.children.some(([p]) => isBuilt(p))
+    : isBuilt(item.path))
+
   const handle = item => {
+    if (!enabled(item)) return
     if (item.children) setOpenKey(k => (k === item.key ? null : item.key))
     else { setOpenKey(null); navigate(item.path) }
   }
 
   const row = (item) => {
     const active = isActive(item)
+    const on = enabled(item)
     const btn = (
       <ListItemButton
         onClick={() => handle(item)}
+        disabled={!on}
         sx={{
           minHeight: 40, px: expanded ? 2 : 0,
+          opacity: on ? 1 : 0.38,
+          '&.Mui-disabled': { opacity: 0.38 },
           justifyContent: expanded ? 'flex-start' : 'center',
           bgcolor: active || openKey === item.key ? colors.blue_500 || '#0828ff' : 'transparent',
           '&:hover': { bgcolor: active ? colors.blue_500 : 'rgba(255,255,255,.10)' },
@@ -126,7 +155,10 @@ export default function MainNav({ expanded, onToggle }) {
         )}
       </ListItemButton>
     )
-    return expanded ? btn : <Tooltip title={item.label} placement="right">{btn}</Tooltip>
+    const label = on ? item.label : `${item.label} — not in this prototype`
+    // A disabled ListItemButton swallows pointer events, so the Tooltip needs a
+    // wrapper it can still hear about.
+    return <Tooltip title={expanded && on ? '' : label} placement="right"><span>{btn}</span></Tooltip>
   }
 
   const open = NAV_ITEMS.find(i => i.key === openKey)
@@ -188,20 +220,29 @@ export default function MainNav({ expanded, onToggle }) {
             {open?.label}
           </Typography>
           <List sx={{ p: 0 }}>
-            {(open?.children || []).map(([path, label]) => (
-              <ListItemButton
-                key={path}
-                selected={pathname === path}
-                onClick={() => { setOpenKey(null); navigate(path) }}
-                sx={{
-                  px: 2.5, minHeight: 40,
-                  '&.Mui-selected': { bgcolor: 'rgba(255,255,255,.12)' },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,.08)' },
-                }}
-              >
-                <ListItemText primary={label} primaryTypographyProps={{ fontSize: 14, sx: { color: colors.white } }} />
-              </ListItemButton>
-            ))}
+            {(open?.children || []).map(([path, label]) => {
+              const on = isBuilt(path)
+              return (
+                <Tooltip key={path} title={on ? '' : 'Not in this prototype'} placement="right">
+                  <span>
+                    <ListItemButton
+                      disabled={!on}
+                      selected={pathname === path}
+                      onClick={() => { setOpenKey(null); navigate(path) }}
+                      sx={{
+                        px: 2.5, minHeight: 40, opacity: on ? 1 : 0.38,
+                        '&.Mui-disabled': { opacity: 0.38 },
+                        '&.Mui-selected': { bgcolor: 'rgba(255,255,255,.12)' },
+                        '&:hover': { bgcolor: 'rgba(255,255,255,.08)' },
+                      }}
+                    >
+                      <ListItemText primary={label}
+                        primaryTypographyProps={{ fontSize: 14, sx: { color: colors.white } }} />
+                    </ListItemButton>
+                  </span>
+                </Tooltip>
+              )
+            })}
           </List>
         </Box>
       </Collapse>

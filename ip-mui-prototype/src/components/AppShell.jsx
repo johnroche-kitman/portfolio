@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  AppBar, Avatar, Box, Button, Divider, Drawer, IconButton, List, ListItemButton,
-  ListItemText, MenuItem, TextField, Toolbar, Typography,
+  AppBar, Avatar, Box, Button, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon,
+  ListItemText, Menu, MenuItem, TextField, Toolbar, Typography,
 } from '@mui/material'
 import PersonSearchIcon from '@mui/icons-material/PersonSearchOutlined'
+import AccountCircleIcon from '@mui/icons-material/AccountCircleOutlined'
+import LogoutIcon from '@mui/icons-material/LogoutOutlined'
 import CloseIcon from '@mui/icons-material/Close'
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight'
 import colors from '../theme/tokens'
@@ -17,6 +19,7 @@ export default function AppShell({ title, children, fullHeight = false, listLabe
   const eventList = listLabel === 'Event list'
   const [playerListOpen, setPlayerListOpen] = useState(false)
   const [navExpanded, setNavExpanded] = useState(false)
+  const [userEl, setUserEl] = useState(null)
   const [currentSquad, setCurrentSquad] = useState(squad)
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
@@ -52,7 +55,32 @@ export default function AppShell({ title, children, fullHeight = false, listLabe
             >
               {squads.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
             </TextField>
-            <Avatar sx={{ width: 30, height: 30, bgcolor: colors.neutral_300, color: colors.grey_200, fontSize: 12 }}>JR</Avatar>
+            <IconButton size="small" onClick={e => setUserEl(e.currentTarget)} aria-label="Your account">
+              <Avatar sx={{ width: 30, height: 30, bgcolor: colors.neutral_300, color: colors.grey_200, fontSize: 12 }}>JR</Avatar>
+            </IconButton>
+            <Menu anchorEl={userEl} open={!!userEl} onClose={() => setUserEl(null)}
+              slotProps={{ paper: { sx: { minWidth: 240 } } }}>
+              <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: colors.neutral_300, color: colors.grey_200, fontSize: 12 }}>JR</Avatar>
+                <Box>
+                  <Typography variant="subtitle2">John Roche Test</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>jrochetest</Typography>
+                </Box>
+              </Box>
+              <Divider />
+              <MenuItem onClick={() => { setUserEl(null); navigate('/user_profile/edit') }}>
+                <ListItemIcon><AccountCircleIcon fontSize="small" /></ListItemIcon>
+                View Profile
+              </MenuItem>
+              <MenuItem onClick={() => setUserEl(null)}>
+                <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+                Sign Out
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={() => setUserEl(null)}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>Terms and Policies</Typography>
+              </MenuItem>
+            </Menu>
           </Toolbar>
         </AppBar>
 

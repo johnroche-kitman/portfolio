@@ -31,7 +31,7 @@ import {
 import { AdminGrid, CardAction, PageHeader, SettingsCard, StateChip } from '../admin/parts'
 import {
   DRILL_ACTIVITIES, DRILL_CREATORS, DRILL_PRINCIPLES, INTENSITIES, PARTICIPATION_LEVELS,
-  DRILL_FIELDS, PRINCIPLE_CATEGORY, PRINCIPLE_PHASES, PRINCIPLE_TYPE, SESSION_TABS, SQUAD_PICKER,
+  DRILL_FIELDS, DRILL_LABELS, PRINCIPLE_CATEGORY, PRINCIPLE_PHASES, PRINCIPLE_TYPE, SESSION_TABS, SQUAD_PICKER,
   collections, drillLibrary, principleOptions, sessionAthletes, sessionDrills, sessionMeta, sessionStaff,
   shortActivity,
 } from '../../data/session'
@@ -482,6 +482,74 @@ const AddDrillBody = ({ onPick }) => {
   )
 }
 
+/**
+ * Drill detail body. Each accordion holds a multi-select and its removable
+ * chips, which is what the live panel carries; an earlier version of this showed
+ * "None set." and was wrong. Below them: description, intensity, web links and
+ * an attachment drop zone.
+ */
+function DrillDetailBody({ drill }) {
+  const [principles, setPrinciples] = useState(['Creating Space', 'Ball Retention'])
+  const [labels, setLabels] = useState(['Dribbling'])
+  const [squads, setSquads] = useState(SQUAD_PICKER.slice(0, 3))
+
+  const sections = [
+    ['Available principle(s)', principleOptions, principles, setPrinciples],
+    ['Available drill label(s)', DRILL_LABELS, labels, setLabels],
+    ['Drill visible to the following squads...', SQUAD_PICKER, squads, setSquads],
+  ]
+
+  return (
+    <>
+      <FileDrop hint="Drag and drop drill diagram or" />
+      <TextInput label="Drill name" defaultValue={drill?.name || ''} required helperText="Required" />
+      <SelectField label="Activity" defaultValue={drill?.activity || ''}
+        options={DRILL_ACTIVITIES} required helperText="Required" />
+      <Typography variant="caption" sx={{ color: 'text.secondary', mt: -1 }}>
+        Associated squads: U16 (Test Kitman FC), U15, U21
+      </Typography>
+
+      {sections.map(([title, options, value, setValue]) => (
+        <Accordion key={title} disableGutters variant="outlined" defaultExpanded
+          sx={{ borderColor: colors.neutral_300, '&::before': { display: 'none' } }}>
+          <AccordionSummary expandIcon={<ChevronRightIcon />}>
+            <Typography variant="subtitle2">{title}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <MultiSelect label={`${value.length} selected`} options={options}
+              value={value} onChange={setValue} sx={{ width: '100%' }} />
+          </AccordionDetails>
+        </Accordion>
+      ))}
+
+      <RichTextField label="Description" />
+      <Box>
+        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Estimated intensity</Typography>
+        <IntensityPicker value={drill?.intensity} />
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>Web link(s)</Typography>
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+          <TextInput label="Title" sx={{ flex: 1 }} />
+          <TextInput label="URL" sx={{ flex: 2 }} />
+          <Button variant="outlined" sx={{ mt: 0.5 }}>Add</Button>
+        </Box>
+      </Box>
+      <FileDrop hint="Drag and drop files or" />
+    </>
+  )
+}
+
+/**
+ * Drill detail is also reached from the Coaching library, where clicking a drill
+ * name opens this same panel. Exported so there is one definition, not two.
+ */
+export const DRILL_DETAIL_PANEL = {
+  title: 'Drill detail',
+  chip: 'In library',
+  body: ({ drill }) => <DrillDetailBody drill={drill} />,
+}
+
 const SESSION_PANELS = {
   addDrill: { title: 'Add drill', body: ({ onPick }) => <AddDrillBody onPick={onPick} /> },
 
@@ -515,39 +583,7 @@ const SESSION_PANELS = {
     body: () => <SquadPicker />,
   },
 
-  drillDetail: {
-    title: 'Drill detail',
-    chip: 'In library',
-    body: ({ drill }) => (
-      <>
-        <FileDrop hint="Drag and drop drill diagram or" />
-        <TextInput label="Drill name" defaultValue={drill?.name || ''} required helperText="Required" />
-        <SelectField label="Activity" defaultValue={drill?.activity || ''}
-          options={DRILL_ACTIVITIES} required helperText="Required" />
-        <Typography variant="caption" sx={{ color: 'text.secondary', mt: -1 }}>
-          Associated squads: U16 (Test Kitman FC), U15, U21
-        </Typography>
-
-        {['Available principle(s)', 'Available drill label(s)', 'Drill visible to the following squads...'].map(t => (
-          <Accordion key={t} disableGutters variant="outlined"
-            sx={{ borderColor: colors.neutral_300, '&::before': { display: 'none' } }}>
-            <AccordionSummary expandIcon={<ChevronRightIcon />}>
-              <Typography variant="subtitle2">{t}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>None set.</Typography>
-            </AccordionDetails>
-          </Accordion>
-        ))}
-
-        <RichTextField label="Description" />
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Estimated intensity</Typography>
-          <IntensityPicker value={drill?.intensity} />
-        </Box>
-      </>
-    ),
-  },
+  drillDetail: DRILL_DETAIL_PANEL,
 
   principles: {
     title: 'Principles',

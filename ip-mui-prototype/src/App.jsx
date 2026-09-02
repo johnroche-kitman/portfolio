@@ -11,6 +11,11 @@ import SessionImporter from './pages/events/SessionImporter'
 import ComponentLibrary from './pages/library/ComponentLibrary'
 import BuildGuide from './pages/help/BuildGuide'
 import BenchmarkReport from './pages/analysis/BenchmarkReport'
+import Submissions from './pages/forms/Submissions'
+import BenchmarkValidation from './pages/forms/BenchmarkValidation'
+import GrowthMaturation from './pages/forms/GrowthMaturation'
+import CoachingLibrary from './pages/planning/CoachingLibrary'
+import PlanningLibrary from './pages/planning/PlanningLibrary'
 import ManageAthletes from './pages/admin/ManageAthletes'
 import NewAthlete from './pages/admin/NewAthlete'
 import ManageStaffUsers from './pages/admin/ManageStaffUsers'
@@ -23,6 +28,7 @@ import AthleteGroups from './pages/admin/AthleteGroups'
 import NewAthleteGroup from './pages/admin/NewAthleteGroup'
 import StockManagement from './pages/admin/StockManagement'
 import { Exports, Imports } from './pages/admin/Transfers'
+import { benchmarkSubmissions, importerSubmissions } from './data/forms'
 
 export default function App() {
   return (
@@ -40,6 +46,18 @@ export default function App() {
       <Route path="/medical/athletes/:athleteId/illnesses/:id" element={<InjuryRecord />} />
 
       <Route path="/analysis/benchmark_report" element={<BenchmarkReport />} />
+
+      {/* Forms */}
+      <Route path="/benchmark/test_validation" element={<BenchmarkValidation />} />
+      <Route path="/benchmark/league_benchmarking"
+        element={<Submissions title="League benchmarking" rows={benchmarkSubmissions} showSource />} />
+      <Route path="/data_importer"
+        element={<Submissions title="Data importer" rows={importerSubmissions} />} />
+      <Route path="/growth_and_maturation" element={<GrowthMaturation />} />
+
+      {/* Planning */}
+      <Route path="/planning_hub/coaching_library" element={<CoachingLibrary />} />
+      <Route path="/planning_hub/settings" element={<PlanningLibrary />} />
 
       {/* Administration */}
       <Route path="/administration/athletes" element={<ManageAthletes />} />

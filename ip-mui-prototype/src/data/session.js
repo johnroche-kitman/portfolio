@@ -161,3 +161,6 @@ export const eventListItems = [
   { id: 12, name: 'crgtst', when: 'Mon, 13 Jul 2026 | 10:00' },
   { id: 13, name: 'Test Team (Neutral), Premier League 2', when: 'Mon, 13 Jul 2026 | 09:00' },
 ]
+
+/** Labels a drill can carry, offered in the Drill detail panel. */
+export const DRILL_LABELS = ['Dribbling', 'Passing', 'Finishing', 'Pressing', 'Possession', 'Transition']
