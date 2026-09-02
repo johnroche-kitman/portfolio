@@ -11,14 +11,11 @@ const LONG_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
  * Mirrors the live popup: colour chip, title, Duplicate, date/type/squad,
  * recurrence line, then Delete / Edit / More details.
  */
-/**
- * Where "More details" goes depends on the event type. Event detail is not built
- * in this prototype, so an Event gets no detail link rather than a dead one.
- */
+/** Each event type has its own detail page. */
 const detailPath = ev =>
   ev.type === EVENT_TYPES.GAME ? `/games/${ev.id}`
     : ev.type === EVENT_TYPES.SESSION ? `/sessions/${ev.id}`
-    : null
+    : `/events/${ev.id}`
 
 export default function EventPopover({ event, anchorEl, onClose }) {
   const navigate = useNavigate()
@@ -67,10 +64,8 @@ export default function EventPopover({ event, anchorEl, onClose }) {
       <Box sx={{ px: 2, py: 1.25, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Button variant="text" color="error" size="small" onClick={onClose}>Delete</Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="text" size="small" onClick={() => go(`/events/${event.id}`)}>Edit</Button>
-          {detailPath(event) && (
-            <Button size="small" onClick={() => go(detailPath(event))}>More details</Button>
-          )}
+          <Button variant="text" size="small" onClick={() => go(`/events/${event.id}/edit`)}>Edit</Button>
+          <Button size="small" onClick={() => go(detailPath(event))}>More details</Button>
         </Box>
       </Box>
     </Popover>

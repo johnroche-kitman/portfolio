@@ -708,7 +708,7 @@ export default function SessionDetail() {
             {/* Turning this on is what puts the check mark on the event in every calendar view. */}
             <FormControlLabel sx={{ mr: 0 }} label="Complete"
               control={<Switch checked={complete} onChange={e => toggleComplete(e.target.checked)} />} />
-            <Button variant="outlined" onClick={() => navigate(`/events/${ev.id}`)}>Edit details</Button>
+            <Button variant="outlined" onClick={() => navigate(`/events/${ev.id}/edit`)}>Edit details</Button>
             <IconButton size="small" onClick={e => setMenuEl(e.currentTarget)} aria-label="More actions">
               <MoreVertIcon />
             </IconButton>

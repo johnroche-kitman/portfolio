@@ -71,7 +71,7 @@ export default function GameDetail() {
             {/* Marking a game complete ticks it in every calendar view. */}
             <FormControlLabel label="Complete" sx={{ mr: 0 }}
               control={<Switch checked={complete} onChange={e => setComplete(e.target.checked)} />} />
-            <Button variant="outlined" onClick={() => navigate('/events/1?type=Game')}>Game details</Button>
+            <Button variant="outlined" onClick={() => navigate('/events/1/edit?type=Game')}>Game details</Button>
             <IconButton size="small" aria-label="Game actions" onClick={e => setMenuEl(e.currentTarget)}>
               <MoreVertIcon />
             </IconButton>

@@ -6,6 +6,7 @@ import CalendarPage from './pages/calendar/CalendarPage'
 import EventEditor from './pages/events/EventEditor'
 import SessionDetail from './pages/events/SessionDetail'
 import GameDetail from './pages/events/GameDetail'
+import EventDetail from './pages/events/EventDetail'
 import SessionImporter from './pages/events/SessionImporter'
 import ComponentLibrary from './pages/library/ComponentLibrary'
 import BuildGuide from './pages/help/BuildGuide'
@@ -29,7 +30,8 @@ export default function App() {
       <Route path="/" element={<Navigate to="/calendar" replace />} />
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/events/new" element={<EventEditor />} />
-      <Route path="/events/:id" element={<EventEditor />} />
+      <Route path="/events/:id/edit" element={<EventEditor />} />
+      <Route path="/events/:id" element={<EventDetail />} />
       <Route path="/sessions/:id" element={<SessionDetail />} />
       <Route path="/games/:id" element={<GameDetail />} />
       <Route path="/mass_upload/event_data" element={<SessionImporter />} />
