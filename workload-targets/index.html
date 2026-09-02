@@ -536,7 +536,7 @@
     /* ── Read-only view ──────────────────────────────────────────────── */
     // showPosition and showImports come off together on the version whose file
     // carries neither: nothing sets them, so nothing should report them.
-    function SquadTargetTable({ squad, cfg, percentOnly = false, showPosition = true, showImports = true }) {
+    function SquadTargetTable({ squad, cfg, percentOnly = false, showPosition = true, showImports = true, showDays = true }) {
       const rows = [];
       const filled = [];
       POSITIONS.forEach((position) => {
@@ -571,7 +571,7 @@
       return (
         <Box sx={{ mb: 5 }}>
           <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}>
-            {squad} targets by GD +/&#8722;
+            {squad} targets{showDays ? ' by GD +/\u2212' : ''}
           </Typography>
 
           <Box sx={{ overflowX: 'auto' }}>
@@ -644,7 +644,7 @@
     // them primary. empty replaces the tables when nothing has been set yet.
     function ReadOnlyView({
       config, onAction, title = 'Workload metrics and targets', actionLabel = 'Edit',
-      percentOnly = false, showPosition = true, showImports = true,
+      percentOnly = false, showPosition = true, showImports = true, showDays = true,
       secondaryLabel, onSecondary, actions, empty,
     }) {
       const buttons = actions || [
@@ -683,6 +683,7 @@
               percentOnly={percentOnly}
               showPosition={showPosition}
               showImports={showImports}
+              showDays={showDays}
             />
           ))}
         </Box>
@@ -1596,6 +1597,7 @@
                     empty={set ? null : emptyState}
                     showPosition={false}
                     showImports={false}
+                    showDays={false}
                   />
                 )}
               </Box>
