@@ -1449,8 +1449,11 @@
                 ) : (
                   <ReadOnlyView
                     config={config}
-                    onAction={() => { setDraft(clone(config)); setSquad(DEFAULT_SQUAD); }}
-                    actionLabel={set ? 'Edit' : 'Add targets'}
+                    // Nothing to act on until there is something there, and the
+                    // prompt in the middle of the page already offers the way in.
+                    actions={set
+                      ? [{ label: 'Edit', onClick: () => { setDraft(clone(config)); setSquad(DEFAULT_SQUAD); }, primary: true }]
+                      : []}
                     empty={set ? null : emptyState}
                     showPosition={false}
                     showImports={false}
