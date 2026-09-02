@@ -21,8 +21,10 @@ export const RAIL_COLLAPSED = 60
 export const RAIL_EXPANDED = 240
 const FLYOUT = 246
 
+export const AUDIT_URL = 'https://johnroche-kitman.github.io/portfolio/ip-audit/'
+
 // Mirrors mainNavBarDesktop in the live app: same items, same order, same routes.
-export const NAV_ITEMS = [
+const NAV_ITEMS = [
   {
     key: 'analysis', label: 'Analysis', icon: <BarChartIcon />,
     // Analysis is being sunset; League Benchmark Reporting is the one surface carried over.
@@ -139,10 +141,19 @@ export default function MainNav({ expanded, onToggle }) {
           display: 'flex', flexDirection: 'column', transition: 'width .18s ease',
         }}
       >
+        {/* The logo is the way back out to the surface audit. New tab, so the
+            prototype keeps its state and nobody re-enters the passphrase. */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: expanded ? 2 : 0,
           justifyContent: expanded ? 'flex-start' : 'center', height: 56, flexShrink: 0 }}>
-          <Box component="img" src={`${import.meta.env.BASE_URL}kitman-logo.png`} alt="Kitman Labs"
-            sx={{ width: 26, height: 26, display: 'block' }} />
+          <Tooltip title="Surface audit" placement="right">
+            <Box component="a" href={AUDIT_URL} target="_blank" rel="noopener"
+              aria-label="Surface audit"
+              sx={{ display: 'block', borderRadius: 1, lineHeight: 0,
+                '&:hover': { filter: 'brightness(1.25)' } }}>
+              <Box component="img" src={`${import.meta.env.BASE_URL}kitman-logo.png`} alt="Kitman Labs"
+                sx={{ width: 26, height: 26, display: 'block' }} />
+            </Box>
+          </Tooltip>
         </Box>
 
         <List sx={{ p: 0, flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
