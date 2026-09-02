@@ -72,7 +72,7 @@
       createTheme, ThemeProvider, CssBaseline,
       Box, Stack, Typography, Button, IconButton, Divider, Tooltip,
       Tabs, Tab, List, ListItemButton, ListItemText,
-      TextField, MenuItem, Menu, ListSubheader, Avatar, ButtonBase,
+      TextField, MenuItem, Menu, ListSubheader, Checkbox, Avatar, ButtonBase,
       Snackbar, Alert, AlertTitle,
       ToggleButton, ToggleButtonGroup, InputAdornment, Switch,
     } from '@mui/material';
@@ -1187,7 +1187,10 @@
                         sx={{ mb: 2, '& .MuiFilledInput-root': { minHeight: 50 } }}
                       >
                         {METRIC_LIBRARY.map((metric) => (
-                          <MenuItem key={metric} value={metric}>{metric}</MenuItem>
+                          <MenuItem key={metric} value={metric} sx={{ py: 0.25 }}>
+                            <Checkbox checked={block.metrics.includes(metric)} size="small" sx={{ mr: 1, p: 0.5 }} />
+                            {metric}
+                          </MenuItem>
                         ))}
                       </TextField>
 
@@ -1208,7 +1211,10 @@
                           {Array.from({ length: GD_LIMIT }, (_, n) => gdLabel(-(GD_LIMIT - n)))
                             .concat(Array.from({ length: GD_LIMIT }, (_, n) => gdLabel(n + 1)))
                             .map((day) => (
-                              <MenuItem key={day} value={day}>{day}</MenuItem>
+                              <MenuItem key={day} value={day} sx={{ py: 0.25 }}>
+                                <Checkbox checked={block.days.includes(day)} size="small" sx={{ mr: 1, p: 0.5 }} />
+                                {day}
+                              </MenuItem>
                             ))}
                         </TextField>
                       )}
@@ -1266,6 +1272,10 @@
       const [downloaded, setDownloaded] = useState(false);
       const [imported, setImported] = useState(false);
 
+      // Both banners sit in the same corner now, so the download one steps aside
+      // rather than being covered by the import one.
+      const startImport = () => { setDownloaded(false); setImporting(true); };
+
       const finishImport = (didImport) => {
         setImporting(false);
         if (didImport) { setConfig(seedConfig()); setSet(true); setImported(true); }
@@ -1303,9 +1313,9 @@
         ? [
           { label: 'Edit', onClick: () => setEditing(true) },
           { label: 'Create CSV template', onClick: () => setDrawer(true) },
-          { label: 'Import targets', onClick: () => setImporting(true), primary: true },
+          { label: 'Import targets', onClick: startImport, primary: true },
         ]
-        : [{ label: 'Import targets', onClick: () => setImporting(true) }];
+        : [{ label: 'Import targets', onClick: startImport }];
 
       return (
         <Box sx={{ height: '100%', display: 'flex' }}>
@@ -1354,8 +1364,8 @@
 
           <Snackbar
             open={downloaded}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-            sx={{ left: '28px !important', bottom: '32px !important' }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            sx={{ right: '28px !important', bottom: '32px !important' }}
             onClose={() => setDownloaded(false)}
           >
             <Alert severity="success" variant="filled" onClose={() => setDownloaded(false)}>
