@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Button, Divider, Link, Popover, Typography } from '@mui/material'
 import RepeatIcon from '@mui/icons-material/Repeat'
 import colors from '../../theme/tokens'
-import { TYPE_COLOR } from '../../data/events'
+import { EVENT_TYPES, TYPE_COLOR } from '../../data/events'
 
 const LONG_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -11,6 +11,15 @@ const LONG_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
  * Mirrors the live popup: colour chip, title, Duplicate, date/type/squad,
  * recurrence line, then Delete / Edit / More details.
  */
+/**
+ * Where "More details" goes depends on the event type. Event detail is not built
+ * in this prototype, so an Event gets no detail link rather than a dead one.
+ */
+const detailPath = ev =>
+  ev.type === EVENT_TYPES.GAME ? `/games/${ev.id}`
+    : ev.type === EVENT_TYPES.SESSION ? `/sessions/${ev.id}`
+    : null
+
 export default function EventPopover({ event, anchorEl, onClose }) {
   const navigate = useNavigate()
   if (!event) return null
@@ -59,7 +68,9 @@ export default function EventPopover({ event, anchorEl, onClose }) {
         <Button variant="text" color="error" size="small" onClick={onClose}>Delete</Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="text" size="small" onClick={() => go(`/events/${event.id}`)}>Edit</Button>
-          <Button size="small" onClick={() => go(`/sessions/${event.id}`)}>More details</Button>
+          {detailPath(event) && (
+            <Button size="small" onClick={() => go(detailPath(event))}>More details</Button>
+          )}
         </Box>
       </Box>
     </Popover>
