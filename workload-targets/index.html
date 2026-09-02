@@ -164,7 +164,13 @@
     const ORG_TABS = ['Appearance', 'Workload', 'Planning', 'Security and privacy', 'My iP', 'Calendar', 'Locations', 'Notifications'];
     const SUB_SECTIONS = ['Participation and RPE', 'Workload metrics and targets'];
 
-    const SQUADS    = ['1st team', 'U21', 'U18'];
+    // Every squad the club runs, youngest first. Only some carry targets so far,
+    // and the read only page shows the ones that do.
+    const SQUADS = [
+      'U10', 'U11', 'U12', 'U13', 'U14', 'U15', 'U16', 'U17', 'U18', 'U19',
+      'U21', 'U23', '1st team',
+    ];
+    const DEFAULT_SQUAD = '1st team';
     const POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
     // The metric library, named exactly as it reads in the app. Every dropdown on
@@ -284,7 +290,7 @@
 
     const seedMetrics = (squad) => {
       const slots = emptySlots();
-      Object.entries(SQUAD_TARGETS[squad]).forEach(([metric, values], i) => {
+      Object.entries(SQUAD_TARGETS[squad] || {}).forEach(([metric, values], i) => {
         slots[i] = {
           metric,
           targets: GD_DEFAULT.reduce((acc, day, d) => ({ ...acc, [day]: String(values[d]) }), {}),
@@ -306,7 +312,7 @@
           days: [...GD_DEFAULT],
           byPosition: {
             All: {
-              imports: SQUAD_IMPORTS[squad],
+              imports: SQUAD_IMPORTS[squad] || 'Last 5 imports',
               metrics: seedMetrics(squad),
               mode: 'exact',
               percents: {},
@@ -316,6 +322,36 @@
       });
       return cfg;
     };
+
+    // Nothing set yet: the squads exist, the grid is empty. Ten rows rather than
+    // six, since a page that starts blank is where a long list gets typed.
+    const BLANK_ROWS = 10;
+    const emptyConfig = () => {
+      const cfg = {};
+      SQUADS.forEach((squad) => {
+        cfg[squad] = {
+          days: [...GD_DEFAULT],
+          byPosition: {
+            All: {
+              imports: SQUAD_IMPORTS[squad] || 'Last 5 imports',
+              metrics: Array.from({ length: BLANK_ROWS }, emptySlot),
+              mode: 'exact',
+              percents: {},
+            },
+          },
+        };
+      });
+      return cfg;
+    };
+
+    const squadHasContent = (squadCfg) => Boolean(squadCfg) &&
+      Object.values(squadCfg.byPosition).some((combo) => combo.metrics.some(isFilled));
+
+    const hasAnyTarget = (config) => Object.values(config).some((squadCfg) =>
+      Object.values(squadCfg.byPosition).some((combo) =>
+        combo.metrics.some((slot) => isFilled(slot) && Object.values(slot.targets).some((t) => t !== '' && t != null))
+      )
+    );
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -553,11 +589,18 @@
       );
     }
 
+    // actions are the buttons at the top right, in the order given, the last of
+    // them primary. empty replaces the tables when nothing has been set yet.
     function ReadOnlyView({
       config, onAction, title = 'Workload metrics and targets', actionLabel = 'Edit',
       percentOnly = false, showPosition = true, showImports = true,
-      secondaryLabel, onSecondary,
+      secondaryLabel, onSecondary, actions, empty,
     }) {
+      const buttons = actions || [
+        ...(secondaryLabel ? [{ label: secondaryLabel, onClick: onSecondary }] : []),
+        { label: actionLabel, onClick: onAction, primary: true },
+      ];
+
       return (
         <Box sx={{ pl: `${CONTENT_X}px`, pt: 4, pb: 6, overflowY: 'auto', flex: 1 }}>
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 3.5, pr: `${CONTENT_X}px` }}>
@@ -565,18 +608,23 @@
               {title}
             </Typography>
             <Stack direction="row" spacing={1.5}>
-              {secondaryLabel && (
-                <Button variant="contained" color="secondary" onClick={onSecondary} sx={{ px: 2.5 }}>
-                  {secondaryLabel}
+              {buttons.map((b) => (
+                <Button
+                  key={b.label}
+                  variant="contained"
+                  color={b.primary ? 'primary' : 'secondary'}
+                  onClick={b.onClick}
+                  sx={{ px: 2.5 }}
+                >
+                  {b.label}
                 </Button>
-              )}
-              <Button variant="contained" color="primary" onClick={onAction} sx={{ px: 2.5 }}>
-                {actionLabel}
-              </Button>
+              ))}
             </Stack>
           </Stack>
 
-          {SQUADS.map((squad) => (
+          {/* Thirteen squads, only some with targets: an empty table for each of
+              the rest would bury the ones that have them. */}
+          {empty || SQUADS.filter((squad) => squadHasContent(config[squad])).map((squad) => (
             <SquadTargetTable
               key={squad}
               squad={squad}
@@ -650,7 +698,10 @@
       );
     }
 
-    function EditView({ draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel, allowPercent = false }) {
+    function EditView({
+      draft, setDraft, squad, setSquad, position, setPosition, onSave, onCancel,
+      allowPercent = false, showPosition = true, showImports = true, requireInput = false,
+    }) {
       const [dayAnchor, setDayAnchor] = useState(null);
       // One field is enough: only one metric dropdown is ever open.
       const [metricQuery, setMetricQuery] = useState('');
@@ -780,7 +831,16 @@
               Workload metrics and targets
             </Typography>
             <Stack direction="row" spacing={1}>
-              <Button variant="contained" color="primary" onClick={onSave} sx={{ px: 3 }}>Save</Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={onSave}
+                // Nothing to save until a metric carries at least one figure.
+                disabled={requireInput && !hasAnyTarget(draft)}
+                sx={{ px: 3 }}
+              >
+                Save
+              </Button>
               <Button variant="contained" color="secondary" onClick={onCancel} sx={{ px: 3 }}>Cancel</Button>
             </Stack>
           </Stack>
@@ -788,7 +848,9 @@
           {/* These two filter what the grid shows. */}
           <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 3.5, pl: `${CONTENT_X}px` }}>
             <FilledSelect label="Squad"       value={squad}    options={SQUADS}    onChange={setSquad}       width={251} />
-            <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={240} />
+            {showPosition && (
+              <FilledSelect label="Position(s)" value={position} options={POSITIONS} onChange={ensurePosition} width={240} />
+            )}
 
             {/* selected and onClick are set per button rather than left to the
                 group, which does not inject them through in this build. */}
@@ -1010,20 +1072,175 @@
 
           {/* Sits under the grid because it belongs to this squad and position
               combination, unlike the two filters above. */}
-          <Box sx={{ pl: '18px', mt: 2.5 }}>
-            <FilledSelect
-              label="Imports used for drill averages"
-              value={combo.imports}
-              options={IMPORT_WINDOWS}
-              onChange={setImports}
-              width={499}
-            />
-          </Box>
+          {showImports && (
+            <Box sx={{ pl: '18px', mt: 2.5 }}>
+              <FilledSelect
+                label="Imports used for drill averages"
+                value={combo.imports}
+                options={IMPORT_WINDOWS}
+                onChange={setImports}
+                width={499}
+              />
+            </Box>
+          )}
         </Box>
       );
     }
 
     /* ── Participation and RPE (static placeholder) ──────────────────── */
+    /* ── Create a csv template ───────────────────────────────────────── */
+    // A block per squad: which squad, which metrics, which gamedays. The file is
+    // never actually written, so the drawer's job is only to show what would go
+    // into deciding its headers.
+    const emptyTemplateBlock = () => ({ squad: '', metrics: [], days: [...GD_DEFAULT] });
+
+    function TemplateDrawer({ open, onClose, onDownload }) {
+      const [blocks, setBlocks] = useState(() => [emptyTemplateBlock()]);
+
+      const update = (index, patch) => setBlocks((prev) =>
+        prev.map((b, i) => (i === index ? { ...b, ...patch } : b))
+      );
+
+      const usedSquads = blocks.map((b) => b.squad).filter(Boolean);
+      const ready = blocks.some((b) => b.squad && b.metrics.length && b.days.length);
+
+      if (!open) return null;
+
+      return (
+        <Box sx={{
+          position: 'fixed', inset: 0, zIndex: 1300, display: 'flex', justifyContent: 'flex-end',
+          bgcolor: 'rgba(15,20,30,0.32)',
+        }}>
+          <Box sx={{
+            width: 520, maxWidth: '100%', bgcolor: '#fff', height: '100%',
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '-4px 0 16px rgba(59,73,96,0.18)',
+          }}>
+            <Stack
+              direction="row" alignItems="center" justifyContent="space-between"
+              sx={{ px: 3, py: 2.25, flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}
+            >
+              <Typography sx={{ fontSize: 20, fontWeight: 700 }}>Create CSV template</Typography>
+              <IconButton onClick={onClose} aria-label="Close">
+                <MI name="close" size={22} color={PRIMARY} />
+              </IconButton>
+            </Stack>
+
+            <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 3 }}>
+              <Typography sx={{ fontSize: 14, color: GREY100, mb: 3 }}>
+                Pick a squad, the metrics it needs and the gamedays to set them for.
+                The template comes back with a row for every metric and a column for
+                every day.
+              </Typography>
+
+              {blocks.map((block, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    border: `1px solid ${DIVIDER}`, borderRadius: `${RADIUS}px`,
+                    p: 2.5, mb: 2.5,
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>Squad {i + 1}</Typography>
+                    {blocks.length > 1 && (
+                      <IconButton
+                        onClick={() => setBlocks((prev) => prev.filter((_, idx) => idx !== i))}
+                        aria-label={`Remove squad ${i + 1}`}
+                        sx={{ p: 0.5 }}
+                      >
+                        <MI name="close" size={18} color={GREY100} />
+                      </IconButton>
+                    )}
+                  </Stack>
+
+                  <TextField
+                    select
+                    label="Squad"
+                    value={block.squad}
+                    onChange={(e) => update(i, { squad: e.target.value })}
+                    variant="filled"
+                    fullWidth
+                    sx={{ mb: 2, '& .MuiFilledInput-root': { height: 50 } }}
+                  >
+                    {SQUADS.map((sq) => (
+                      <MenuItem key={sq} value={sq} disabled={usedSquads.includes(sq) && block.squad !== sq}>
+                        {sq}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+
+                  {/* The rest only makes sense once a squad is named */}
+                  {block.squad && (
+                    <React.Fragment>
+                      <TextField
+                        select
+                        label="Metrics"
+                        value={block.metrics}
+                        onChange={(e) => update(i, { metrics: e.target.value })}
+                        variant="filled"
+                        fullWidth
+                        SelectProps={{
+                          multiple: true,
+                          renderValue: (picked) => picked.join(', '),
+                        }}
+                        sx={{ mb: 2, '& .MuiFilledInput-root': { minHeight: 50 } }}
+                      >
+                        {METRIC_LIBRARY.map((metric) => (
+                          <MenuItem key={metric} value={metric}>{metric}</MenuItem>
+                        ))}
+                      </TextField>
+
+                      {Boolean(block.metrics.length) && (
+                        <TextField
+                          select
+                          label="Gamedays"
+                          value={block.days}
+                          onChange={(e) => update(i, { days: [...e.target.value].sort(gdSort) })}
+                          variant="filled"
+                          fullWidth
+                          SelectProps={{
+                            multiple: true,
+                            renderValue: (picked) => picked.join(', '),
+                          }}
+                          sx={{ '& .MuiFilledInput-root': { minHeight: 50 } }}
+                        >
+                          {Array.from({ length: GD_LIMIT }, (_, n) => gdLabel(-(GD_LIMIT - n)))
+                            .concat(Array.from({ length: GD_LIMIT }, (_, n) => gdLabel(n + 1)))
+                            .map((day) => (
+                              <MenuItem key={day} value={day}>{day}</MenuItem>
+                            ))}
+                        </TextField>
+                      )}
+                    </React.Fragment>
+                  )}
+                </Box>
+              ))}
+
+              <Button
+                onClick={() => setBlocks((prev) => [...prev, emptyTemplateBlock()])}
+                disabled={usedSquads.length >= SQUADS.length}
+                startIcon={<MI name="add" size={18} color={PRIMARY} />}
+                sx={{ color: PRIMARY, px: 0, '&:hover': { bgcolor: 'transparent', opacity: 0.7 } }}
+              >
+                Add another squad
+              </Button>
+            </Box>
+
+            <Stack
+              direction="row" spacing={1} justifyContent="flex-end"
+              sx={{ px: 3, py: 2, flex: 'none', borderTop: `1px solid ${DIVIDER}` }}
+            >
+              <Button variant="contained" color="secondary" onClick={onClose} sx={{ px: 2.5 }}>Cancel</Button>
+              <Button variant="contained" color="primary" onClick={onDownload} disabled={!ready} sx={{ px: 3 }}>
+                Download
+              </Button>
+            </Stack>
+          </Box>
+        </Box>
+      );
+    }
+
     function ParticipationView() {
       return (
         <Box sx={{ px: `${CONTENT_X}px`, py: 4, overflowY: 'auto', flex: 1, bgcolor: '#fafafa' }}>
@@ -1033,6 +1250,215 @@
             alt="Participation and RPE settings, existing interface"
             sx={{ display: 'block', width: '100%', maxWidth: 900, mx: 'auto', borderRadius: `${RADIUS}px` }}
           />
+        </Box>
+      );
+    }
+
+    /* ── Version 5: nothing imported yet, template first ─────────────── */
+    function VersionFive({ onHome }) {
+      const [section, setSection] = useState(V2_SUB_SECTIONS[1]);
+      // Nothing has been imported, so there is nothing to show until there is.
+      const [config, setConfig] = useState(emptyConfig);
+      const [set, setSet] = useState(false);
+      const [importing, setImporting] = useState(false);
+      const [editing, setEditing] = useState(false);
+      const [drawer, setDrawer] = useState(false);
+      const [downloaded, setDownloaded] = useState(false);
+      const [imported, setImported] = useState(false);
+
+      const finishImport = (didImport) => {
+        setImporting(false);
+        if (didImport) { setConfig(seedConfig()); setSet(true); setImported(true); }
+      };
+
+      if (importing) {
+        return (
+          <ImportFlow
+            onExit={finishImport}
+            onHome={onHome}
+            onCreateTemplate={() => { setImporting(false); setDrawer(true); }}
+          />
+        );
+      }
+      if (editing) return <ImportFlow onExit={() => setEditing(false)} onHome={onHome} edit />;
+
+      // Before anything is set the page is the instruction: make a template, then
+      // bring it back. After it, the ordinary targets page with a third button.
+      const emptyState = (
+        <Box sx={{ pr: `${CONTENT_X}px`, py: 10, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ maxWidth: 460, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}>No targets set yet</Typography>
+            <Typography sx={{ fontSize: 15, color: GREY100, mb: 3, lineHeight: 1.6 }}>
+              Start by creating a csv template for the squads and metrics you want
+              targets for. Fill it in, then import it here to set them.
+            </Typography>
+            <Button variant="contained" color="primary" onClick={() => setDrawer(true)} sx={{ px: 3 }}>
+              Create CSV template
+            </Button>
+          </Box>
+        </Box>
+      );
+
+      const actions = set
+        ? [
+          { label: 'Edit', onClick: () => setEditing(true) },
+          { label: 'Create CSV template', onClick: () => setDrawer(true) },
+          { label: 'Import targets', onClick: () => setImporting(true), primary: true },
+        ]
+        : [{ label: 'Import targets', onClick: () => setImporting(true) }];
+
+      return (
+        <Box sx={{ height: '100%', display: 'flex' }}>
+          <NavRail onHome={onHome} />
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <TopBar />
+
+            <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
+              <Tabs
+                value="Workload"
+                sx={{
+                  minHeight: 46, px: 1,
+                  '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+                  '& .MuiTab-root': { pointerEvents: 'none' },
+                }}
+              >
+                {ORG_TABS.map((label) => <Tab key={label} label={label} value={label} />)}
+              </Tabs>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              <SubNav value={section} onChange={setSection} sections={V2_SUB_SECTIONS} />
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {section === V2_SUB_SECTIONS[0] ? (
+                  <ParticipationView />
+                ) : (
+                  <ReadOnlyView
+                    config={config}
+                    actions={actions}
+                    empty={set ? null : emptyState}
+                    showPosition={false}
+                    showImports={false}
+                  />
+                )}
+              </Box>
+            </Box>
+          </Box>
+
+          <TemplateDrawer
+            open={drawer}
+            onClose={() => setDrawer(false)}
+            onDownload={() => { setDrawer(false); setDownloaded(true); }}
+          />
+
+          <Snackbar
+            open={downloaded}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            sx={{ left: '28px !important', bottom: '32px !important' }}
+            onClose={() => setDownloaded(false)}
+          >
+            <Alert severity="success" variant="filled" onClose={() => setDownloaded(false)}>
+              template.csv successfully downloaded
+            </Alert>
+          </Snackbar>
+
+          <Snackbar
+            open={imported}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            sx={{ right: '28px !important', bottom: '32px !important' }}
+            onClose={() => setImported(false)}
+          >
+            <Alert severity="success" variant="filled" onClose={() => setImported(false)}>
+              Targets imported
+            </Alert>
+          </Snackbar>
+        </Box>
+      );
+    }
+
+    /* ── Version 6: nothing set yet, typed in from scratch ───────────── */
+    function VersionSix({ onHome }) {
+      const [section, setSection] = useState(SUB_SECTIONS[1]);
+      const [config, setConfig] = useState(emptyConfig);
+      const [set, setSet] = useState(false);
+      const [draft, setDraft] = useState(null);
+      const [squad, setSquad] = useState(DEFAULT_SQUAD);
+      const editing = draft !== null;
+
+      const emptyState = (
+        <Box sx={{ pr: `${CONTENT_X}px`, py: 10, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ maxWidth: 420, textAlign: 'center' }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}>No targets added yet</Typography>
+            <Typography sx={{ fontSize: 15, color: GREY100, mb: 3, lineHeight: 1.6 }}>
+              Pick the metrics this squad is measured on and set a target for each
+              gameday you train on.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => { setDraft(clone(config)); setSquad(DEFAULT_SQUAD); }}
+              sx={{ px: 3 }}
+            >
+              Add targets
+            </Button>
+          </Box>
+        </Box>
+      );
+
+      return (
+        <Box sx={{ height: '100%', display: 'flex' }}>
+          <NavRail onHome={onHome} />
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <TopBar />
+
+            <Box sx={{ flex: 'none', borderBottom: `1px solid ${DIVIDER}` }}>
+              <Tabs
+                value="Workload"
+                sx={{
+                  minHeight: 46, px: 1,
+                  '& .MuiTabs-indicator': { backgroundColor: PRIMARY, height: 2 },
+                  '& .MuiTab-root': { pointerEvents: 'none' },
+                }}
+              >
+                {ORG_TABS.map((label) => <Tab key={label} label={label} value={label} />)}
+              </Tabs>
+            </Box>
+
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              <SubNav value={section} onChange={setSection} />
+
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                {section === SUB_SECTIONS[0] ? (
+                  <ParticipationView />
+                ) : editing ? (
+                  <EditView
+                    draft={draft}
+                    setDraft={setDraft}
+                    squad={squad}
+                    setSquad={setSquad}
+                    position="All"
+                    setPosition={() => {}}
+                    onSave={() => { setConfig(draft); setDraft(null); setSet(true); }}
+                    onCancel={() => setDraft(null)}
+                    showPosition={false}
+                    showImports={false}
+                    requireInput
+                  />
+                ) : (
+                  <ReadOnlyView
+                    config={config}
+                    onAction={() => { setDraft(clone(config)); setSquad(DEFAULT_SQUAD); }}
+                    actionLabel={set ? 'Edit' : 'Add targets'}
+                    empty={set ? null : emptyState}
+                    showPosition={false}
+                    showImports={false}
+                  />
+                )}
+              </Box>
+            </Box>
+          </Box>
         </Box>
       );
     }
@@ -1057,6 +1483,14 @@
           {
             hash: '#/v4',
             title: 'Version 4 - Import a share of GD max from a CSV',
+          },
+          {
+            hash: '#/v5',
+            title: 'Version 5 - Nothing set yet: build a template, then import it',
+          },
+          {
+            hash: '#/v6',
+            title: 'Version 6 - Nothing set yet: type the first targets in',
           },
         ],
       },
@@ -1239,12 +1673,12 @@
       const [section, setSection]   = useState(SUB_SECTIONS[1]);
       const [config, setConfig]     = useState(seedConfig);
       const [draft, setDraft]       = useState(null);
-      const [squad, setSquad]       = useState(SQUADS[0]);
+      const [squad, setSquad]       = useState(DEFAULT_SQUAD);
       const [position, setPosition] = useState('All');
 
       const editing = draft !== null;
 
-      const startEdit = () => { setDraft(clone(config)); setSquad(SQUADS[0]); setPosition('All'); };
+      const startEdit = () => { setDraft(clone(config)); setSquad(DEFAULT_SQUAD); setPosition('All'); };
       const save      = () => { setConfig(draft); setDraft(null); };
       const cancel    = () => setDraft(null);
 
@@ -1387,7 +1821,7 @@
     }
 
     /* ── Instructions panel ──────────────────────────────────────────── */
-    function InstructionsPanel({ onCollapse, mode = 'metrics' }) {
+    function InstructionsPanel({ onCollapse, mode = 'metrics', onCreateTemplate }) {
       const body = { fontSize: 15, lineHeight: 1.6, color: PRIMARY };
       const strong = { fontSize: 15, fontWeight: 700, color: PRIMARY };
       return (
@@ -1406,23 +1840,44 @@
           </Stack>
 
           <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            <Typography sx={body}>
-              Download a template csv file with the relevant headers.
-              {mode === 'metrics' && ' Select metrics from the metrics sheet.'}
-            </Typography>
+            {/* Where a template has to be made first, the panel sends you to make
+                one rather than handing you a file that does not exist yet. */}
+            {onCreateTemplate ? (
+              <React.Fragment>
+                <Typography sx={body}>
+                  Create a csv template with the relevant headers, then fill it in
+                  and upload it here.
+                </Typography>
+                <Typography
+                  component="a"
+                  href="#/v5"
+                  onClick={(e) => { e.preventDefault(); onCreateTemplate(); }}
+                  sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Create CSV template
+                </Typography>
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <Typography sx={body}>
+                  Download a template csv file with the relevant headers.
+                  {mode === 'metrics' && ' Select metrics from the metrics sheet.'}
+                </Typography>
 
-            {/* The metrics sheet is only of use to the file that names metrics */}
-            {(mode === 'metrics' ? ['template.csv', 'metrics-list.csv'] : ['template.csv']).map((file) => (
-              <Typography
-                key={file}
-                component="a"
-                href="#/v2"
-                onClick={(e) => e.preventDefault()}
-                sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-              >
-                {file}
-              </Typography>
-            ))}
+                {/* The metrics sheet is only of use to the file that names metrics */}
+                {(mode === 'metrics' ? ['template.csv', 'metrics-list.csv'] : ['template.csv']).map((file) => (
+                  <Typography
+                    key={file}
+                    component="a"
+                    href="#/v2"
+                    onClick={(e) => e.preventDefault()}
+                    sx={{ ...strong, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {file}
+                  </Typography>
+                ))}
+              </React.Fragment>
+            )}
 
             <Typography sx={strong}>Accepted values</Typography>
 
@@ -1744,7 +2199,7 @@
       );
     }
 
-    function ImportFlow({ onExit, onHome, mode = 'metrics', edit = false }) {
+    function ImportFlow({ onExit, onHome, mode = 'metrics', edit = false, onCreateTemplate }) {
       // Editing opens straight onto the table: there is no file to pick.
       const [step, setStep] = useState(edit ? 2 : 1);
       const [file, setFile] = useState(null);
@@ -1790,7 +2245,13 @@
             )}
 
             <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
-              {instructionsOpen && <InstructionsPanel onCollapse={() => setInstructionsOpen(false)} mode={mode} />}
+              {instructionsOpen && (
+                <InstructionsPanel
+                  onCollapse={() => setInstructionsOpen(false)}
+                  mode={mode}
+                  onCreateTemplate={onCreateTemplate}
+                />
+              )}
 
               {step === 1 ? (
                 <Box sx={{ flex: 1, display: 'flex', minWidth: 0 }}>
@@ -3595,6 +4056,8 @@
       if (route === '#/v2') return <VersionTwo onHome={goHome} />;
       if (route === '#/v3') return <VersionOne onHome={goHome} allowPercent key="v3" />;
       if (route === '#/v4') return <VersionTwo onHome={goHome} importMode="percent" key="v4" />;
+      if (route === '#/v5') return <VersionFive onHome={goHome} key="v5" />;
+      if (route === '#/v6') return <VersionSix onHome={goHome} key="v6" />;
       if (route === '#/planning-v1') return <SessionPlanning onHome={goHome} key="p1" />;
       if (route === '#/planning-v2') return <SessionPlanning onHome={goHome} rowBars="cumulative" key="p2" />;
       if (route === '#/planning-v3') return <SessionPlanning onHome={goHome} rowBars="cumulative" footerBar="total" key="p3" />;
