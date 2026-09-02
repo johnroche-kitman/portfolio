@@ -11,13 +11,12 @@ import AddPanel from '../../components/AddPanel'
 import { SearchInput } from '../../components/form'
 import { GAME_HEADER, GAME_TABS } from '../../data/game'
 import GameEvents from './GameEvents'
-// Five of the game's six tabs are the same surfaces as the session's. One
-// implementation, used by both. If a third event type needs them they should
-// move to a shared module of their own.
-import {
-  AthleteSelectionTab, CollectionTab, DevelopmentGoalsTab, ImportedDataTab, SquadPicker,
-  StaffSelectionTab,
-} from './SessionDetail'
+import { GameAthleteSelection, GameStaffSelection } from './GameSelection'
+// Development goals, Collection and Imported data are the same surfaces as the
+// session's, so they are one implementation used by both. Athlete and staff
+// selection are NOT: the game's are a different, much smaller surface, so they
+// live in GameSelection.
+import { CollectionTab, DevelopmentGoalsTab, ImportedDataTab, SquadPicker } from './SessionDetail'
 
 const PANELS = {
   addPlayers: {
@@ -89,8 +88,8 @@ export default function GameDetail() {
       <Divider />
 
       <Box sx={{ p: 3, bgcolor: colors.white }}>
-        {tab === 0 && <AthleteSelectionTab onAddRemove={() => setPanel('addPlayers')} />}
-        {tab === 1 && <StaffSelectionTab onAddRemove={() => setPanel('addStaff')} />}
+        {tab === 0 && <GameAthleteSelection onAddPlayers={() => setPanel('addPlayers')} />}
+        {tab === 1 && <GameStaffSelection onAddRemove={() => setPanel('addStaff')} />}
         {tab === 2 && <GameEvents />}
         {tab === 3 && <DevelopmentGoalsTab />}
         {tab === 4 && <CollectionTab />}

@@ -212,7 +212,7 @@ function PlanningTab({ drills, onChange, onRemove, onAddFromLibrary, onCreateDri
  * dropdown, checkboxSelection gives the row checkboxes and a bulk edit, all
  * with keyboard support. The live page hand-builds each of those.
  */
-export function AthleteSelectionTab({ onAddRemove }) {
+function AthleteSelectionTab({ onAddRemove }) {
   const [rows, setRows] = useState(sessionAthletes)
   const [selection, setSelection] = useState(sessionAthletes.filter(a => a.selected).map(a => a.id))
   const [q, setQ] = useState('')
@@ -261,7 +261,7 @@ export function AthleteSelectionTab({ onAddRemove }) {
 }
 
 /* --------------------------------------------------------- Staff selection */
-export function StaffSelectionTab({ onAddRemove }) {
+function StaffSelectionTab({ onAddRemove }) {
   const [selection, setSelection] = useState([])
   return (
     <SettingsCard title="Staff" action={<CardAction onClick={onAddRemove}>Add/remove staff</CardAction>}>
