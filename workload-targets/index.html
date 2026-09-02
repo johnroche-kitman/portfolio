@@ -173,21 +173,65 @@
     const DEFAULT_SQUAD = '1st team';
     const POSITIONS = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
-    // The metric library, named exactly as it reads in the app. Every dropdown on
-    // every page picks from this one list.
-    const METRIC_LIBRARY = [
-      'Total Distance (m)',
-      'Distance Per Minute (m/min)',
-      'HMLD (m)',
-      'HSR Distance (m)',
-      'Sprint Distance (m)',
-      'Accels Distance (m)',
-      'Accels >3m/s',
-      'Decels Distance (m)',
-      'Decels >3m/s',
-      'RPE x Duration',
-      '% max velocity',
+    // The metric library, named exactly as it reads in the app, and the vendor
+    // lists beside it. Every dropdown on every page picks from these, under the
+    // same headings. Names are unique across the three: a metric is identified by
+    // its name, so Total Distance from one vendor is not Total Distance (m) here.
+    const METRIC_GROUPS = [
+      {
+        header: 'Kitman',
+        items: [
+          'Total Distance (m)',
+          'Distance Per Minute (m/min)',
+          'HMLD (m)',
+          'HSR Distance (m)',
+          'Sprint Distance (m)',
+          'Accels Distance (m)',
+          'Accels >3m/s',
+          'Decels Distance (m)',
+          'Decels >3m/s',
+          'RPE x Duration',
+          '% max velocity',
+        ],
+      },
+      {
+        header: 'STATSports',
+        items: [
+          'Total Distance',
+          'Distance Per Min',
+          'HSR Distance',
+          'Sprint Distance',
+          'HMLD',
+          'High Intensity Distance',
+          'Accelerations',
+          'Decelerations',
+          'Sprint Count',
+          'Dynamic Stress Load',
+          'Step Balance',
+          'Impacts',
+          'Time On Field',
+        ],
+      },
+      {
+        header: 'Catapult',
+        items: [
+          'Player Load',
+          'Player Load Per Minute',
+          'Velocity Band 4 Distance',
+          'Velocity Band 5 Distance',
+          'Acceleration Efforts',
+          'Deceleration Efforts',
+          'Explosive Efforts',
+          'IMA Accel High',
+          'IMA Decel High',
+          'Metabolic Power',
+          'Equivalent Distance',
+          'Work Rate',
+        ],
+      },
     ];
+
+    const METRIC_LIBRARY = METRIC_GROUPS.flatMap((g) => g.items);
 
     const IMPORT_WINDOWS = ['Last 3 imports', 'Last 5 imports', 'Last 10 imports', 'All imports'];
 
@@ -1025,18 +1069,31 @@
                       <MetricSearch value={metricQuery} onChange={setMetricQuery} />
                     </ListSubheader>
 
-                    {METRIC_LIBRARY.map((metric) => (
-                      <MenuItem
-                        key={metric}
-                        value={metric}
-                        // Hidden rather than dropped: a select whose value is not
-                        // among its children loses track of what is chosen.
-                        sx={metricMatches(metric, metricQuery) ? undefined : { display: 'none' }}
-                        disabled={usedMetrics.includes(metric) && slot.metric !== metric}
+                    {METRIC_GROUPS.map((group) => [
+                      // A heading goes when the search takes the last of its items
+                      <ListSubheader
+                        key={`${group.header}-head`}
+                        sx={{
+                          px: 2, py: 0.5, fontSize: 12, fontWeight: 700, lineHeight: 2,
+                          letterSpacing: '0.06em', textTransform: 'uppercase', color: GREY100,
+                          ...(group.items.some((m) => metricMatches(m, metricQuery)) ? {} : { display: 'none' }),
+                        }}
                       >
-                        {metric}
-                      </MenuItem>
-                    ))}
+                        {group.header}
+                      </ListSubheader>,
+                      ...group.items.map((metric) => (
+                        <MenuItem
+                          key={metric}
+                          value={metric}
+                          // Hidden rather than dropped: a select whose value is not
+                          // among its children loses track of what is chosen.
+                          sx={metricMatches(metric, metricQuery) ? undefined : { display: 'none' }}
+                          disabled={usedMetrics.includes(metric) && slot.metric !== metric}
+                        >
+                          {metric}
+                        </MenuItem>
+                      )),
+                    ])}
 
                     {!METRIC_LIBRARY.some((m) => metricMatches(m, metricQuery)) && (
                       <Typography sx={{ px: 2, py: 1.5, fontSize: 14, color: GREY100 }}>
@@ -1206,12 +1263,23 @@
                         }}
                         sx={{ mb: 2, '& .MuiFilledInput-root': { minHeight: 50 } }}
                       >
-                        {METRIC_LIBRARY.map((metric) => (
-                          <MenuItem key={metric} value={metric} sx={{ py: 0.25 }}>
-                            <Checkbox checked={block.metrics.includes(metric)} size="small" sx={{ mr: 1, p: 0.5 }} />
-                            {metric}
-                          </MenuItem>
-                        ))}
+                        {METRIC_GROUPS.map((group) => [
+                          <ListSubheader
+                            key={`${group.header}-head`}
+                            sx={{
+                              px: 2, py: 0.5, fontSize: 12, fontWeight: 700, lineHeight: 2,
+                              letterSpacing: '0.06em', textTransform: 'uppercase', color: GREY100,
+                            }}
+                          >
+                            {group.header}
+                          </ListSubheader>,
+                          ...group.items.map((metric) => (
+                            <MenuItem key={metric} value={metric} sx={{ py: 0.25 }}>
+                              <Checkbox checked={block.metrics.includes(metric)} size="small" sx={{ mr: 1, p: 0.5 }} />
+                              {metric}
+                            </MenuItem>
+                          )),
+                        ])}
                       </TextField>
 
                       {Boolean(block.metrics.length) && (
@@ -2415,6 +2483,24 @@
       { key: 'maxvel',  label: '% max vel',     name: '% max velocity',              unit: '',      agg: 'max', color: '#546E7A' },
     ];
 
+    // The vendor metrics join the session library too, so a column can be set to
+    // one. No import stands behind them here, so they read as dashes until a
+    // figure is typed, which is the honest state for a metric nobody has pulled.
+    const VENDOR_COLOURS = ['#00968F', '#2E7D32', '#1565C0', '#E8590C', '#7C3AED', '#AD1457', '#00838F', '#5D4037'];
+    METRIC_GROUPS.filter((g) => g.header !== 'Kitman').forEach((group) => {
+      group.items.forEach((name, i) => {
+        METRIC_LIBRARY_SESSION.push({
+          key: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          label: name,
+          name,
+          unit: '',
+          // Rates and balances do not add up over a session; the rest do.
+          agg: /Per Min|Per Minute|Power|Work Rate|Balance/.test(name) ? 'avg' : 'sum',
+          color: VENDOR_COLOURS[i % VENDOR_COLOURS.length],
+        });
+      });
+    });
+
     const metricByKey = (key) => METRIC_LIBRARY_SESSION.find((m) => m.key === key);
     const DEFAULT_COLUMNS = ['td', 'hmld', 'hsr', 'sd', 'accels', 'decels'];
     const MAX_SESSION_COLUMNS = 6;
@@ -2859,6 +2945,17 @@
       const readAs = !athlete || basis === 'Self' ? cohort : basis;
       const valueEffect = COHORT_EFFECT[readAs] || COHORT_EFFECT['Whole squad'];
       const targetEffect = COHORT_EFFECT[cohort] || COHORT_EFFECT['Whole squad'];
+
+      // The metric menu keeps the library's own headings, and a heading goes when
+      // a search takes the last of its metrics.
+      const sessionMetricSections = METRIC_GROUPS
+        .map((g) => ({
+          header: g.header,
+          items: g.items
+            .map((name) => METRIC_LIBRARY_SESSION.find((m) => m.name === name))
+            .filter((m) => m && metricMatches(m.name, metricQuery)),
+        }))
+        .filter((g) => g.items.length);
 
       // Values can be read as anybody; only the athlete gets the choice.
       const basisSections = [
@@ -3644,10 +3741,18 @@
                     {/* The list scrolls, not the menu, so the field stays put at
                         the top however far down the metrics you are. */}
                     <Box sx={{ maxHeight: MENU_VISIBLE_ITEMS * MENU_ITEM_H, overflowY: 'auto', py: 1 }}>
-                    {METRIC_LIBRARY_SESSION.filter((m) => metricMatches(m.name, metricQuery)).map((m) => {
-                      const adding = colAnchor?.index == null;
-                      const usedElsewhere = columns.includes(m.key) && (adding || columns[colAnchor?.index] !== m.key);
-                      return (
+                    {sessionMetricSections.map((section) => (
+                      <React.Fragment key={section.header}>
+                        <Typography sx={{
+                          px: 2, pt: 1, pb: 0.5, fontSize: 12, fontWeight: 700,
+                          letterSpacing: '0.06em', textTransform: 'uppercase', color: GREY100,
+                        }}>
+                          {section.header}
+                        </Typography>
+                        {section.items.map((m) => {
+                          const adding = colAnchor?.index == null;
+                          const usedElsewhere = columns.includes(m.key) && (adding || columns[colAnchor?.index] !== m.key);
+                          return (
                         <MenuItem
                           key={m.key}
                           disabled={usedElsewhere}
@@ -3667,10 +3772,12 @@
                             )}
                           </Stack>
                         </MenuItem>
-                      );
-                    })}
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
 
-                    {!METRIC_LIBRARY_SESSION.some((m) => metricMatches(m.name, metricQuery)) && (
+                    {sessionMetricSections.length === 0 && (
                       <Typography sx={{ px: 2, py: 1.5, fontSize: 14, color: GREY100 }}>
                         No metric by that name
                       </Typography>
