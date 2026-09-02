@@ -212,7 +212,7 @@ function PlanningTab({ drills, onChange, onRemove, onAddFromLibrary, onCreateDri
  * dropdown, checkboxSelection gives the row checkboxes and a bulk edit, all
  * with keyboard support. The live page hand-builds each of those.
  */
-function AthleteSelectionTab({ onAddRemove }) {
+export function AthleteSelectionTab({ onAddRemove }) {
   const [rows, setRows] = useState(sessionAthletes)
   const [selection, setSelection] = useState(sessionAthletes.filter(a => a.selected).map(a => a.id))
   const [q, setQ] = useState('')
@@ -261,7 +261,7 @@ function AthleteSelectionTab({ onAddRemove }) {
 }
 
 /* --------------------------------------------------------- Staff selection */
-function StaffSelectionTab({ onAddRemove }) {
+export function StaffSelectionTab({ onAddRemove }) {
   const [selection, setSelection] = useState([])
   return (
     <SettingsCard title="Staff" action={<CardAction onClick={onAddRemove}>Add/remove staff</CardAction>}>
@@ -299,7 +299,7 @@ const GridToolbar = ({ onEditValues }) => (
   </GridToolbarContainer>
 )
 
-function CollectionTab() {
+export function CollectionTab() {
   // The live tab keeps a collection open and toggles the rail beside it, so the
   // rail is a Collapse in row orientation rather than a swapped-out view.
   const [openId, setOpenId] = useState('workload')
@@ -397,7 +397,7 @@ const MultiSelectQuestion = ({ label, options }) => {
 }
 
 /* ------------------------------------------------------------ Imported data */
-const ImportedDataTab = ({ onImport }) => (
+export const ImportedDataTab = ({ onImport }) => (
   <Box>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
       <Typography variant="h6">Imported data</Typography>
@@ -410,7 +410,7 @@ const ImportedDataTab = ({ onImport }) => (
 )
 
 /* ------------------------------------------------------------ Development */
-const DevelopmentGoalsTab = () => (
+export const DevelopmentGoalsTab = () => (
   <SettingsCard title="Development Goals">
     <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary', py: 5 }}>
       No development goals added
@@ -624,7 +624,7 @@ function IntensityPicker({ value: initial = 'Moderate' }) {
   )
 }
 
-function SquadPicker() {
+export function SquadPicker() {
   const [picked, setPicked] = useState(() => new Set(['crgtst']))
   const toggle = n => setPicked(p => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
 
