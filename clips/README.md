@@ -89,8 +89,19 @@ and I will reword the fixture rather than you re-cutting the video.
 ## Posters (optional)
 
 `posters/<same name>.jpg` is used as the thumbnail and the video poster frame.
-Without them the prototype draws a pale pitch instead, which is why the missing
-posters are not an error. `transcode.sh` generates them.
+Without one the prototype falls back to the placeholders below, which is why a
+missing poster is not an error. `transcode.sh` generates them.
+
+## Placeholders
+
+`placeholders/hudl-01.jpg` … `hudl-06.jpg` are six training stills, each shown
+under a scrim with the Hudl logo watermarked over it. They stand in for any clip
+whose media has not arrived yet.
+
+Which still a clip gets is derived from its file name, so a clip always shows
+the same frame — a grid that reshuffled its images on every render would look
+broken rather than pending. Nothing needs to be configured: as soon as a real
+`.mp4` and its poster land, that clip stops using a placeholder.
 
 ## Nothing here is a real Hudl integration
 
