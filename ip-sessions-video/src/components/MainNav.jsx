@@ -41,7 +41,12 @@ const BUILT = new Set([
 ])
 const isBuilt = path => BUILT.has(path)
 
-export const AUDIT_URL = 'https://johnroche-kitman.github.io/portfolio/ip-audit/'
+/**
+ * The logo goes back to the prototype landing page, the way it goes to the
+ * dashboard in the live app. Absolute rather than relative: each prototype is
+ * built against its own base, and the landing sits above both of them.
+ */
+export const PROTOTYPES_URL = 'https://johnroche-kitman.github.io/portfolio/prototypes/'
 
 // Mirrors mainNavBarDesktop in the live app: same items, same order, same routes.
 const NAV_ITEMS = [
@@ -173,13 +178,14 @@ export default function MainNav({ expanded, onToggle }) {
           display: 'flex', flexDirection: 'column', transition: 'width .18s ease',
         }}
       >
-        {/* The logo is the way back out to the surface audit. New tab, so the
-            prototype keeps its state and nobody re-enters the passphrase. */}
+        {/* The logo is the way back out to the prototype landing page, the way
+            it goes to the dashboard in the live app. Same tab: the landing is a
+            step up and out, not a side trip, and the passphrase is already held
+            in sessionStorage for the origin so nothing asks for it again. */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: expanded ? 2 : 0,
           justifyContent: expanded ? 'flex-start' : 'center', height: 56, flexShrink: 0 }}>
-          <Tooltip title="Surface audit" placement="right">
-            <Box component="a" href={AUDIT_URL} target="_blank" rel="noopener"
-              aria-label="Surface audit"
+          <Tooltip title="Back to the prototypes" placement="right">
+            <Box component="a" href={PROTOTYPES_URL} aria-label="Back to the prototypes"
               sx={{ display: 'block', borderRadius: 1, lineHeight: 0,
                 '&:hover': { filter: 'brightness(1.25)' } }}>
               <Box component="img" src={`${import.meta.env.BASE_URL}kitman-logo.png`} alt="Kitman Labs"
