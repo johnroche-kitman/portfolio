@@ -1,0 +1,148 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  AppBar, Avatar, Box, Button, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon,
+  ListItemText, Menu, MenuItem, TextField, Toolbar, Typography,
+} from '@mui/material'
+import PersonSearchIcon from '@mui/icons-material/PersonSearchOutlined'
+import AccountCircleIcon from '@mui/icons-material/AccountCircleOutlined'
+import LogoutIcon from '@mui/icons-material/LogoutOutlined'
+import CloseIcon from '@mui/icons-material/Close'
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight'
+import colors from '../theme/tokens'
+import MainNav, { RAIL_COLLAPSED } from './MainNav'
+import { athletes, squad, squads } from '../data/athletes'
+import { EVENT_LIST_TYPES, eventListItems } from '../data/session'
+import AthleteCell from './AthleteCell'
+
+export default function AppShell({ title, children, fullHeight = false, listLabel = 'Player list' }) {
+  const eventList = listLabel === 'Event list'
+  const [playerListOpen, setPlayerListOpen] = useState(false)
+  const [navExpanded, setNavExpanded] = useState(false)
+  const [userEl, setUserEl] = useState(null)
+  const [currentSquad, setCurrentSquad] = useState(squad)
+  const [query, setQuery] = useState('')
+  const navigate = useNavigate()
+
+  const shown = athletes.filter(a => a.name.toLowerCase().includes(query.toLowerCase()))
+
+  return (
+    <Box sx={{ display: 'flex', height: fullHeight ? '100vh' : undefined,
+      minHeight: fullHeight ? undefined : '100vh', overflow: fullHeight ? 'hidden' : undefined,
+      bgcolor: colors.background }}>
+      <MainNav expanded={navExpanded} onToggle={() => setNavExpanded(v => !v)} />
+
+      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <AppBar position="sticky" elevation={0}
+          sx={{ bgcolor: colors.white, color: 'text.primary', borderBottom: `1px solid ${colors.neutral_300}` }}>
+          <Toolbar sx={{ gap: 2, minHeight: 56 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{title}</Typography>
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<PersonSearchIcon />}
+              endIcon={<KeyboardDoubleArrowRightIcon sx={{ fontSize: 16 }} />}
+              onClick={() => setPlayerListOpen(true)}
+            >
+              {listLabel}
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            <Avatar sx={{ width: 28, height: 28, bgcolor: colors.grey_300, fontSize: 12 }}>K</Avatar>
+            <TextField
+              select value={currentSquad} onChange={e => setCurrentSquad(e.target.value)}
+              variant="standard" InputProps={{ disableUnderline: true }}
+              sx={{ width: 210, '& .MuiInputBase-input': { fontSize: 14, py: 0 } }}
+            >
+              {squads.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+            </TextField>
+            <IconButton size="small" onClick={e => setUserEl(e.currentTarget)} aria-label="Your account">
+              <Avatar sx={{ width: 30, height: 30, bgcolor: colors.neutral_300, color: colors.grey_200, fontSize: 12 }}>JR</Avatar>
+            </IconButton>
+            <Menu anchorEl={userEl} open={!!userEl} onClose={() => setUserEl(null)}
+              slotProps={{ paper: { sx: { minWidth: 240 } } }}>
+              <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: colors.neutral_300, color: colors.grey_200, fontSize: 12 }}>JR</Avatar>
+                <Box>
+                  <Typography variant="subtitle2">John Roche Test</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>jrochetest</Typography>
+                </Box>
+              </Box>
+              <Divider />
+              <MenuItem onClick={() => { setUserEl(null); navigate('/user_profile/edit') }}>
+                <ListItemIcon><AccountCircleIcon fontSize="small" /></ListItemIcon>
+                View Profile
+              </MenuItem>
+              <MenuItem onClick={() => setUserEl(null)}>
+                <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+                Sign Out
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={() => setUserEl(null)}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>Terms and Policies</Typography>
+              </MenuItem>
+            </Menu>
+          </Toolbar>
+        </AppBar>
+
+        {/* fullHeight: panes scroll, the page does not. Otherwise the page scrolls and
+            no overflow is set here — that would clip descendants out of position: sticky. */}
+        <Box component="main" sx={{
+          flex: 1, width: '100%', minWidth: 0,
+          ...(fullHeight ? { minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}),
+        }}>{children}</Box>
+      </Box>
+
+      {/* Two different panels behind the same slot: Player list on most pages,
+          Select event in the planning hub. */}
+      <Drawer anchor="left" open={playerListOpen} onClose={() => setPlayerListOpen(false)}
+        PaperProps={{ sx: { width: eventList ? 360 : 320, ml: `${RAIL_COLLAPSED}px` } }}>
+        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h6">{eventList ? 'Select event' : 'Select player'}</Typography>
+          <IconButton size="small" onClick={() => setPlayerListOpen(false)} aria-label="Close player list">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        {eventList ? (
+          <>
+            <Box sx={{ px: 2, pb: 1.5, display: 'flex', gap: 1.5 }}>
+              <TextField select label="Type" defaultValue="Events" sx={{ width: 140 }}>
+                <MenuItem value="Events">Events</MenuItem>
+                {EVENT_LIST_TYPES.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+              </TextField>
+              <TextField label="Date range" defaultValue="15/05/2026 – 14/07/2026" sx={{ flex: 1 }} />
+            </Box>
+            <Divider />
+            <List sx={{ pt: 0, overflowY: 'auto' }}>
+              {eventListItems.map(e => (
+                <ListItemButton key={e.id} onClick={() => setPlayerListOpen(false)}
+                  sx={{ display: 'block', borderBottom: `1px solid ${colors.neutral_200}` }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{e.name}</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{e.when}</Typography>
+                </ListItemButton>
+              ))}
+            </List>
+          </>
+        ) : (
+          <>
+            <Box sx={{ px: 2, pb: 1.5 }}>
+              <TextField fullWidth placeholder="Filter" value={query} onChange={e => setQuery(e.target.value)} />
+            </Box>
+            <Divider />
+            <Typography variant="caption" sx={{ px: 2, py: 1, color: 'text.secondary' }}>{currentSquad}</Typography>
+            <List sx={{ pt: 0, overflowY: 'auto' }}>
+              {shown.map(a => (
+                <ListItemButton key={a.id} onClick={() => { setPlayerListOpen(false); navigate(`/medical/athletes/${a.id}`) }}>
+                  <ListItemText primary={<AthleteCell athlete={a} />} secondary={String(a.id)}
+                    secondaryTypographyProps={{ variant: 'caption', sx: { pl: 6.5 } }} />
+                </ListItemButton>
+              ))}
+              {!shown.length && (
+                <Typography variant="body2" sx={{ px: 2, py: 3, color: 'text.secondary' }}>No players match “{query}”.</Typography>
+              )}
+            </List>
+          </>
+        )}
+      </Drawer>
+    </Box>
+  )
+}

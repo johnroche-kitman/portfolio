@@ -4,8 +4,35 @@
     {
       "name": "ip-mui-prototype",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "ip-mui-prototype"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "ip-mui-prototype"
+      ],
       "port": 5210
+    },
+    {
+      "name": "ip-sessions-video",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "ip-sessions-video"
+      ],
+      "port": 5220
+    },
+    {
+      "name": "ip-idp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "ip-idp"
+      ],
+      "port": 5230
     }
   ]
 }
