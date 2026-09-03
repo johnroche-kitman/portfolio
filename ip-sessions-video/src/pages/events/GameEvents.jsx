@@ -5,6 +5,7 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import colors from '../../theme/tokens'
+import { athleteByName, initialsOf, photoUrl } from '../../data/athletes'
 import { AdminGrid, CardAction, SettingsCard } from '../admin/parts'
 import { SelectField } from '../../components/form'
 import {
@@ -61,8 +62,9 @@ function PositionSlot({ label, player, selected, onSelect, onClear, style }) {
               '&:hover': { borderColor: colors.grey_200 },
             }}>
             {player
-              ? <Avatar sx={{ width: 36, height: 36, fontSize: 12 }}>
-                  {player.name.split(',')[0][0]}
+              ? <Avatar src={photoUrl(athleteByName(player.name))} alt=""
+                  sx={{ width: 36, height: 36, fontSize: 12 }}>
+                  {initialsOf(player.name)}
                 </Avatar>
               : <Typography variant="caption" sx={{ fontWeight: 700 }}>{label}</Typography>}
           </Box>
@@ -295,7 +297,8 @@ export default function GameEvents() {
                       {players.map(p => (
                         <ListItemButton key={p.id} onClick={() => assign(p)} disabled={!selectedSlot}
                           sx={{ px: 1, gap: 1.5 }}>
-                          <Avatar sx={{ width: 32, height: 32, fontSize: 12 }}>{p.name[0]}</Avatar>
+                          <Avatar src={photoUrl(athleteByName(p.name))} alt=""
+                            sx={{ width: 32, height: 32, fontSize: 12 }}>{initialsOf(p.name)}</Avatar>
                           <ListItemText primary={p.name} secondary={`${p.position} | #`}
                             primaryTypographyProps={{ variant: 'body2', fontWeight: 700 }} />
                         </ListItemButton>

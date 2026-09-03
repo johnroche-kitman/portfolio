@@ -1,3 +1,4 @@
+import { athletesInSquad, squad } from './athletes'
 // Game fixtures, read off /planning_hub/events/:id for a Game event.
 
 export const GAME_TABS = [
@@ -41,27 +42,38 @@ export const buildPeriods = (count, total = 90) => {
   }))
 }
 
-const P = (id, name, position, group, availability) => ({ id, name, position, group, availability })
+/**
+ * The match-day squad is the training squad, so a face and a name mean the same
+ * thing on a game as they do on a session. `group` is what the line-up picker
+ * buckets by, so it is derived from the position rather than stored twice.
+ */
+const GROUP = {
+  Goalkeeper: 'Goalkeeper',
+  'Right Back': 'Defender', 'Centre Back': 'Defender', 'Left Back': 'Defender',
+  'Defensive Midfield': 'Midfielder', 'Centre Midfield': 'Midfielder', 'Attacking Midfield': 'Midfielder',
+  'Right Wing': 'Forward', 'Left Wing': 'Forward', Striker: 'Forward',
+}
 
-export const gameSquad = [
-  P(1, 'Prundel, Athlete Razvan', 'CB', 'Defender', 'Unavailable'),
-  P(2, 'Aplayer, Org', 'RWB', 'Defender', 'Available'),
-  P(3, 'Athlete, Dan', 'RWB', 'Defender', 'Available'),
-  P(4, 'Athlete, Max', 'CB', 'Defender', 'Available'),
-  P(5, 'Kansara, Utsav', 'RWB', 'Defender', 'Available'),
-  P(6, 'Athlete, Player', 'CM', 'Midfielder', 'Available'),
-  P(7, 'Claire-Marie', 'CM', 'Midfielder', 'Available'),
-  P(8, 'Athlete 7, MK Test', 'CF', 'Forward', 'Available'),
-  P(9, 'Diagnostic, Max', 'GK', 'Goalkeeper', 'Unavailable'),
-]
+const SHORT = {
+  Goalkeeper: 'GK', 'Right Back': 'RB', 'Centre Back': 'CB', 'Left Back': 'LB',
+  'Defensive Midfield': 'CDM', 'Centre Midfield': 'CM', 'Attacking Midfield': 'CAM',
+  'Right Wing': 'RW', 'Left Wing': 'LW', Striker: 'CF',
+}
+
+export const gameSquad = athletesInSquad(squad).map(a => ({
+  id: a.id,
+  name: a.name,
+  position: SHORT[a.position] || a.position,
+  group: GROUP[a.position] || 'Other',
+  availability: a.availability === 'Unavailable' ? 'Unavailable' : 'Available',
+}))
 
 export const gameStaff = [
-  { id: 1, name: 'Craig Bennett', role: 'Head Coach' },
-  { id: 2, name: 'Pablo de Miguel', role: 'Assistant Coach' },
-  { id: 3, name: 'ST Test', role: 'Physiotherapist' },
+  { id: 1, name: 'Tom Hargreaves', role: 'Head Coach' },
+  { id: 2, name: 'Ciara Whelan', role: 'Performance Analyst' },
+  { id: 3, name: 'Marie Nolan', role: 'Goalkeeping Coach' },
 ]
 
-/** Columns on the List view that are per-event rather than per-period. */
 export const EVENT_COLUMNS = [
   { field: 'yellow', label: 'Yellow', colour: '#f1c410' },
   { field: 'red', label: 'Red', colour: '#c31d2b' },

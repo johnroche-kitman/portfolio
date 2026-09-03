@@ -15,7 +15,7 @@ import {
   DiagnosticsTab, DocumentsTab, MedicationsTab, ModificationsTab, NotesTab, TreatmentsTab,
 } from './tabs'
 import { INJURY_TABS, REHAB_ROWS, injuryById } from '../../data/medical'
-import { MEDICAL_ADD_ITEMS } from '../../data/athletes'
+import { MEDICAL_ADD_ITEMS, athleteByName, initialsOf, photoUrl } from '../../data/athletes'
 
 function Overview({ injury }) {
   return (
@@ -125,8 +125,9 @@ export default function InjuryRecord() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: colors.neutral_200, color: colors.neutral_400, fontSize: 14 }}>
-            AO
+          <Avatar src={photoUrl(athleteByName(injury.athlete))} alt=""
+            sx={{ width: 40, height: 40, bgcolor: colors.neutral_200, color: colors.neutral_400, fontSize: 14 }}>
+            {initialsOf(injury.athlete)}
           </Avatar>
           <Box>
             <Typography variant="h5">{injury.athlete} - {injury.title}</Typography>

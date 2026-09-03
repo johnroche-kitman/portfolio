@@ -2,12 +2,12 @@
 // Data is synthetic. Names are invented but realistic, so the prototype reads
 // as a football club rather than a test environment.
 
-export const squad = 'U21 (Test Kitman FC)'
+export const squad = 'U16 (Test Kitman FC)'
 
 export const squads = [
-  'U21 (Test Kitman FC)',
-  'U18 (Test Kitman FC)',
   'U16 (Test Kitman FC)',
+  'U18 (Test Kitman FC)',
+  'U21 (Test Kitman FC)',
   'First team (Test Kitman FC)',
   'Testing',
 ]
@@ -29,7 +29,7 @@ export const AVAILABILITY = {
  * so a list never has to reformat. `first` is kept for the places that read
  * naturally in prose, such as a coach's note.
  */
-const U21 = [
+const U16 = [
   {
     id: 113734, name: 'Reeves, Callum', first: 'Callum', position: 'Goalkeeper',
     availability: AVAILABILITY.AVAILABLE, issues: [], latestNote: null,
@@ -105,7 +105,7 @@ const U18 = [
   { id: 460107, name: 'Whitlock, Josh', first: 'Josh', position: 'Striker' },
 ]
 
-const U16 = [
+const U21 = [
   { id: 470201, name: 'Byrne, Sean', first: 'Sean', position: 'Goalkeeper' },
   { id: 470202, name: 'Doyle, Mark', first: 'Mark', position: 'Centre Back' },
   { id: 470203, name: 'Farrell, Cian', first: 'Cian', position: 'Centre Midfield' },
@@ -121,11 +121,39 @@ const withSquad = (list, name) => list.map(a => ({
   availability: AVAILABILITY.AVAILABLE, issues: [], latestNote: null, ...a, squad: name,
 }))
 
+/**
+ * Twenty headshots for twenty-six athletes. The index runs across the whole
+ * roster rather than restarting per squad, so no two people in the same squad
+ * list ever share a face — only the all-squads view can repeat one, and only
+ * near the bottom of it.
+ */
+const PHOTOS = 20
+const photoFor = i => `players/athlete-${String((i % PHOTOS) + 1).padStart(2, '0')}.jpg`
+
 export const athletes = [
-  ...withSquad(U21, squads[0]),
+  ...withSquad(U16, squads[0]),
   ...withSquad(U18, squads[1]),
-  ...withSquad(U16, squads[2]),
-]
+  ...withSquad(U21, squads[2]),
+].map((a, i) => ({ ...a, photo: photoFor(i) }))
+
+/**
+ * The headshot for an athlete, resolved against the app's base path. Undefined
+ * for anyone without one, which is what makes an Avatar fall back to initials.
+ */
+export const photoUrl = a => (a?.photo ? `${import.meta.env.BASE_URL}${a.photo}` : undefined)
+
+/** Initials, for the fallback and for the places that draw their own avatar. */
+export const initialsOf = name => String(name)
+  .replace(/\(.*?\)/g, '')
+  .split(/[\s,]+/)
+  .filter(Boolean)
+  .slice(0, 2)
+  .map(w => w[0])
+  .join('')
+  .toUpperCase()
+
+/** Lookup by name — the injury record carries a name, not an id. */
+export const athleteByName = name => athletes.find(a => a.name === name)
 
 /** The athletes in one squad, or all of them when no squad is named. */
 export const athletesInSquad = name => (name ? athletes.filter(a => a.squad === name) : athletes)

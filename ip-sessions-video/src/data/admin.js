@@ -1,3 +1,4 @@
+import { athletes } from './athletes'
 // Administration fixtures, read off the testkitmanfc demo. Synthetic data.
 
 export const ROSTER_POSITIONS = [
@@ -32,29 +33,42 @@ export const LABELS = [
 ]
 
 /* ----------------------------------------------------------- athlete rows */
-const A = (id, name, username, position, squads, created, labels = [], active = true) =>
-  ({ id, name, username, position, squads, created, labels, active })
+/**
+ * Manage Athletes lists the same people as everywhere else, so a headshot and a
+ * name mean the same thing on this page as they do on a session or a plan. Only
+ * the administrative fields — username, when the record was created, labels —
+ * are invented here.
+ */
+const USERNAME = a => `${a.first[0]}${a.name.split(',')[0]}`.toLowerCase().replace(/[^a-z]/g, '')
 
-export const adminAthletes = [
-  A(1, 'A Jordan', 'ajordan-athlete', 'Goalkeeper', ['U16 (Test Kitman FC)'], '29 Jul 2026', ['Premier League']),
-  A(2, 'A Test 1, Mark', 'matest1', 'Centre Forward', ['U16 (Test Kitman FC) (Primary)', 'U15'], '29 Aug 2023'),
-  A(3, 'Ahuja, Akshay', 'aahujaathlete', 'Goalkeeper', ['U16 (Test Kitman FC)'], '15 Apr 2026'),
-  A(4, 'Ali, Mohamed', 'mailkfcath', 'Wing Forward', ['U16 (Test Kitman FC) (Primary)'], '14 Jul 2023'),
-  A(5, 'Amariei, amariei', 'samariei2', 'Goalkeeper', ['U16 (Test Kitman FC)'], '25 Jun 2026'),
-  A(6, 'Sabin', 'sabin-athlete', 'Sweeper', ['U15 (Primary)', 'U21', 'Testing'], '6 Jul 2026'),
-  A(7, 'Aplayer, Org', 'oaplayer', 'Right Wing Back', ['U16 (Test Kitman FC)'], '13 Sep 2023'),
-  A(8, 'Athlete, Craig', 'C.Athlete', 'Attacking Midfielder', ['U16 (Test Kitman FC)'], '14 Jul 2026'),
-  A(9, 'Athlete, Dan', 'danathlete', 'Right Wing Back', ['U16 (Test Kitman FC)'], '28 Jul 2026'),
-  A(10, 'Athlete, Delete test', 'deletetest', 'Goalkeeper', ['U16 (Test Kitman FC)'], '28 Nov 2025'),
-  A(11, 'Athlete, Diagnostic', 'dathlete1', 'Central Midfielder', ['U16 (Test Kitman FC) (Primary)', 'U21'], '23 Aug 2023', ['Central Players', '2002', '2003']),
-  A(12, 'Athlete, Export test', 'eathlete', 'Central Midfielder', ['U16 (Test Kitman Rovers) (Primary)', 'U15'], '11 Sep 2023', ['Central Players', '2001', '2004', 'Knee']),
-  A(13, 'Athlete, Friday', 'fathlete', 'Right Back', ['U16 (Test Kitman FC) (Primary)', 'U21'], '8 Sep 2023', ['Female Athletes', '2005', 'High Value']),
-  A(14, 'Athlete, Monday', 'mathlete', 'Left Wing', ['U16 (Test Kitman FC)'], '4 Sep 2023', ['Injury Risk']),
-  A(15, 'Bennett, Craig', 'cbennettath', 'Striker', ['U16 (Test Kitman FC)'], '11 Jul 2023', ['Loan Player']),
-  A(16, 'Byrne, Sean', 'sbyrneath', 'Left Back', ['U15 (Primary)'], '2 Feb 2025', [], false),
-  A(17, 'Casey, Tom', 'tcaseyath', 'Centre Back', ['U16 (Test Kitman FC)'], '19 Mar 2024', [], false),
-  A(18, 'Doyle, Mark', 'mdoyleath', 'Defensive Midfielder', ['U21 (Primary)'], '7 Nov 2024', ['2000'], false),
+const CREATED = [
+  '29 Jul 2026', '11 Jul 2023', '15 Apr 2026', '14 Jul 2023', '25 Jun 2026', '6 Jul 2026',
+  '13 Sep 2023', '14 Jul 2026', '28 Jul 2026', '28 Nov 2025', '23 Aug 2023', '11 Sep 2023',
+  '8 Sep 2023', '4 Sep 2023', '2 Feb 2025', '19 Mar 2024', '7 Nov 2024', '3 Jan 2026',
+  '22 Feb 2026', '9 May 2025', '17 Jun 2025', '30 Oct 2024', '12 Dec 2025', '5 Mar 2026',
+  '18 Apr 2025', '27 Aug 2025',
 ]
+
+const LABELS_BY_INDEX = {
+  0: ['Premier League'],
+  3: ['Central Players', '2005'],
+  6: ['High Value'],
+  9: ['Injury Risk'],
+  12: ['Loan Player'],
+  15: ['Female Athletes'],
+}
+
+export const adminAthletes = athletes.map((a, i) => ({
+  id: a.id,
+  name: a.name,
+  photo: a.photo,
+  username: USERNAME(a),
+  position: a.position,
+  squads: [`${a.squad} (Primary)`],
+  created: CREATED[i % CREATED.length],
+  labels: LABELS_BY_INDEX[i] || [],
+  active: true,
+}))
 
 /* -------------------------------------------------------------- staff rows */
 export const STAFF_ROLES = ['Account Admin', 'Staff', 'Coach', 'Medical', 'Analyst']

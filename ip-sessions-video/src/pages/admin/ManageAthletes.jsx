@@ -8,6 +8,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import FileDownloadIcon from '@mui/icons-material/FileDownloadOutlined'
 import colors from '../../theme/tokens'
+import { initialsOf, photoUrl } from '../../data/athletes'
 import AppShell from '../../components/AppShell'
 import { ChipList, FilterRow, AdminGrid, PageHeader } from './parts'
 import { LABEL_COLORS, ROSTER_POSITIONS, adminAthletes } from '../../data/admin'
@@ -34,8 +35,9 @@ export default function ManageAthletes() {
       field: 'name', headerName: 'Player', flex: 1.2, minWidth: 220,
       renderCell: p => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar sx={{ width: 30, height: 30, bgcolor: colors.neutral_300, color: colors.grey_150, fontSize: 12 }}>
-            {p.row.name.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
+          <Avatar src={photoUrl(p.row)} alt=""
+            sx={{ width: 30, height: 30, bgcolor: colors.neutral_300, color: colors.grey_150, fontSize: 12 }}>
+            {initialsOf(p.row.name)}
           </Avatar>
           <Typography variant="body2">{p.row.name}</Typography>
         </Box>

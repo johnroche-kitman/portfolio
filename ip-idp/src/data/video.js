@@ -72,7 +72,7 @@ export const peakMetric = key => PEAK_METRICS.find(m => m.key === key)
 export const videoSession = {
   id: 'sv-1',
   title: 'Matchday -3 training',
-  squad: 'U21 (Test Kitman FC)',
+  squad: 'U16 (Test Kitman FC)',
   sessionType: '1st Team Training',
   date: 'September 21, 2026 2:00 PM, (3:00 PM Europe/Dublin) (90 min)',
   gameDay: '-3, +4',

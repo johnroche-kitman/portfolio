@@ -1,22 +1,12 @@
 import { Avatar, Box, Typography } from '@mui/material'
 import colors from '../theme/tokens'
-import { AVAILABILITY } from '../data/athletes'
+import { AVAILABILITY, initialsOf, photoUrl } from '../data/athletes'
 
 const DOT = {
   [AVAILABILITY.AVAILABLE]: colors.green_100,
   [AVAILABILITY.UNAVAILABLE]: colors.red_100,
   [AVAILABILITY.MODIFIED]: colors.orange_100,
 }
-
-const initials = name =>
-  name
-    .replace(/\(.*?\)/g, '')
-    .split(/[\s,]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase()
 
 /**
  * Avatar with availability dot, name and position. The one athlete cell —
@@ -37,8 +27,11 @@ export default function AthleteCell({ athlete, onClick, status, size = 34 }) {
       }}
     >
       <Box sx={{ position: 'relative', flexShrink: 0 }}>
-        <Avatar sx={{ width: size, height: size, bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 13 }}>
-          {initials(athlete.name)}
+        {/* MUI falls back to the children when src is absent or fails to load,
+            so an athlete with no headshot still gets their initials. */}
+        <Avatar src={photoUrl(athlete)} alt=""
+          sx={{ width: size, height: size, bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 13 }}>
+          {initialsOf(athlete.name)}
         </Avatar>
         <Box
           sx={{

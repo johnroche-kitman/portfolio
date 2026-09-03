@@ -10,7 +10,7 @@ import LockIcon from '@mui/icons-material/LockOutlined'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
 import { ClipDialog, ClipThumb, shareMessage } from '../../components/clips'
-import { athleteById } from '../../data/athletes'
+import { athleteById, initialsOf, photoUrl } from '../../data/athletes'
 import { GOAL_PLAN, goalsForAthlete } from '../../data/goals'
 import { clipSource, drillById, principleLabel } from '../../data/video'
 
@@ -246,9 +246,9 @@ export default function IdpAthlete() {
         </Button>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-          <Avatar sx={{ width: 52, height: 52, bgcolor: colors.neutral_300, color: colors.grey_100,
-            fontSize: 18 }}>
-            {athlete.name.split(/[\s,]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
+          <Avatar src={photoUrl(athlete)} alt=""
+            sx={{ width: 52, height: 52, bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 18 }}>
+            {initialsOf(athlete.name)}
           </Avatar>
           <Box>
             <Typography variant="h5">{athlete.name}</Typography>

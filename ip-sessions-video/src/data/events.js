@@ -88,7 +88,7 @@ let nextId = 5650000
 const mk = (title, type, day, start, end, extra = {}) => ({
   id: nextId++, title, type, day, start, end,
   // Sessions and games carry a completion state; plain events do not.
-  squad: 'U21 (Test Kitman FC)', complete: false, ...extra,
+  squad: 'U16 (Test Kitman FC)', complete: false, ...extra,
 })
 
 export const events = [
@@ -118,7 +118,7 @@ export const events = [
   mk('Video session — development goals', EVENT_TYPES.SESSION, 4, '14:30', '15:15', { sessionType: 'Individual' }),
 
   mk('Bloods Test', EVENT_TYPES.EVENT, 5, '14:04', '15:04', { eventType: 'Bloods Test' }),
-  mk('U21 v Riverside Athletic', EVENT_TYPES.GAME, 5, '15:00', '16:30', {
+  mk('U16 v Riverside Athletic', EVENT_TYPES.GAME, 5, '15:00', '16:30', {
     competition: 'Premier League 2', competitionType: 'League', venue: 'Home',
     location: 'Performance Centre', opposition: 'Riverside Athletic', round: '5', format: '11 v 11',
   }),

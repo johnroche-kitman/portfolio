@@ -81,9 +81,9 @@ export const sessionStaff = [
 ]
 
 export const SQUAD_PICKER = [
-  { squad: 'U21 (Test Kitman FC)', athletes: athletesInSquad('U21 (Test Kitman FC)').map(a => a.name) },
-  { squad: 'U18 (Test Kitman FC)', athletes: athletesInSquad('U18 (Test Kitman FC)').map(a => a.name) },
   { squad: 'U16 (Test Kitman FC)', athletes: athletesInSquad('U16 (Test Kitman FC)').map(a => a.name) },
+  { squad: 'U18 (Test Kitman FC)', athletes: athletesInSquad('U18 (Test Kitman FC)').map(a => a.name) },
+  { squad: 'U21 (Test Kitman FC)', athletes: athletesInSquad('U21 (Test Kitman FC)').map(a => a.name) },
 ]
 
 /**
@@ -167,7 +167,7 @@ export const eventListItems = [
   { id: 7, name: 'Set piece walkthrough', when: 'Tue, 22 Sep 2026 | 14:30' },
   { id: 8, name: 'Matchday -1 activation', when: 'Wed, 23 Sep 2026 | 10:00' },
   { id: 9, name: 'Travel to Northgate', when: 'Wed, 23 Sep 2026 | 15:35' },
-  { id: 10, name: 'U21 v Riverside Athletic', when: 'Sat, 26 Sep 2026 | 15:00' },
+  { id: 10, name: 'U16 v Riverside Athletic', when: 'Sat, 26 Sep 2026 | 15:00' },
   { id: 11, name: 'Matchday +1 recovery', when: 'Thu, 24 Sep 2026 | 10:00' },
   { id: 12, name: 'Individual finishing block', when: 'Thu, 24 Sep 2026 | 14:30' },
   { id: 13, name: 'Video session — development goals', when: 'Fri, 25 Sep 2026 | 14:30' },

@@ -17,7 +17,7 @@ import {
 import {
   ATHLETE_DETAIL_FIELDS, MAINTENANCE_ROWS, MEDICAL_ATHLETE_TABS, athleteHeader, medicalAthleteById,
 } from '../../data/medical'
-import { MEDICAL_ADD_ITEMS } from '../../data/athletes'
+import { MEDICAL_ADD_ITEMS, initialsOf, photoUrl } from '../../data/athletes'
 
 /** One of the three stacked tables on the Injury/ Illness tab. */
 const IssueSection = ({ title, columns, rows, empty, onOpen }) => (
@@ -141,8 +141,9 @@ export default function MedicalAthlete() {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3, mt: 1 }}>
-          <Avatar sx={{ width: 76, height: 76, bgcolor: colors.neutral_200, color: colors.neutral_400, fontSize: 24 }}>
-            {athlete.name.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
+          <Avatar src={photoUrl(athlete)} alt=""
+            sx={{ width: 76, height: 76, bgcolor: colors.neutral_200, color: colors.neutral_400, fontSize: 24 }}>
+            {initialsOf(athlete.name)}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="h5">{athlete.name}</Typography>
