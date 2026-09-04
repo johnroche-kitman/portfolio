@@ -668,7 +668,9 @@ const MetaCell = ({ label, value }) => (
  * playhead in one is the frame in the other. Everything descriptive drops below
  * them, full width, where it does not compete for the space they need.
  */
-export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onStar }) => {
+export const ClipDialog = ({
+  clip, drill, onClose, onShare, starred = false, onStar, soloAthlete = false,
+}) => {
   const [time, setTime] = useState(0)
   const [measured, setMeasured] = useState(null)
   const [metric, setMetric] = useState(CHART_METRICS[0].key)
@@ -728,7 +730,8 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
             onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />
           <DistanceChart series={series} duration={span} playhead={time}
             drillName={drill?.name || clipSource(clip).opposition} metrics={CHART_METRICS}
-            metric={metric} onMetricChange={setMetric} />
+            metric={metric} onMetricChange={setMetric}
+            focusAthleteId={soloAthlete ? clip.athleteId : null} />
         </Box>
 
         <Divider sx={{ my: 3 }} />

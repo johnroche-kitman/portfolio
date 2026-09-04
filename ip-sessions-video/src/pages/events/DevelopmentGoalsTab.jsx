@@ -14,7 +14,7 @@ import AthleteCell from '../../components/AthleteCell'
 import { MultiSelect, SearchInput } from '../../components/form'
 import { ClipDialog, ClipThumb, shareMessage } from '../../components/clips'
 import { athleteById, positions } from '../../data/athletes'
-import { GOAL_TYPES, GOAL_PLAN, goalsForAthlete, sessionClipsForGoal } from '../../data/goals'
+import { GOAL_PLAN, goalsForAthlete, sessionClipsForGoal } from '../../data/goals'
 import { PRINCIPLE_NAMES, clipSource, drillById, principleLabel } from '../../data/video'
 
 /**
@@ -93,7 +93,6 @@ export default function DevelopmentGoalsTab() {
   const [q, setQ] = useState('')
   const [athleteNames, setAthleteNames] = useState([])
   const [pos, setPos] = useState([])
-  const [types, setTypes] = useState([])
   const [principles, setPrinciples] = useState([])
   const [marked, setMarked] = useState({})   // `${athleteId}:${goalId}:${markKey}` -> true
   const [starred, setStarred] = useState(() => new Set())
@@ -120,7 +119,7 @@ export default function DevelopmentGoalsTab() {
     () => PRINCIPLE_NAMES.filter(p => rows.some(r => r.goals.some(g => g.principle === p))), [rows],
   )
 
-  const active = !!q || !!athleteNames.length || !!pos.length || !!types.length || !!principles.length
+  const active = !!q || !!athleteNames.length || !!pos.length || !!principles.length
 
   const shown = rows
     .filter(r => !athleteNames.length || athleteNames.includes(r.athlete.name))
@@ -129,7 +128,6 @@ export default function DevelopmentGoalsTab() {
       ...r,
       goals: r.goals
         .filter(g => !principles.length || principles.includes(g.principle))
-        .filter(g => !types.length || types.includes(GOAL_PLAN))
         .filter(g => !q || `${g.title} ${g.description} ${r.athlete.name}`.toLowerCase().includes(q.toLowerCase())),
     }))
     .filter(r => r.goals.length)
@@ -137,7 +135,7 @@ export default function DevelopmentGoalsTab() {
   const isMarked = (a, g, k) => !!marked[`${a}:${g}:${k}`]
   const setMark = (a, g, k, v) => setMarked(m => ({ ...m, [`${a}:${g}:${k}`]: v }))
 
-  const clear = () => { setQ(''); setAthleteNames([]); setPos([]); setTypes([]); setPrinciples([]) }
+  const clear = () => { setQ(''); setAthleteNames([]); setPos([]); setPrinciples([]) }
 
   const toggleStar = id => setStarred(s2 => {
     const next = new Set(s2)
@@ -158,8 +156,6 @@ export default function DevelopmentGoalsTab() {
             onChange={setAthleteNames} selectAll sx={{ width: 260 }} />
           <MultiSelect label="Positions" options={positionOptions} value={pos}
             onChange={setPos} selectAll sx={{ width: 220 }} />
-          <MultiSelect label="Type" options={GOAL_TYPES} value={types} onChange={setTypes}
-            sx={{ width: 220 }} />
           <MultiSelect label="Principle" options={principleOptions} value={principles}
             onChange={setPrinciples} selectAll sx={{ width: 300 }} />
           {active && <Button variant="text" onClick={clear} sx={{ flexShrink: 0 }}>Clear filters</Button>}
@@ -246,7 +242,7 @@ export default function DevelopmentGoalsTab() {
         <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, py: 8, textAlign: 'center' }}>
           <Typography variant="subtitle1">No development goals match the filters</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            Widen the athlete, position, type or principle filter to see the rest of the squad.
+            Widen the athlete, position or principle filter to see the rest of the squad.
           </Typography>
           <Button variant="outlined" onClick={clear}>Clear filters</Button>
         </Paper>
@@ -254,7 +250,7 @@ export default function DevelopmentGoalsTab() {
 
       {clip && (
         <ClipDialog clip={clip} drill={clip.drillId ? drillById(clip.drillId) : null}
-          onClose={() => setClip(null)}
+          onClose={() => setClip(null)} soloAthlete
           starred={starred.has(clip.id)} onStar={toggleStar}
           onShare={(t, c) => setToast(shareMessage(t, c))} />
       )}

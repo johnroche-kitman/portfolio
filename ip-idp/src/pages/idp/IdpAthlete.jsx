@@ -336,7 +336,7 @@ export default function IdpAthlete() {
 
       {clip && (
         <ClipDialog clip={clip} drill={clip.drillId ? drillById(clip.drillId) : null}
-          onClose={() => setClip(null)}
+          onClose={() => setClip(null)} soloAthlete
           starred={starred.has(clip.id)} onStar={toggleStar}
           onShare={(t, c) => setToast(shareMessage(t, c))} />
       )}

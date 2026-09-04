@@ -44,13 +44,24 @@ const niceScale = (v, minStep = 0) => {
 
 const comma = n => n.toLocaleString('en-GB')
 
+/**
+ * Which lines start switched off. Opened against one athlete — from a goal, or
+ * from their plan — the others are off: the reader came for one person, and
+ * four more lines are context they can ask for rather than noise they have to
+ * clear. Opened from the drill, everything is on.
+ */
+const initialHidden = (series, focusAthleteId) => new Set(
+  focusAthleteId == null ? [] : series.filter(s => s.athleteId !== focusAthleteId).map(s => s.athleteId),
+)
+
 export default function DistanceChart({
   series, duration, playhead = null, drillName, metrics = [], metric, onMetricChange,
+  focusAthleteId = null,
 }) {
   const [metricEl, setMetricEl] = useState(null)
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(0)
-  const [hidden, setHidden] = useState(() => new Set())
+  const [hidden, setHidden] = useState(() => initialHidden(series, focusAthleteId))
   const [hoverT, setHoverT] = useState(null)
   const [showTable, setShowTable] = useState(false)
 
@@ -63,6 +74,14 @@ export default function DistanceChart({
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  // Reset on the athletes, not on the series: switching metric rebuilds the
+  // series but plots the same people, and it should not throw away which lines
+  // the reader has switched on.
+  const roster = series.map(s => s.athleteId).join(',')
+  useEffect(() => {
+    setHidden(initialHidden(series, focusAthleteId))
+  }, [roster, focusAthleteId])
 
   // Colour is bound to the athlete's slot in the series list, never to how many
   // are currently shown — hiding a line must not repaint the ones that remain.
