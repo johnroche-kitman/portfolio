@@ -75,6 +75,22 @@ const page = `<!doctype html>
   /* ---- page */
   .wrap { max-width:1000px; margin:0 auto; padding:48px 32px 64px }
 
+  /* The two brands, side by side. Kitman only ships the ring mark, so its
+     lockup is built here to match Hudl's mark-plus-wordmark and keep the pair
+     optically balanced rather than a bare ring beside a full logo. */
+  .brands { display:flex; align-items:center; justify-content:center; gap:26px;
+            margin:0 0 44px }
+  .brand { display:inline-flex; align-items:center; gap:10px }
+  .brand-word { font-size:19px; font-weight:700; letter-spacing:-.01em; color:var(--ink) }
+  .brand img { display:block }
+  .hudl { height:26px; width:auto; display:block }
+  .brand-split { width:1px; height:26px; background:var(--rule) }
+
+  @media (max-width:420px) {
+    .brands { gap:16px }
+    .brand-word { font-size:16px }
+  }
+
   .cards { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)) }
   .card { display:flex; flex-direction:column; border:1px solid var(--rule); border-radius:8px;
           overflow:hidden; text-decoration:none; color:inherit; background:#fff;

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Chip, Collapse,
+  Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Chip, Collapse, Divider,
   FormControlLabel, Paper, Snackbar, Typography,
 } from '@mui/material'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
@@ -137,26 +137,25 @@ export default function DevelopmentGoalsTab() {
   const clear = () => { setQ(''); setAthleteNames([]); setPos([]); setTypes([]); setPrinciples([]) }
 
   return (
-    <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden' }}>
-      {/* No section title: the tab is already called Development goals. */}
-      <Box sx={{ p: 3, pb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-          <SearchInput label="Search" value={q} onChange={e => setQ(e.target.value)} sx={{ width: 190 }} />
+    <Box>
+      {/* No section title: the tab is already called Development goals. The card,
+          the field widths and the Clear filters button match the Video tab, so
+          moving between the two tabs does not move the controls. */}
+      <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2, mb: 2.5 }}>
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <SearchInput label="Search goals" value={q} onChange={e => setQ(e.target.value)}
+            sx={{ width: 230 }} />
           <MultiSelect label="Athlete" options={athleteOptions} value={athleteNames}
-            onChange={setAthleteNames} selectAll sx={{ width: 195 }} />
+            onChange={setAthleteNames} selectAll sx={{ width: 260 }} />
           <MultiSelect label="Positions" options={positionOptions} value={pos}
-            onChange={setPos} selectAll sx={{ width: 195 }} />
+            onChange={setPos} selectAll sx={{ width: 220 }} />
           <MultiSelect label="Type" options={GOAL_TYPES} value={types} onChange={setTypes}
-            sx={{ width: 195 }} />
+            sx={{ width: 220 }} />
           <MultiSelect label="Principle" options={principleOptions} value={principles}
-            onChange={setPrinciples} selectAll sx={{ width: 195 }} />
+            onChange={setPrinciples} selectAll sx={{ width: 300 }} />
+          {active && <Button variant="text" onClick={clear} sx={{ flexShrink: 0 }}>Clear filters</Button>}
         </Box>
-        {active && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-            <Button variant="text" size="small" onClick={clear}>Clear filters</Button>
-          </Box>
-        )}
-      </Box>
+      </Paper>
 
       {/* One accordion per athlete, all closed. Thirty goals laid flat is a
           page nobody reads; the header carries enough — who, their position,
@@ -164,12 +163,11 @@ export default function DevelopmentGoalsTab() {
       {shown.map(({ athlete, goals }) => {
         const clipCount = goals.reduce((n, g) => n + g.clips.length, 0)
         return (
-          <Accordion key={athlete.id} disableGutters elevation={0} square
+          <Accordion key={athlete.id} disableGutters elevation={0}
             TransitionProps={{ unmountOnExit: true }}
-            sx={{ '&::before': { display: 'none' },
-              borderTop: `1px solid ${colors.neutral_300}` }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}
-              sx={{ px: 3, bgcolor: colors.neutral_100 }}>
+            sx={{ border: `1px solid ${colors.neutral_300}`, borderRadius: 1, mb: 2,
+              '&::before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 gap: 2, width: '100%', pr: 2 }}>
                 <AthleteCell athlete={athlete} size={34} />
@@ -179,9 +177,10 @@ export default function DevelopmentGoalsTab() {
                 </Typography>
               </Box>
             </AccordionSummary>
-            <AccordionDetails sx={{ p: 0, borderTop: `1px solid ${colors.neutral_300}` }}>
+            <Divider />
+            <AccordionDetails sx={{ p: 0 }}>
               {goals.map((g, i) => (
-                <Box key={g.goalId} sx={{ px: 3, py: 2,
+                <Box key={g.goalId} sx={{ px: 2, py: 2,
                   borderBottom: i < goals.length - 1 ? `1px solid ${colors.neutral_200}` : 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -223,12 +222,13 @@ export default function DevelopmentGoalsTab() {
       })}
 
       {!shown.length && (
-        <Box sx={{ py: 6, textAlign: 'center', borderTop: `1px solid ${colors.neutral_300}` }}>
+        <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, py: 8, textAlign: 'center' }}>
+          <Typography variant="subtitle1">No development goals match the filters</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            No development goals match the filters
+            Widen the athlete, position, type or principle filter to see the rest of the squad.
           </Typography>
           <Button variant="outlined" onClick={clear}>Clear filters</Button>
-        </Box>
+        </Paper>
       )}
 
       {clip && (
@@ -237,6 +237,6 @@ export default function DevelopmentGoalsTab() {
           onShare={(t, c) => setToast(shareMessage(t, c))} />
       )}
       <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast('')} message={toast} />
-    </Paper>
+    </Box>
   )
 }

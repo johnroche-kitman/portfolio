@@ -21,13 +21,14 @@ export default function IdpList() {
     const goals = goalsForAthlete(a.id, a.name)
     // Notes are newest-first within a goal but not across them, so the most
     // recent review has to be found rather than read off the first goal.
-    const dates = goals.flatMap(g => g.notes).map(n => n.date)
-    const latest = dates.sort((a, b) => new Date(b) - new Date(a))[0]
+    const notes = goals.flatMap(g => g.notes)
+    const latest = notes.map(n => n.date).sort((a, b) => new Date(b) - new Date(a))[0]
     return {
       ...a,
       goals,
       goalCount: goals.length,
       clipCount: goals.reduce((n, g) => n + g.clips.length, 0),
+      noteCount: notes.length,
       lastNote: latest || null,
     }
   }), [])
@@ -55,6 +56,14 @@ export default function IdpList() {
       renderCell: p => (
         <Typography variant="body2" sx={{ color: p.value ? 'text.primary' : 'text.secondary' }}>
           {p.value || '—'}
+        </Typography>
+      ),
+    },
+    {
+      field: 'noteCount', headerName: 'Notes added', width: 120,
+      renderCell: p => (
+        <Typography variant="body2" sx={{ color: p.value ? 'text.primary' : 'text.secondary' }}>
+          {p.value || 'None'}
         </Typography>
       ),
     },

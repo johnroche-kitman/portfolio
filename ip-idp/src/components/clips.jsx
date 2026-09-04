@@ -175,6 +175,20 @@ export const ClipPlayer = ({
    */
   const report = t => onTime?.(t)
 
+  /** The clip's clock from the recording's: 0 is the window's in point. */
+  const rel = t => Math.max(0, (t ?? 0) - bounds.current.in)
+
+  /**
+   * The frame loop exists only for smoothness. `timeupdate` fires about four
+   * times a second, which reads as a stepping playhead, so a loop reads
+   * `currentTime` every frame while the video plays.
+   *
+   * It is never the only driver. `requestAnimationFrame` does not fire in a tab
+   * the browser treats as hidden or throttled, and this component once had no
+   * `timeupdate` handler at all — so wherever the loop did not run, nothing
+   * moved the playhead while the video played on. Both report into the same
+   * idempotent function now.
+   */
   const raf = useRef(0)
   const stop = () => { cancelAnimationFrame(raf.current); raf.current = 0 }
 
@@ -184,12 +198,12 @@ export const ClipPlayer = ({
       if (v.currentTime >= bounds.current.out) {
         v.pause()
         v.currentTime = bounds.current.out
-        report(bounds.current.out - bounds.current.in)
+        report(rel(bounds.current.out))
         setPlaying(false)
         stop()
         return
       }
-      report(Math.max(0, v.currentTime - bounds.current.in))
+      report(rel(v.currentTime))
     }
     raf.current = requestAnimationFrame(follow)
   }
@@ -275,11 +289,9 @@ export const ClipPlayer = ({
             onError={() => setFailed(true)}
             onLoadedMetadata={onMeta}
             onPlay={() => { setStarted(true); setPlaying(true); stop(); follow() }}
-            onPause={() => {
-            setPlaying(false)
-            stop()
-            report(Math.max(0, (ref.current?.currentTime ?? 0) - bounds.current.in))
-          }}
+            onPause={() => { setPlaying(false); stop(); report(rel(ref.current?.currentTime)) }}
+            onSeeked={e => report(rel(e.currentTarget.currentTime))}
+            onTimeUpdate={e => report(rel(e.currentTarget.currentTime))}
             sx={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain',
               bgcolor: colors.grey_400, cursor: 'pointer' }} />
         )}
