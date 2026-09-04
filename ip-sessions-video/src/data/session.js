@@ -81,9 +81,9 @@ export const sessionStaff = [
 ]
 
 export const SQUAD_PICKER = [
-  { squad: 'U16 (Test Kitman FC)', athletes: athletesInSquad('U16 (Test Kitman FC)').map(a => a.name) },
-  { squad: 'U18 (Test Kitman FC)', athletes: athletesInSquad('U18 (Test Kitman FC)').map(a => a.name) },
-  { squad: 'U21 (Test Kitman FC)', athletes: athletesInSquad('U21 (Test Kitman FC)').map(a => a.name) },
+  { squad: 'U16', athletes: athletesInSquad('U16').map(a => a.name) },
+  { squad: 'U18', athletes: athletesInSquad('U18').map(a => a.name) },
+  { squad: 'U21', athletes: athletesInSquad('U21').map(a => a.name) },
 ]
 
 /**
@@ -158,17 +158,17 @@ export const IMPORT_VENDORS = [
 export const EVENT_LIST_TYPES = ['Games', 'Sessions', 'Event']
 
 export const eventListItems = [
-  { id: 1, name: 'Matchday -3 training', when: 'Mon, 21 Sep 2026 | 14:00' },
+  { id: 1, name: 'Gameday -3 training', when: 'Mon, 21 Sep 2026 | 14:00' },
   { id: 2, name: 'Recovery — pool and mobility', when: 'Mon, 21 Sep 2026 | 10:00' },
   { id: 3, name: 'Gym — lower body strength', when: 'Mon, 21 Sep 2026 | 10:30' },
   { id: 4, name: 'Breakfast', when: 'Mon, 21 Sep 2026 | 07:00' },
   { id: 5, name: 'Team meeting — opposition analysis', when: 'Tue, 22 Sep 2026 | 16:00' },
-  { id: 6, name: 'Matchday -2 training', when: 'Tue, 22 Sep 2026 | 10:00' },
+  { id: 6, name: 'Gameday -2 training', when: 'Tue, 22 Sep 2026 | 10:00' },
   { id: 7, name: 'Set piece walkthrough', when: 'Tue, 22 Sep 2026 | 14:30' },
-  { id: 8, name: 'Matchday -1 activation', when: 'Wed, 23 Sep 2026 | 10:00' },
+  { id: 8, name: 'Gameday -1 activation', when: 'Wed, 23 Sep 2026 | 10:00' },
   { id: 9, name: 'Travel to Northgate', when: 'Wed, 23 Sep 2026 | 15:35' },
   { id: 10, name: 'U16 v Riverside Athletic', when: 'Sat, 26 Sep 2026 | 15:00' },
-  { id: 11, name: 'Matchday +1 recovery', when: 'Thu, 24 Sep 2026 | 10:00' },
+  { id: 11, name: 'Gameday +1 recovery', when: 'Thu, 24 Sep 2026 | 10:00' },
   { id: 12, name: 'Individual finishing block', when: 'Thu, 24 Sep 2026 | 14:30' },
   { id: 13, name: 'Video session — development goals', when: 'Fri, 25 Sep 2026 | 14:30' },
 ]

@@ -12,9 +12,9 @@
 import { clips } from './video'
 
 /** The review the goals were set under — the chip on every goal row. */
-export const GOAL_PLAN = '2026/27 Development Plan (1/2)'
+export const GOAL_PLAN = '2026/27 Development Plan'
 
-export const GOAL_TYPES = [GOAL_PLAN, 'Individual Learning Plan (2/2)']
+export const GOAL_TYPES = [GOAL_PLAN, 'Individual Learning Plan']
 
 export const goalCatalogue = [
   {

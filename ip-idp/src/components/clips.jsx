@@ -1,26 +1,26 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Box, Button, Chip, Dialog, DialogContent, Divider, IconButton, List, ListItemButton,
-  ListItemIcon, ListItemText, Menu, MenuItem, Paper, Tooltip, Typography,
+  Box, Button, Chip, Dialog, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper,
+  Tooltip, Typography,
 } from '@mui/material'
 import PlayCircleIcon from '@mui/icons-material/PlayCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import ShareIcon from '@mui/icons-material/ShareOutlined'
-import MoreVertIcon from '@mui/icons-material/MoreVert'
+import StarIcon from '@mui/icons-material/Star'
+import StarBorderIcon from '@mui/icons-material/StarBorder'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import SpeedIcon from '@mui/icons-material/SpeedOutlined'
 import TrendingUpIcon from '@mui/icons-material/TrendingUpOutlined'
 import FavoriteIcon from '@mui/icons-material/FavoriteBorderOutlined'
 import PersonIcon from '@mui/icons-material/PersonOutline'
-import GroupsIcon from '@mui/icons-material/GroupsOutlined'
 import BadgeIcon from '@mui/icons-material/BadgeOutlined'
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAddOutlined'
-import FlagIcon from '@mui/icons-material/FlagOutlined'
 import LinkIcon from '@mui/icons-material/LinkOutlined'
-import OpenInNewIcon from '@mui/icons-material/OpenInNewOutlined'
 import colors from '../theme/tokens'
+import DistanceChart from './DistanceChart'
 import { athleteById } from '../data/athletes'
 import {
-  CLIPS, PEAK_METRICS, SHARE_TARGETS, clipSourceLine, clipSrc, posterSrc, principleLabel,
+  CLIPS, PEAK_METRICS, SHARE_TARGETS, clipSourceLine, clipSrc, distanceSeries, posterSrc,
+  principleLabel, toSeconds,
 } from '../data/video'
 
 /* ------------------------------------------------------------------ pieces */
@@ -122,7 +122,7 @@ export const ClipThumb = ({ file, duration, height = 108, badge, onClick }) => {
  * and rather than leaving a black box we say so and name the file that is
  * missing — which is also what makes the clip manifest verifiable at a glance.
  */
-export const ClipPlayer = ({ file, autoPlay, height = 420 }) => {
+export const ClipPlayer = ({ file, autoPlay, height = 420, onTime, onDuration, fallbackDuration }) => {
   const [failed, setFailed] = useState(false)
   const ref = useRef(null)
 
@@ -139,12 +139,52 @@ export const ClipPlayer = ({ file, autoPlay, height = 420 }) => {
     return () => { live = false }
   }, [file])
 
+  // The playhead has to move smoothly, and `timeupdate` only fires about four
+  // times a second. A frame loop while the video is playing reads currentTime
+  // directly; the event handlers cover seeking and the paused states.
+  const raf = useRef(0)
+  const stop = () => { cancelAnimationFrame(raf.current); raf.current = 0 }
+  const follow = () => {
+    const v = ref.current
+    if (v) onTime?.(v.currentTime)
+    raf.current = requestAnimationFrame(follow)
+  }
+  useEffect(() => stop, [])
+
+  /**
+   * Until the real media lands there is nothing to play, so the missing-clip
+   * panel offers a synthetic clock over the fixture's duration. It drives the
+   * same playhead the video would, which is what makes the chart's sync
+   * reviewable before a single file has been cut.
+   */
+  const [preview, setPreview] = useState(false)
+  useEffect(() => {
+    if (!preview || !fallbackDuration) return undefined
+    const started = performance.now()
+    let id = 0
+    const step = () => {
+      const t = (performance.now() - started) / 1000
+      if (t >= fallbackDuration) { onTime?.(fallbackDuration); setPreview(false); return }
+      onTime?.(t)
+      id = requestAnimationFrame(step)
+    }
+    id = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(id)
+  }, [preview, fallbackDuration, onTime])
+
   return (
     <Box sx={{ position: 'relative', width: '100%', height, bgcolor: colors.grey_400,
       borderRadius: 1, overflow: 'hidden' }}>
       {!failed && (
         <Box component="video" ref={ref} src={clipSrc(file)} poster={posterSrc(file)}
-          controls autoPlay={autoPlay} playsInline preload="metadata" onError={() => setFailed(true)}
+          controls autoPlay={autoPlay} playsInline preload="metadata"
+          onError={() => setFailed(true)}
+          onLoadedMetadata={e => onDuration?.(e.currentTarget.duration)}
+          onPlay={() => { stop(); follow() }}
+          onPause={() => { stop(); onTime?.(ref.current?.currentTime ?? 0) }}
+          onEnded={stop}
+          onSeeked={e => onTime?.(e.currentTarget.currentTime)}
+          onTimeUpdate={e => { if (!raf.current) onTime?.(e.currentTarget.currentTime) }}
           sx={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain', bgcolor: colors.grey_400 }} />
       )}
       {failed && (
@@ -161,6 +201,12 @@ export const ClipPlayer = ({ file, autoPlay, height = 420 }) => {
                 Hudl has the tag but the media has not synced. Expected file:{' '}
                 <Box component="code" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{file}</Box>
               </Typography>
+              {!!fallbackDuration && onTime && (
+                <Button variant="outlined" size="small" startIcon={<PlayCircleIcon />}
+                  onClick={() => { onTime(0); setPreview(true) }} disabled={preview}>
+                  {preview ? 'Running timeline…' : 'Run the timeline without video'}
+                </Button>
+              )}
             </Paper>
           </Box>
         </Box>
@@ -187,6 +233,11 @@ export const PeakChips = ({ peaks, only, size = 'small' }) => (
   </Box>
 )
 
+/**
+ * Principles a clip or drill carries. Only the accordion header and the clip
+ * dialog show these: repeating them on every tile inside a drill restates what
+ * the header already said, three or four times a row.
+ */
 export const PrincipleChips = ({ principles, max }) => {
   const shown = max ? principles.slice(0, max) : principles
   const rest = principles.length - shown.length
@@ -201,160 +252,198 @@ export const PrincipleChips = ({ principles, max }) => {
   )
 }
 
-/* ------------------------------------------------------------------ share */
+/* ----------------------------------------------------------------- starring */
 
-const SHARE_ICON = {
-  athlete: PersonIcon, squad: GroupsIcon, staff: BadgeIcon, playlist: PlaylistAddIcon,
-  goal: FlagIcon, link: LinkIcon, hudl: OpenInNewIcon,
+/** Favourite toggle. Filled and amber when on, outline in the surface when off. */
+export const StarButton = ({ on, onToggle, size = 'small', label = 'clip' }) => (
+  <Tooltip title={on ? `Remove ${label} from favourites` : `Add ${label} to favourites`}>
+    <IconButton size={size} aria-label={on ? 'Starred' : 'Not starred'} aria-pressed={on}
+      onClick={e => { e.stopPropagation(); onToggle() }}
+      sx={{ color: on ? colors.yellow_100 : undefined }}>
+      {on ? <StarIcon fontSize={size} /> : <StarBorderIcon fontSize={size} />}
+    </IconButton>
+  </Tooltip>
+)
+
+/* -------------------------------------------------------------------- share */
+
+const SHARE_ICON = { link: LinkIcon, athlete: PersonIcon, staff: BadgeIcon }
+
+/** One Share button, three targets behind it. */
+export const ShareButton = ({ onShare, variant = 'outlined', size = 'medium' }) => {
+  const [el, setEl] = useState(null)
+  return (
+    <>
+      <Button variant={variant} size={size} startIcon={<ShareIcon />} endIcon={<KeyboardArrowDownIcon />}
+        onClick={e => setEl(e.currentTarget)}>
+        Share
+      </Button>
+      <Menu anchorEl={el} open={!!el} onClose={() => setEl(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
+        {SHARE_TARGETS.map(t => {
+          const Icon = SHARE_ICON[t.key]
+          return (
+            <MenuItem key={t.key} sx={{ minWidth: 210 }} onClick={() => { setEl(null); onShare(t) }}>
+              <ListItemIcon><Icon fontSize="small" /></ListItemIcon>
+              {t.label}
+            </MenuItem>
+          )
+        })}
+      </Menu>
+    </>
+  )
 }
 
-/** The share sheet, inline. Used inside the clip dialog. */
-export const ShareOptions = ({ onShare, dense }) => (
-  <List dense={dense} disablePadding>
-    {SHARE_TARGETS.map(t => {
-      const Icon = SHARE_ICON[t.key]
-      return (
-        <ListItemButton key={t.key} onClick={() => onShare(t)} sx={{ borderRadius: 1 }}>
-          <ListItemIcon sx={{ minWidth: 36 }}><Icon fontSize="small" /></ListItemIcon>
-          <ListItemText primary={t.label} secondary={t.hint}
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-            secondaryTypographyProps={{ variant: 'caption' }} />
-        </ListItemButton>
-      )
-    })}
-  </List>
-)
+/** Confirmation copy for a share, so the tile and the dialog agree. */
+export const shareMessage = (target, clip) => {
+  const athlete = clip && athleteById(clip.athleteId)
+  switch (target.key) {
+    case 'link': return 'Link copied'
+    case 'athlete': return athlete ? `Clip shared with ${athlete.name}` : 'Clip shared with the athletes in it'
+    case 'staff': return 'Clip shared with staff on this event'
+    default: return 'Done'
+  }
+}
 
-/** The same targets as a menu, for the overflow on a tile. */
-export const ShareMenu = ({ anchorEl, onClose, onShare }) => (
-  <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={onClose}>
-    {SHARE_TARGETS.map(t => {
-      const Icon = SHARE_ICON[t.key]
-      return (
-        <MenuItem key={t.key} sx={{ minWidth: 240 }} onClick={() => { onClose(); onShare(t) }}>
-          <ListItemIcon><Icon fontSize="small" /></ListItemIcon>
-          {t.label}
-        </MenuItem>
-      )
-    })}
-  </Menu>
-)
-
-/* ------------------------------------------------------------------- tile */
+/* --------------------------------------------------------------------- tile */
 
 /**
- * One clip. The whole tile is the play target, and the share options sit beside
- * the player once it opens — a coach who has just watched something is the one
- * who wants to send it on.
+ * One clip. The thumbnail is the play target; the star is the only control on
+ * it, because sharing belongs with the clip you have just watched rather than
+ * with a thumbnail you have only looked at.
  */
-export const ClipTile = ({ clip, onOpen, onShare, showSource, highlightMetric }) => {
-  const [menuEl, setMenuEl] = useState(null)
+export const ClipTile = ({ clip, onOpen, starred = false, onStar, showSource }) => {
   const athlete = athleteById(clip.athleteId)
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden',
-      display: 'flex', flexDirection: 'column' }}>
+      display: 'flex', flexDirection: 'column', height: '100%' }}>
       <ClipThumb file={clip.file} duration={clip.duration} onClick={() => onOpen(clip)} />
-      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" sx={{ lineHeight: 1.35 }}>{clip.title}</Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-              {athlete?.name} · {athlete?.position} · {clip.at}
+      <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start', gap: 0.5, flex: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle2" sx={{ lineHeight: 1.35 }}>{clip.title}</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+            {athlete?.name} · {athlete?.position} · {clip.at}
+          </Typography>
+          <Box sx={{ mt: 0.75 }}><PeakChips peaks={clip.peaks} /></Box>
+          {showSource && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+              {clipSourceLine(clip)}
             </Typography>
-          </Box>
-          <IconButton size="small" aria-label={`Actions for ${clip.title}`}
-            onClick={e => setMenuEl(e.currentTarget)}>
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
+          )}
         </Box>
-
-        <PrincipleChips principles={clip.principles} max={2} />
-        <PeakChips peaks={clip.peaks} only={highlightMetric} />
-
-        {showSource && (
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{clipSourceLine(clip)}</Typography>
-        )}
+        {onStar && <StarButton on={starred} onToggle={() => onStar(clip.id)} />}
       </Box>
-      <ShareMenu anchorEl={menuEl} onClose={() => setMenuEl(null)}
-        onShare={t => onShare(t, clip)} />
     </Paper>
   )
 }
 
-/* ----------------------------------------------------------------- dialog */
+/* ------------------------------------------------------------------- dialog */
 
-const MetaRow = ({ label, value }) => (
-  <Box sx={{ display: 'flex', gap: 1, py: 0.5 }}>
-    <Typography variant="body2" sx={{ fontWeight: 700, minWidth: 104, flexShrink: 0 }}>{label}</Typography>
-    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{value}</Typography>
+const MetaCell = ({ label, value }) => (
+  <Box>
+    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{label}</Typography>
+    <Typography variant="body2" sx={{ fontWeight: 600 }}>{value}</Typography>
   </Box>
 )
 
 /**
- * Clip detail. Player on the left, everything the clip carries on the right,
- * with the share sheet under it — which is what a coach reaches for straight
- * after watching.
+ * Clip detail.
+ *
+ * The header is fixed and only the body scrolls: a coach scrubbing the video or
+ * reading the chart should never lose the clip's name, its star or its share
+ * button off the top of the dialog.
+ *
+ * The chart sits beside the video because the two are read together — the
+ * playhead in one is the frame in the other. Everything descriptive drops below
+ * them, full width, where it does not compete for the space they need.
  */
-export const ClipDialog = ({ clip, drill, onClose, onShare }) => {
-  const athlete = clip && athleteById(clip.athleteId)
+export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onStar }) => {
+  const [time, setTime] = useState(0)
+  const [duration, setDuration] = useState(null)
+
+  const fixture = clip ? toSeconds(clip.duration) : 0
+  // The video's own duration wins as soon as metadata loads, so the chart's
+  // x-axis always matches the media rather than the fixture that stood in for it.
+  const span = duration || fixture || 1
+
+  useEffect(() => { setTime(0); setDuration(null) }, [clip?.id])
+
+  const series = useMemo(
+    () => (clip?.drillId
+      ? distanceSeries({ drillId: clip.drillId, athleteId: clip.athleteId, duration: span })
+      : []),
+    [clip?.drillId, clip?.athleteId, span],
+  )
+
   if (!clip) return null
+  const athlete = athleteById(clip.athleteId)
   const source = clipSourceLine(clip)
+
   return (
-    <Dialog open onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogContent sx={{ p: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 2, px: 3, py: 2 }}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h6" sx={{ lineHeight: 1.3 }}>{clip.title}</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{source}</Typography>
-          </Box>
+    <Dialog open onClose={onClose} maxWidth="lg" fullWidth
+      PaperProps={{ sx: { maxHeight: '92vh', display: 'flex', flexDirection: 'column' } }}>
+      {/* Fixed header */}
+      <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 2, px: 3, py: 2, borderBottom: `1px solid ${colors.neutral_300}` }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h6" sx={{ lineHeight: 1.3 }}>{clip.title}</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{source}</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+          {onStar && <StarButton on={starred} onToggle={() => onStar(clip.id)} size="medium" />}
+          <ShareButton size="small" onShare={t => onShare(t, clip)} />
           <IconButton size="small" onClick={onClose} aria-label="Close clip"><CloseIcon /></IconButton>
         </Box>
-        <Divider />
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0,1fr) 340px' } }}>
-          <Box sx={{ p: 3 }}>
-            <ClipPlayer file={clip.file} autoPlay height={400} />
+      </Box>
+
+      {/* Scrolling body */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
+        <Box sx={{ display: 'grid', gap: 3, alignItems: 'start',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.15fr) minmax(320px, 1fr)' } }}>
+          <ClipPlayer file={clip.file} autoPlay height={360} fallbackDuration={fixture}
+            onTime={setTime} onDuration={d => Number.isFinite(d) && d > 0 && setDuration(d)} />
+          {series.length ? (
+            <DistanceChart series={series} duration={span} playhead={time}
+              drillName={drill?.name} />
+          ) : (
+            <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2 }}>
+              <Typography variant="subtitle1">Distance covered</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Distance is tracked per drill. This clip came from a game, so it has no drill
+                to plot against.
+              </Typography>
+            </Paper>
+          )}
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="subtitle1" sx={{ mb: 1.5 }}>Clip details</Typography>
+        <Box sx={{ display: 'grid', gap: 2, mb: 2.5,
+          gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' } }}>
+          {athlete && <MetaCell label="Athlete" value={`${athlete.name} (${athlete.position})`} />}
+          {drill && <MetaCell label="Drill" value={drill.name} />}
+          <MetaCell label="Timestamp" value={`${clip.at} · ${clip.duration}`} />
+          <MetaCell label="Source" value={source} />
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Principles
+            </Typography>
+            <PrincipleChips principles={clip.principles} />
           </Box>
-          <Box sx={{ p: 3, borderLeft: { md: `1px solid ${colors.neutral_300}` } }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>Clip details</Typography>
-            {athlete && <MetaRow label="Athlete" value={`${athlete.name} (${athlete.position})`} />}
-            {drill && <MetaRow label="Drill" value={drill.name} />}
-            <MetaRow label="Timestamp" value={`${clip.at} · ${clip.duration}`} />
-            <MetaRow label="Source" value={source} />
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Principles</Typography>
-              <PrincipleChips principles={clip.principles} />
-            </Box>
-            <Box sx={{ mt: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Peak metrics</Typography>
-              <PeakChips peaks={clip.peaks} />
-            </Box>
-            <Divider sx={{ my: 2 }} />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <ShareIcon fontSize="small" sx={{ color: colors.grey_100 }} />
-              <Typography variant="subtitle1">Share</Typography>
-            </Box>
-            <ShareOptions dense onShare={t => onShare(t, clip)} />
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              Peak metrics
+            </Typography>
+            <PeakChips peaks={clip.peaks} />
           </Box>
         </Box>
-      </DialogContent>
+      </Box>
     </Dialog>
   )
-}
-
-/** Confirmation copy for a share, so the tile menu and the dialog agree. */
-export const shareMessage = (target, clip) => {
-  const athlete = athleteById(clip.athleteId)
-  switch (target.key) {
-    case 'athlete': return athlete ? `Clip shared with ${athlete.name}` : 'Clip shared with the athletes in it'
-    case 'squad': return 'Clip shared with the squad'
-    case 'staff': return 'Clip shared with staff on this event'
-    case 'playlist': return 'Clip added to a playlist'
-    case 'goal': return 'Clip tagged to a development goal'
-    case 'link': return 'Link copied'
-    case 'hudl': return 'Opening the source clip in Hudl'
-    default: return 'Done'
-  }
 }
 
 /** Full-drill playback — the whole team, uncut, above that drill's clips. */
@@ -367,10 +456,9 @@ export const FullDrillCard = ({ drill, onOpen }) => (
     </Box>
     <Box sx={{ flex: 1, minWidth: 0 }}>
       <Typography variant="subtitle1">Full drill playback</Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         Whole team, uncut · {drill.fullClip.duration} · {drill.fullClip.angle} · {drill.areaSize}
       </Typography>
-      <PrincipleChips principles={drill.principles} />
     </Box>
     <Button variant="outlined" startIcon={<PlayCircleIcon />} onClick={onOpen} sx={{ flexShrink: 0 }}>
       Watch full drill

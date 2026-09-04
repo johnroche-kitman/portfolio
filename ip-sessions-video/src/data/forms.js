@@ -68,7 +68,7 @@ export const PRINCIPLES = ['Ball Retention', 'Breaking Lines', 'Creating Space',
 const D = (id, name, description, intensity, activity, principles, creator, squads) =>
   ({ id, name, description, intensity, activity, principles, creator, squads })
 
-const ALL_SQUADS = 'U15, U16 (Test Kitman FC), U21'
+const ALL_SQUADS = 'U15, U16, U21'
 
 export const libraryDrills = [
   D(1, 'New drill', 'This is a test drill', 'Moderate', 'Cooldown', ['Ball Retention'], 'Dan Higgins', ALL_SQUADS),

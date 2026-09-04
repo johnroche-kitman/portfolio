@@ -113,7 +113,7 @@ export const dailyStatus = medicalTeam.map((a, i) => ({
 export const athleteHeader = a => [
   ['Date of birth', '-'], ['Age', '-'], ['Country', '-'], ['Height', '-'],
   ['Status', a.status.toLowerCase()], ['Positions', 'Defender'],
-  ['Team', 'U16 (Test Kitman FC)'], ['Open injury/ illness', String(a.issues.length)],
+  ['Team', 'U16'], ['Open injury/ illness', String(a.issues.length)],
 ]
 
 export const MEDICAL_ATHLETE_TABS = [

@@ -77,18 +77,18 @@ const U = (id, name, username, role, email, squads, created, active = true) =>
   ({ id, name, username, role, email, squads, created, active })
 
 export const staffUsers = [
-  U(1, 'test team 2', 't2x1', 'Staff', 'swood+tt2@kitmanlabs.com', ['U16 (Test Kitman FC)', 'U15', 'U21'], '19 July 2023'),
-  U(2, 'Romain Achard', 'rachard', 'Staff', 'rachard+testkitmanfc@kitmanlabs.com', ['U16 (Test Kitman FC)', '+6'], '27 August 2025'),
-  U(3, 'jon adamson', 'jadamson42', 'Account Admin', 'jadamson@kitmanlabs.com', ['U16 (Test Kitman FC)', '+4'], '26 October 2023'),
-  U(4, 'Brian Admin', 'bmunjoma1', 'Account Admin', 'bmunjoma+staff1@kitmanlabs.com', ['U16 (Test Kitman FC)', '+2'], '3 March 2026'),
-  U(5, 'QA Admin', 'qadmin', 'Account Admin', 'mking+tkfcadmin@kitmanlabs.com', ['U16 (Test Kitman FC)', '+5'], '21 October 2025'),
-  U(6, 'Akshay Ahuja', 'aahuja1', 'Account Admin', 'aahuja@kitmanlabs.com', ['U16 (Test Kitman FC)', '+6'], '15 April 2026'),
-  U(7, 'Akshay Ahuja staff', 'aahujastaff', 'Coach', 'aahuja+staffc@kitmanlabs.com', ['U16 (Test Kitman FC)', '+6'], '6 May 2026'),
-  U(8, 'Email Alerts', 'ealerts', 'Staff', 'mking+alerts@kitmanlabs.com', ['U16 (Test Kitman FC)', '+2'], '9 May 2024'),
-  U(9, 'Tymofii Antoniuk', 'tantoniuk', 'Account Admin', 'tantoniuk@kitmanlabs.com', ['U16 (Test Kitman FC)', '+5'], '28 May 2025'),
-  U(10, 'Craig Bailey', 'cbailey2', 'Account Admin', 'cbailey+kfc@kitmanlabs.com', ['U16 (Test Kitman FC)', '+2'], '11 July 2023'),
-  U(11, 'Craig Bennett', 'cbennett10', 'Account Admin', 'cbennett@kitmanlabs.com', ['U16 (Test Kitman FC)', '+6'], '13 February 2025'),
-  U(12, 'Dan Higgins', 'dhiggins3', 'Analyst', 'dhiggins@kitmanlabs.com', ['U16 (Test Kitman FC)'], '4 April 2024', false),
+  U(1, 'test team 2', 't2x1', 'Staff', 'swood+tt2@kitmanlabs.com', ['U16', 'U15', 'U21'], '19 July 2023'),
+  U(2, 'Romain Achard', 'rachard', 'Staff', 'rachard+testkitmanfc@kitmanlabs.com', ['U16', '+6'], '27 August 2025'),
+  U(3, 'jon adamson', 'jadamson42', 'Account Admin', 'jadamson@kitmanlabs.com', ['U16', '+4'], '26 October 2023'),
+  U(4, 'Brian Admin', 'bmunjoma1', 'Account Admin', 'bmunjoma+staff1@kitmanlabs.com', ['U16', '+2'], '3 March 2026'),
+  U(5, 'QA Admin', 'qadmin', 'Account Admin', 'mking+tkfcadmin@kitmanlabs.com', ['U16', '+5'], '21 October 2025'),
+  U(6, 'Akshay Ahuja', 'aahuja1', 'Account Admin', 'aahuja@kitmanlabs.com', ['U16', '+6'], '15 April 2026'),
+  U(7, 'Akshay Ahuja staff', 'aahujastaff', 'Coach', 'aahuja+staffc@kitmanlabs.com', ['U16', '+6'], '6 May 2026'),
+  U(8, 'Email Alerts', 'ealerts', 'Staff', 'mking+alerts@kitmanlabs.com', ['U16', '+2'], '9 May 2024'),
+  U(9, 'Tymofii Antoniuk', 'tantoniuk', 'Account Admin', 'tantoniuk@kitmanlabs.com', ['U16', '+5'], '28 May 2025'),
+  U(10, 'Craig Bailey', 'cbailey2', 'Account Admin', 'cbailey+kfc@kitmanlabs.com', ['U16', '+2'], '11 July 2023'),
+  U(11, 'Craig Bennett', 'cbennett10', 'Account Admin', 'cbennett@kitmanlabs.com', ['U16', '+6'], '13 February 2025'),
+  U(12, 'Dan Higgins', 'dhiggins3', 'Analyst', 'dhiggins@kitmanlabs.com', ['U16'], '4 April 2024', false),
   U(13, 'Conor Cawley', 'ccawley1', 'Medical', 'ccawley@kitmanlabs.com', ['U15', 'U21'], '23 May 2024', false),
 ]
 
@@ -120,7 +120,7 @@ export const imports = [
   { id: 8, name: 'user_mass_importer - Import.csv', type: 'Staff Import', at: '1 Jul 2025 15:08', status: 'Completed', by: 'Jamie Schultz', errors: [] },
   { id: 9, name: 'user_mass_importer - Import.csv', type: 'Staff Import', at: '1 Jul 2025 15:06', status: 'Completed', by: 'Jamie Schultz', errors: ['User with email no-email_2@kitmanlabs.com already exists', 'User with email no-email_3@kitmanlabs.com already exists'] },
   { id: 10, name: 'athlete_mass_importer_athletes.csv', type: 'Athlete Import', at: '1 Jul 2025 15:02', status: 'Completed', by: 'Jamie Schultz', errors: [] },
-  { id: 11, name: 'athlete_mass_importer_athletes.csv', type: 'Athlete Import', at: '1 Jul 2025 14:59', status: 'Completed', by: 'Jamie Schultz', errors: ['Squad U16 (Test Kitman FC), U21 does not exist', 'Squad U16 (Test Kitman FC), U15 does not exist'] },
+  { id: 11, name: 'athlete_mass_importer_athletes.csv', type: 'Athlete Import', at: '1 Jul 2025 14:59', status: 'Completed', by: 'Jamie Schultz', errors: ['Squad U16, U21 does not exist', 'Squad U16, U15 does not exist'] },
   { id: 12, name: 'athlete_mass_importer_15_athletes.csv', type: 'Athlete Import', at: '1 Jul 2025 14:54', status: 'Completed', by: 'Jamie Schultz', errors: [] },
 ]
 
@@ -193,14 +193,14 @@ export const WORKLOAD_VARIABLES = ['RPE x Duration', 'Total Distance', 'High Spe
 
 export const principles = [
   { id: 1, name: 'Ball Retention', category: 'Delay, Deny, and Dictate', phase: 'Transition', type: 'Tactical', squads: 'U21' },
-  { id: 2, name: 'Breaking Lines', category: 'Progressing and Penetrating', phase: 'Defending', type: 'Tactical', squads: 'U15, U16 (Test Kitman FC), U21' },
+  { id: 2, name: 'Breaking Lines', category: 'Progressing and Penetrating', phase: 'Defending', type: 'Tactical', squads: 'U15, U16, U21' },
   { id: 3, name: 'Creating Space', category: 'Pressing', phase: 'Set Pieces', type: 'Tactical', squads: 'U15, U21' },
-  { id: 4, name: 'Forward Passing', category: 'Progressing and Penetrating', phase: 'Attacking', type: 'Technical', squads: 'U15, U16 (Test Kitman FC), U21' },
-  { id: 5, name: 'Pressing', category: 'Direct Play', phase: 'Attacking', type: 'Tactical', squads: 'U15, U16 (Test Kitman FC), U21' },
+  { id: 4, name: 'Forward Passing', category: 'Progressing and Penetrating', phase: 'Attacking', type: 'Technical', squads: 'U15, U16, U21' },
+  { id: 5, name: 'Pressing', category: 'Direct Play', phase: 'Attacking', type: 'Tactical', squads: 'U15, U16, U21' },
   { id: 6, name: 'Rotations', category: 'Delay, Deny, and Dictate', phase: 'Transition', type: 'Tactical', squads: 'U21' },
-  { id: 7, name: 'Screening', category: 'Delay, Deny, and Dictate', phase: 'Transition', type: 'Tactical', squads: 'U15, U16 (Test Kitman FC), U21' },
+  { id: 7, name: 'Screening', category: 'Delay, Deny, and Dictate', phase: 'Transition', type: 'Tactical', squads: 'U15, U16, U21' },
   { id: 8, name: 'Switching Play', category: 'Pressing', phase: 'Attacking', type: 'Tactical', squads: 'U21' },
-  { id: 9, name: 'Wide Play and Crossing', category: 'Attacking', phase: 'Defending', type: 'Tactical', squads: 'U15, U16 (Test Kitman FC), U21' },
+  { id: 9, name: 'Wide Play and Crossing', category: 'Attacking', phase: 'Defending', type: 'Tactical', squads: 'U15, U16, U21' },
 ]
 
 export const PRINCIPLE_CATEGORIES = ['Delay, Deny, and Dictate', 'Progressing and Penetrating', 'Pressing', 'Direct Play', 'Attacking']
@@ -208,8 +208,8 @@ export const PHASES_OF_PLAY = ['Transition', 'Defending', 'Attacking', 'Set Piec
 export const PRINCIPLE_TYPES = ['Tactical', 'Technical', 'Physical', 'Psychological']
 
 export const devGoalTypes = [
-  { id: 1, name: 'Individual Session (1/3)', squads: 'U15, U16 (Test Kitman FC), U21' },
-  { id: 2, name: 'Tactical (1/5)', squads: 'U15, U16 (Test Kitman FC), U21' },
+  { id: 1, name: 'Individual Session (1/3)', squads: 'U15, U16, U21' },
+  { id: 2, name: 'Tactical (1/5)', squads: 'U15, U16, U21' },
   { id: 3, name: 'Test Dev Goal (1/2)', squads: 'U21' },
 ]
 export const devGoalCompletionTypes = [
@@ -235,23 +235,23 @@ export const drillLabels = [
 // Event types, grouped exactly as the settings table renders them.
 export const eventTypeGroups = [
   {
-    group: 'Example Category', squads: '4 - U16 (Test Kitman FC), U15, U21, Historic Squad Reporting Test',
-    items: [{ name: 'Conversations about Puberty', color: '#c2379b', squads: '4 - U16 (Test Kitman FC), U15, U21, Historic …' }],
+    group: 'Example Category', squads: '4 - U16, U15, U21, Historic Squad Reporting Test',
+    items: [{ name: 'Conversations about Puberty', color: '#c2379b', squads: '4 - U16, U15, U21, Historic …' }],
   },
   {
-    group: 'Meals', squads: '3 - U16 (Test Kitman FC), U15, U21',
+    group: 'Meals', squads: '3 - U16, U15, U21',
     items: [
-      { name: 'Breakfast - U16', color: '#22b8a0', squads: '3 - U16 (Test Kitman FC), U15, U21' },
-      { name: 'Dinner', color: '#e8344e', squads: '3 - U15, U16 (Test Kitman FC), U21' },
-      { name: 'Lunch Time', color: '#111111', squads: '3 - U15, U16 (Test Kitman FC), U21' },
+      { name: 'Breakfast - U16', color: '#22b8a0', squads: '3 - U16, U15, U21' },
+      { name: 'Dinner', color: '#e8344e', squads: '3 - U15, U16, U21' },
+      { name: 'Lunch Time', color: '#111111', squads: '3 - U15, U16, U21' },
     ],
   },
   {
     group: 'Ungrouped', squads: '',
     items: [
-      { name: 'Doctor Appointment', color: '#3ddc84', squads: '4 - U16 (Test Kitman FC), U15, U21, Historic …' },
+      { name: 'Doctor Appointment', color: '#3ddc84', squads: '4 - U16, U15, U21, Historic …' },
       { name: "Stephen's Test", color: '#c2379b', squads: '1 - U15' },
-      { name: 'Video Analysis', color: '#b134c1', squads: '4 - U16 (Test Kitman FC), U15, U21, Historic …' },
+      { name: 'Video Analysis', color: '#b134c1', squads: '4 - U16, U15, U21, Historic …' },
     ],
   },
 ]
@@ -303,7 +303,7 @@ export const PERMISSION_GROUPS = [
   { name: 'Recruitment', items: ['Recruitment Admin', 'Scout Access', 'Only See Own Content', 'Sensitive Info Access', 'Modify Succession Player Status'] },
   { name: 'Calendar Settings', items: ['Create Event Type Settings', 'Edit Event Type Settings', 'Archive Event Type Settings'] },
   { name: 'Event Location Settings', items: ['Create Locations', 'Edit Locations', 'Archive Locations'] },
-  { name: 'Squad Access', items: ['U16 (Test Kitman FC)', 'U16 (Test Kitman Rovers)', 'U15', 'U21', 'Testing', 'Historic Squad Reporting Test'] },
+  { name: 'Squad Access', items: ['U16', 'U16 Rovers', 'U15', 'U21', 'Testing', 'Historic Squad Reporting Test'] },
 ]
 
 export const USER_GROUPS = ['-Group-', 'Account Admin', 'Staff', 'Coach', 'Medical', 'Analyst', 'Scout']

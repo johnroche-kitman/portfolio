@@ -55,7 +55,7 @@ export function GameAthleteSelection({ onAddPlayers }) {
     { field: 'availability', headerName: 'Status', width: 160, sortable: false,
       renderCell: p => <StateChip value={p.row.availability} soft /> },
     { field: 'team', headerName: 'Team', flex: 1, minWidth: 200, sortable: false,
-      valueGetter: () => 'U16 (Test Kitman FC)' },
+      valueGetter: () => 'U16' },
     { field: 'rating', headerName: 'Individual Fixture Rating', width: 230, sortable: false,
       renderCell: p => (
         <SelectField

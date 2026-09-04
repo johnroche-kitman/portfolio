@@ -68,15 +68,12 @@ function GoalClips({ clips, onOpen }) {
             return (
               <Box key={c.id} sx={{ width: 176 }}>
                 <ClipThumb file={c.file} duration={c.duration} height={99}
-                  onClick={() => onOpen(c)}
-                  badge={<Chip size="small" label={s.type}
-                    sx={{ height: 18, fontSize: 10, fontWeight: 700, color: colors.white,
-                      bgcolor: s.type === 'Game' ? colors.blue_100 : colors.green_200 }} />} />
+                  onClick={() => onOpen(c)} />
                 <Typography variant="caption" sx={{ display: 'block', fontWeight: 700, mt: 0.5, lineHeight: 1.3 }}>
-                  {s.type === 'Game' ? s.opposition : s.sessionName}
+                  {c.title}
                 </Typography>
                 <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                  {s.date}{s.type === 'Game' ? ` · ${s.competition}` : ''}
+                  {s.sessionName} · {s.date}
                 </Typography>
               </Box>
             )
@@ -126,9 +123,15 @@ export default function DevelopmentGoalsTab() {
   const [clip, setClip] = useState(null)
   const [toast, setToast] = useState('')
 
+  // Session-scoped: a goal shows the clips tagged to it from *this* session.
+  // The game evidence for the same goal lives in the athlete's development
+  // plan, where a whole season is the point.
   const rows = useMemo(() => GOAL_ROSTER.map(id => ({
     athlete: athleteById(id),
-    goals: goalsForAthlete(id),
+    goals: goalsForAthlete(id).map(g => ({
+      ...g,
+      clips: g.clips.filter(c => clipSource(c).type === 'Session'),
+    })),
   })).filter(r => r.athlete), [])
 
   const athleteOptions = useMemo(() => rows.map(r => r.athlete.name).sort(), [rows])
@@ -184,15 +187,9 @@ export default function DevelopmentGoalsTab() {
           <MultiSelect label="Principle" options={principleOptions} value={principles}
             onChange={setPrinciples} selectAll sx={{ width: 195 }} />
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {shown.reduce((n, r) => n + r.goals.length, 0)} goals across {shown.length} athletes
-            {active ? ' matching the filters' : ''}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {active && <Button variant="text" size="small" onClick={clear}>Clear filters</Button>}
-            <MarkAllMenu onMark={(k, v) => markAll(k, v)} />
-          </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+          {active && <Button variant="text" size="small" onClick={clear}>Clear filters</Button>}
+          <MarkAllMenu onMark={(k, v) => markAll(k, v)} />
         </Box>
       </Box>
 

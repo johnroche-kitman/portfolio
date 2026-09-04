@@ -1,16 +1,10 @@
-// Squad fixtures for Test Kitman FC — U21, U18 and U16.
+// Squad fixtures for Test Kitman FC — U16, U18 and U21.
 // Data is synthetic. Names are invented but realistic, so the prototype reads
 // as a football club rather than a test environment.
 
-export const squad = 'U16 (Test Kitman FC)'
+export const squad = 'U16'
 
-export const squads = [
-  'U16 (Test Kitman FC)',
-  'U18 (Test Kitman FC)',
-  'U21 (Test Kitman FC)',
-  'First team (Test Kitman FC)',
-  'Testing',
-]
+export const squads = ['U16', 'U18', 'U21', 'First team', 'Testing']
 
 export const positions = [
   'Goalkeeper', 'Right Back', 'Centre Back', 'Left Back',
@@ -69,9 +63,7 @@ const U16 = [
   },
   {
     id: 453803, name: 'Docherty, Ewan', first: 'Ewan', position: 'Defensive Midfield',
-    availability: AVAILABILITY.UNAVAILABLE, days: 21,
-    issues: [{ date: '13 Aug 2026', label: 'Lateral ankle sprain [Right]', status: 'Unavailable - time-loss' }],
-    latestNote: null,
+    availability: AVAILABILITY.AVAILABLE, issues: [], latestNote: null,
   },
   {
     id: 454521, name: 'Ferrante, Nico', first: 'Nico', position: 'Attacking Midfield',
@@ -91,7 +83,9 @@ const U16 = [
   },
   {
     id: 449902, name: 'Yamamoto, Kai', first: 'Kai', position: 'Striker',
-    availability: AVAILABILITY.AVAILABLE, issues: [], latestNote: null,
+    availability: AVAILABILITY.UNAVAILABLE, days: 21,
+    issues: [{ date: '13 Aug 2026', label: 'Lateral ankle sprain [Right]', status: 'Unavailable - time-loss' }],
+    latestNote: null,
   },
 ]
 

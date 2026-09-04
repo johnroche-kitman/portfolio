@@ -23,22 +23,13 @@ const FLYOUT = 246
 
 
 /**
- * Routes the prototype actually has. Anything in the nav that is not here is
- * shown greyed and does not navigate, so it is obvious what is built and what is
- * only listed for completeness. Keep in step with App.jsx.
+ * The one live link. Everything else in the nav is greyed and does not navigate:
+ * this prototype is about one session, and the calendar is the way into it, so
+ * anything that would take a reviewer somewhere else is deliberately shut.
+ * The session, game and event pages are reached from the calendar, not the nav.
  */
-const BUILT = new Set([
-  '/calendar', '/medical/rosters',
-  '/analysis/benchmark_report',
-  '/benchmark/test_validation', '/benchmark/league_benchmarking',
-  '/data_importer', '/growth_and_maturation',
-  '/planning_hub/coaching_library', '/planning_hub/settings',
-  '/administration/athletes', '/users', '/fixtures',
-  '/administration/organisation/edit', '/administration/exports',
-  '/administration/imports', '/stock_management',
-  '/administration/labels/manage', '/administration/groups',
-  '/library', '/help',
-])
+const BUILT = new Set(['/calendar'])
+
 const isBuilt = path => BUILT.has(path)
 
 /**

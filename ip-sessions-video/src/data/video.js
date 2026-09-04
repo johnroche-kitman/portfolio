@@ -11,17 +11,12 @@
  * point at the same folder instead of shipping two copies of every clip.
  */
 
+import { athletes as ATHLETES } from './athletes'
+
 export const CLIPS = import.meta.env.PROD ? '/portfolio/clips/' : '/clips/'
 
 export const clipSrc = file => `${CLIPS}${file}`
 export const posterSrc = file => `${CLIPS}posters/${file.replace(/\.mp4$/, '.jpg')}`
-
-/* ------------------------------------------------------------------ Hudl */
-export const HUDL = {
-  connected: true,
-  lastSync: '3 Sep 2026, 08:14',
-  account: 'Test Kitman FC — Hudl Sportscode',
-}
 
 /* ------------------------------------------------------------ principles
    Principles are configured per club, so the list is club data rather than
@@ -71,8 +66,8 @@ export const peakMetric = key => PEAK_METRICS.find(m => m.key === key)
    The event the Video tab belongs to. */
 export const videoSession = {
   id: 'sv-1',
-  title: 'Matchday -3 training',
-  squad: 'U16 (Test Kitman FC)',
+  title: 'Gameday -3 training',
+  squad: 'U16',
   sessionType: '1st Team Training',
   date: 'September 21, 2026 2:00 PM, (3:00 PM Europe/Dublin) (90 min)',
   gameDay: '-3, +4',
@@ -124,7 +119,7 @@ export const drillById = id => videoDrills.find(d => d.id === id)
 
    `goals` holds the development goal ids the analyst tagged the clip with in
    Hudl. A clip can carry more than one. */
-export const clips = [
+const CURATED = [
   /* ---- d1 Rondo 4v2 */
   { id: 'c01', file: 'session-01.mp4', drillId: 'd1', athleteId: 431887, at: '00:04:12', duration: '00:09',
     title: 'Diallo — first-time switch out of the rondo',
@@ -234,6 +229,100 @@ export const clipSourceLine = clip => {
     : `Session · ${s.sessionName} · ${s.date}`
 }
 
+
+/* --------------------------------------------------------- participation
+   Everyone who took part in each drill. A clip exists for every one of them,
+   because that is how the Hudl tag actually works: the analyst cuts the drill
+   once and every athlete on the pitch comes back with their own angle of it.
+   Yamamoto is out injured, so he is in no drill and has no clips. */
+const OUT = 449902
+
+const took_part = ids => ids.filter(id => id !== OUT)
+
+export const DRILL_PARTICIPANTS = {
+  d1: took_part([431887, 440316, 454521, 114397, 162023, 427191, 441234, 434584, 448120, 453803, 113734, 440559]),
+  d2: took_part([114397, 431887, 453803, 440316, 454521, 162023, 427191, 441234, 114416, 440559]),
+  d3: took_part([441234, 427191, 448120, 434584, 454521, 162023, 440559, 431887, 440316, 113734, 114397]),
+  d4: took_part([454521, 434584, 431887, 453803, 441234, 448120, 162023, 427191, 114397, 440316, 440559, 114416]),
+  d5: took_part([162023, 431887, 114397, 453803, 441234, 434584, 448120, 427191, 440316, 454521, 113734, 440559, 114416]),
+}
+
+/* ------------------------------------------------------ generated clips
+   The curated clips above are the ones with a story worth writing down. Every
+   other participant still gets one, generated so the drill is complete rather
+   than a sample of it. Everything is derived from the drill and the athlete, so
+   a reload never reshuffles the grid. */
+
+const PHRASES = {
+  d1: ['keeps it under pressure', 'plays out of the middle', 'one-touch round the outside',
+    'presses in the middle', 'switches the angle'],
+  d2: ['finds the pass through', 'holds the line and steps', 'receives between the lines',
+    'plays round the block', 'presses the receiver'],
+  d3: ['attacks the back post', 'overlaps and delivers', 'holds the width',
+    'takes the defender on', 'arrives at the near post'],
+  d4: ['first to react on the turnover', 'closes the outlet', 'presses from behind',
+    'wins the second ball', 'cuts the switch'],
+  d5: ['finds the free side', 'rotates and receives', 'covers behind the press',
+    'breaks the line', 'holds shape through the phase'],
+}
+
+/** Deterministic pseudo-random in [0,1) from a string — stable across reloads. */
+const hash = str => {
+  let h = 2166136261
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return ((h >>> 0) % 100000) / 100000
+}
+
+const surname = name => String(name).split(',')[0]
+
+/** Seconds into the session at which a drill starts, from the running order. */
+const drillStart = drill => videoDrills
+  .filter(d => d.order < drill.order)
+  .reduce((n, d) => n + d.minutes * 60, 0)
+
+const hhmmss = total => [Math.floor(total / 3600), Math.floor((total % 3600) / 60), Math.floor(total % 60)]
+  .map(n => String(n).padStart(2, '0')).join(':')
+
+const generated = videoDrills.flatMap(drill => {
+  const ids = DRILL_PARTICIPANTS[drill.id] || []
+  return ids
+    .filter(id => !CURATED.some(c => c.drillId === drill.id && c.athleteId === id))
+    .map((id, i) => {
+      const seed = `${drill.id}-${id}`
+      const r = hash(seed)
+      const athlete = ATHLETES.find(a => a.id === id)
+      const phrases = PHRASES[drill.id]
+      // Spread the clips across the drill rather than bunching them at the top.
+      const at = drillStart(drill) + Math.round((0.1 + 0.8 * ((i + 1) / (ids.length + 1))) * drill.minutes * 60)
+      return {
+        id: `${drill.id}-${id}`,
+        file: `${drill.id}-${String(id).slice(-3)}.mp4`,
+        drillId: drill.id,
+        athleteId: id,
+        at: hhmmss(at),
+        duration: `00:${String(7 + Math.floor(r * 9)).padStart(2, '0')}`,
+        title: `${surname(athlete?.name || '')} — ${phrases[i % phrases.length]}`,
+        principles: drill.principles.slice(0, 2),
+        peaks: {
+          speed: Math.round((22 + r * 12) * 10) / 10,
+          acceleration: Math.round((2.4 + hash(`${seed}a`) * 2.3) * 10) / 10,
+          heartRate: Math.round(158 + hash(`${seed}h`) * 42),
+        },
+        goals: [],
+      }
+    })
+})
+
+export const clips = [...CURATED, ...generated]
+
+/** The clips cut from one drill, in the order they happened. */
+export const clipsForDrill = id => clips
+  .filter(c => c.drillId === id)
+  .sort((a, b) => a.at.localeCompare(b.at))
+
 export const clipById = id => clips.find(c => c.id === id)
 export const clipsForGoal = goalId => clips.filter(c => c.goals.includes(goalId))
 
@@ -244,14 +333,83 @@ export const sessionClips = clips.filter(c => c.drillId)
 export const clippedAthleteIds = [...new Set(sessionClips.map(c => c.athleteId))]
 
 /* ---------------------------------------------------------------- sharing
-   What the share sheet offers. Kept as data so the Video tab and the clip
-   dialog cannot drift apart. */
+   Three targets, behind one Share button. Anything else a coach might do with a
+   clip — add it to a playlist, tag it to a goal — belongs to the surface that
+   owns that thing, not to a share menu. */
 export const SHARE_TARGETS = [
-  { key: 'athlete', label: 'Share with the athlete', hint: 'Sends to their Athlete app inbox' },
-  { key: 'squad', label: 'Share with the squad', hint: 'Everyone selected for this session' },
-  { key: 'staff', label: 'Share with staff', hint: 'Coaches and analysts on this event' },
-  { key: 'playlist', label: 'Add to a playlist', hint: 'Group clips for a video session' },
-  { key: 'goal', label: 'Tag to a development goal', hint: 'Files the clip as evidence' },
-  { key: 'link', label: 'Copy link', hint: 'Opens in iP for anyone with access' },
-  { key: 'hudl', label: 'Open in Hudl', hint: 'Jumps to the source clip' },
+  { key: 'link', label: 'Copy link' },
+  { key: 'athlete', label: 'Share with athlete' },
+  { key: 'staff', label: 'Share with staff' },
 ]
+
+/* ------------------------------------------------------- distance covered
+   The line chart beside the player. Distance is cumulative, so every line
+   climbs; what differs between athletes is the rate and where in the clip they
+   worked hardest.
+
+   Everything is derived from the drill and the athlete, and expressed as a rate
+   in metres per second rather than a fixed set of points. That is what lets the
+   chart take its duration from the video: whatever length the media turns out
+   to be, the series is sampled across it and the numbers stay sensible. */
+
+/** Metres per second, averaged over the clip. Small-sided work sits near 2 m/s. */
+const baseRate = (drillId, athleteId) => 1.55 + hash(`${drillId}-${athleteId}-rate`) * 1.05
+
+/**
+ * Six multipliers across the clip, so a line bends instead of running straight.
+ * They average out to roughly 1, which keeps the end value near rate x duration.
+ */
+const shape = (drillId, athleteId) => {
+  const k = [0, 1, 2, 3, 4, 5].map(i => 0.55 + hash(`${drillId}-${athleteId}-s${i}`) * 0.95)
+  const mean = k.reduce((a, b) => a + b, 0) / k.length
+  return k.map(v => v / mean)
+}
+
+/** Rate at time t, interpolated between the shape's control points. */
+const rateAt = (base, k, t, duration) => {
+  const x = (t / Math.max(duration, 0.001)) * (k.length - 1)
+  const i = Math.min(Math.floor(x), k.length - 2)
+  const f = x - i
+  return base * (k[i] * (1 - f) + k[i + 1] * f)
+}
+
+export const DISTANCE_LINES = 5
+
+/**
+ * One series per athlete for the drill being watched, sampled across the video's
+ * duration. The clip's own athlete leads, so the line a coach came for is the
+ * first in the legend and never hidden behind the others.
+ */
+export const distanceSeries = ({ drillId, athleteId, duration, samples = 48, lines = DISTANCE_LINES }) => {
+  const pool = DRILL_PARTICIPANTS[drillId] || []
+  const ordered = [
+    ...(athleteId && pool.includes(athleteId) ? [athleteId] : []),
+    ...pool.filter(id => id !== athleteId),
+  ].slice(0, lines)
+
+  const step = duration / samples
+
+  return ordered.map(id => {
+    const athlete = ATHLETES.find(a => a.id === id)
+    const base = baseRate(drillId, id)
+    const k = shape(drillId, id)
+    const points = []
+    let metres = 0
+    for (let i = 0; i <= samples; i += 1) {
+      const t = i * step
+      if (i > 0) metres += rateAt(base, k, t - step / 2, duration) * step
+      points.push([t, metres])
+    }
+    return {
+      athleteId: id,
+      name: athlete?.name || String(id),
+      short: surname(athlete?.name || ''),
+      points,
+      total: metres,
+    }
+  })
+}
+
+/** Duration in seconds from a "mm:ss" or "hh:mm:ss" fixture string. */
+export const toSeconds = str => String(str).split(':').map(Number)
+  .reduce((acc, n) => acc * 60 + n, 0)

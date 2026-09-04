@@ -88,27 +88,27 @@ let nextId = 5650000
 const mk = (title, type, day, start, end, extra = {}) => ({
   id: nextId++, title, type, day, start, end,
   // Sessions and games carry a completion state; plain events do not.
-  squad: 'U16 (Test Kitman FC)', complete: false, ...extra,
+  squad: 'U16', complete: false, ...extra,
 })
 
 export const events = [
   mk('Breakfast', EVENT_TYPES.EVENT, 0, '07:00', '08:00', { eventType: 'Breakfast', repeats: 'Every weekday' }),
-  mk('Matchday -3 training', EVENT_TYPES.SESSION, 0, '14:00', '15:30', { sessionType: '1st Team Training' }),
+  mk('Gameday -3 training', EVENT_TYPES.SESSION, 0, '14:00', '15:30', { sessionType: '1st Team Training' }),
   mk('Recovery — pool and mobility', EVENT_TYPES.SESSION, 0, '10:00', '11:00', { sessionType: 'Recovery', complete: true }),
   mk('Gym — lower body strength', EVENT_TYPES.SESSION, 0, '10:30', '11:30', { sessionType: 'Gym', repeats: 'Daily' }),
 
   mk('Breakfast', EVENT_TYPES.EVENT, 1, '08:00', '09:00', { eventType: 'Breakfast' }),
-  mk('Matchday -2 training', EVENT_TYPES.SESSION, 1, '10:00', '11:30', { sessionType: '1st Team Training' }),
+  mk('Gameday -2 training', EVENT_TYPES.SESSION, 1, '10:00', '11:30', { sessionType: '1st Team Training' }),
   mk('Set piece walkthrough', EVENT_TYPES.SESSION, 1, '14:30', '15:15', { sessionType: '1st Team Training' }),
   mk('Team meeting — opposition analysis', EVENT_TYPES.EVENT, 1, '16:00', '16:45', { eventType: 'Team meeting' }),
 
   mk('Breakfast', EVENT_TYPES.EVENT, 2, '07:00', '08:00', { eventType: 'Breakfast' }),
-  mk('Matchday -1 activation', EVENT_TYPES.SESSION, 2, '10:00', '11:00', { sessionType: '1st Team Training', complete: true }),
+  mk('Gameday -1 activation', EVENT_TYPES.SESSION, 2, '10:00', '11:00', { sessionType: '1st Team Training', complete: true }),
   mk('Rehab group', EVENT_TYPES.SESSION, 2, '11:30', '12:30', { sessionType: 'Rehab', repeats: 'Daily' }),
   mk('Travel to Northgate', EVENT_TYPES.EVENT, 2, '15:35', '18:35', { eventType: 'Travel' }),
 
   mk('Breakfast', EVENT_TYPES.EVENT, 3, '09:00', '10:00', { eventType: 'Breakfast' }),
-  mk('Matchday +1 recovery', EVENT_TYPES.SESSION, 3, '10:00', '11:00', { sessionType: 'Recovery' }),
+  mk('Gameday +1 recovery', EVENT_TYPES.SESSION, 3, '10:00', '11:00', { sessionType: 'Recovery' }),
   mk('Individual finishing block', EVENT_TYPES.SESSION, 3, '14:30', '15:30', { sessionType: 'Individual', complete: true }),
   mk('Gym — upper body', EVENT_TYPES.SESSION, 3, '15:35', '16:35', { sessionType: 'Gym' }),
 

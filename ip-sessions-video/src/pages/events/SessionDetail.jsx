@@ -502,7 +502,7 @@ function DrillDetailBody({ drill }) {
       <SelectField label="Activity" defaultValue={drill?.activity || ''}
         options={DRILL_ACTIVITIES} required helperText="Required" />
       <Typography variant="caption" sx={{ color: 'text.secondary', mt: -1 }}>
-        Associated squads: U16 (Test Kitman FC), U15, U21
+        Associated squads: U16, U15, U21
       </Typography>
 
       {sections.map(([title, options, value, setValue]) => (
@@ -695,6 +695,18 @@ export function SquadPicker() {
 /** "Development goals" -> "development-goals", so a link can name a tab. */
 const tabSlug = t => t.toLowerCase().replace(/\s+/g, '-')
 
+/**
+ * Tabs that stay in the strip but do not open. The session page has them in the
+ * live app and a reviewer should see the full set, but only the four this
+ * prototype builds are worth clicking into.
+ *
+ * They are not marked `disabled`: MUI greys a disabled tab, which reads as
+ * "broken" rather than "not part of this". They keep their normal weight and
+ * simply do not respond — the ripple is off and the cursor stays default, so
+ * nothing invites the click in the first place.
+ */
+const LOCKED_TABS = new Set(['Athlete selection', 'Staff selection', 'Imported data'])
+
 export default function SessionDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -704,9 +716,11 @@ export default function SessionDetail() {
   // ?tab=video opens straight on that tab, so the landing page can link to the
   // part of the session it is advertising rather than the top of the page.
   const fromUrl = SESSION_TABS.findIndex(t => tabSlug(t) === params.get('tab'))
-  const [tab, setTab] = useState(fromUrl >= 0 ? fromUrl : 0)
+  const opening = fromUrl >= 0 && !LOCKED_TABS.has(SESSION_TABS[fromUrl]) ? fromUrl : 0
+  const [tab, setTab] = useState(opening)
 
   const changeTab = v => {
+    if (LOCKED_TABS.has(SESSION_TABS[v])) return
     setTab(v)
     setParams(v ? { tab: tabSlug(SESSION_TABS[v]) } : {}, { replace: true })
   }
@@ -760,7 +774,13 @@ export default function SessionDetail() {
         </Box>
 
         <Tabs value={tab} onChange={(_, v) => changeTab(v)} variant="scrollable" scrollButtons="auto" sx={{ mt: 2 }}>
-          {SESSION_TABS.map(t => <Tab key={t} label={t} />)}
+          {SESSION_TABS.map(t => {
+            const locked = LOCKED_TABS.has(t)
+            return (
+              <Tab key={t} label={t} disableRipple={locked}
+                sx={locked ? { cursor: 'default', '&:hover': { color: colors.grey_100 } } : undefined} />
+            )
+          })}
         </Tabs>
       </Box>
       <Divider />

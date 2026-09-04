@@ -6,8 +6,8 @@ export const GAME_TABS = [
 ]
 
 export const GAME_HEADER = {
-  title: 'U16 (Test Kitman FC) v Test game',
-  squad: 'U16 (Test Kitman FC)',
+  title: 'U16 v Test game',
+  squad: 'U16',
   date: 'July 20, 2026, 8:45 AM - 10:15 AM',
   venue: 'Neutral',
   competition: 'Premier League 2',

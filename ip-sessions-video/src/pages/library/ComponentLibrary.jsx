@@ -145,7 +145,7 @@ export default function ComponentLibrary() {
             <Item name="Select" replaces="kitmanReactSelect" sites={117}
               note="The highest-leverage conversion in the product. Medical Team alone renders 707 of the legacy version.">
               <TextField select label="Squad" defaultValue="U16" sx={{ minWidth: 200 }}>
-                <MenuItem value="U16">U16 (Test Kitman FC)</MenuItem>
+                <MenuItem value="U16">U16</MenuItem>
                 <MenuItem value="U15">U15</MenuItem>
               </TextField>
               <TextField select label="Multiple" defaultValue={['A']} SelectProps={{ multiple: true }} sx={{ minWidth: 200 }}>
@@ -350,7 +350,7 @@ export default function ComponentLibrary() {
               </Box>
             </Item>
             <Item name="<ChipList />" note="Squad and label chips with the live list's overflow count.">
-              <ChipList values={['U16 (Test Kitman FC) (Primary)', 'U15', 'U21']} />
+              <ChipList values={['U16 (Primary)', 'U15', 'U21']} />
               <ChipList values={['Central Players', '2002', '2003']} color={v => LABEL_COLORS[v] || colors.grey_150} />
             </Item>
             <Item name="Inline card edit" note="Settings cards swap Edit/Archive for Save/Cancel and turn their rows into fields in place, rather than opening a separate page. Event Types and Locations both work this way.">

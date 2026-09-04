@@ -221,7 +221,7 @@ export default function EventEditor() {
         <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back"><ArrowBackIcon /></IconButton>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>{heading}</Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{type} · U16 (Test Kitman FC)</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{type} · U16</Typography>
         </Box>
         <Box sx={{ flex: 1 }} />
         {!isNew && <Button variant="text" color="error" startIcon={<DeleteIcon />}>Delete</Button>}
@@ -296,7 +296,7 @@ export default function EventEditor() {
           <Section title="Game details">
             <Sel label="Competition" options={COMPETITIONS} defaultValue={existing?.competition || COMPETITIONS[0]} />
             <Sel label="Competition type" options={COMPETITION_TYPES} defaultValue={COMPETITION_TYPES[0]} />
-            <TextField label="Team" defaultValue="U16 (Test Kitman FC)" />
+            <TextField label="Team" defaultValue="U16" />
             <TextField label="Team score" type="number" />
             <TextField label="Opposition" defaultValue={existing?.opposition || ''} />
             <TextField label="Opposition score" type="number" />

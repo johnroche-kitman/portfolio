@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import {
-  Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Divider, Paper, Slider,
-  Snackbar, Typography,
+  Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Divider, IconButton, Paper,
+  Slider, Snackbar, Tooltip, Typography,
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import SyncIcon from '@mui/icons-material/SyncOutlined'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import StarIcon from '@mui/icons-material/Star'
 import VideoLibraryIcon from '@mui/icons-material/VideoLibraryOutlined'
 import colors from '../../theme/tokens'
 import { MultiSelect, SearchInput, SelectField } from '../../components/form'
@@ -13,13 +15,69 @@ import {
 } from '../../components/clips'
 import { athleteById } from '../../data/athletes'
 import {
-  HUDL, PEAK_METRICS, PRINCIPLE_NAMES, clippedAthleteIds, peakMetric, sessionClips, videoDrills,
+  DRILL_PARTICIPANTS, PEAK_METRICS, PRINCIPLE_NAMES, clippedAthleteIds, peakMetric, sessionClips,
+  videoDrills,
 } from '../../data/video'
 
 /** Chip label for a drill's activity — "Attack (Football Based)" reads as "Attack". */
 const shortActivity = a => a.replace(/\s*\(.*\)$/, '')
 
 const NO_METRIC = ''
+const PER_PAGE = 3
+
+/* ---------------------------------------------------------------- carousel */
+
+/**
+ * A drill has a clip for every athlete who took part, which is ten to thirteen
+ * of them. A grid of thirteen tiles buries the next drill; three at a time with
+ * arrows keeps every drill on screen and still reachable.
+ *
+ * Paging is clamped to the last page that still has clips, so narrowing a
+ * filter never leaves the reader looking at an empty page three.
+ */
+function ClipCarousel({ clips, onOpen, starred, onStar }) {
+  const [page, setPage] = useState(0)
+  const pages = Math.max(1, Math.ceil(clips.length / PER_PAGE))
+  const current = Math.min(page, pages - 1)
+  const visible = clips.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE)
+  const first = current * PER_PAGE + 1
+  const last = Math.min(clips.length, first + PER_PAGE - 1)
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2">
+          Individual clips
+          <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400, ml: 1 }}>
+            {first}–{last} of {clips.length}
+          </Box>
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" aria-label="Previous clips" disabled={current === 0}
+            onClick={() => setPage(current - 1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label="More clips" disabled={current >= pages - 1}
+            onClick={() => setPage(current + 1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Box sx={{ display: 'grid', gap: 2,
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: `repeat(${PER_PAGE}, 1fr)` } }}>
+        {visible.map(c => (
+          <ClipTile key={c.id} clip={c} onOpen={onOpen}
+            starred={starred.has(c.id)} onStar={onStar} />
+        ))}
+      </Box>
+    </Box>
+  )
+}
+
+/* ------------------------------------------------------------------- page */
 
 export default function VideoTab() {
   const [q, setQ] = useState('')
@@ -27,6 +85,8 @@ export default function VideoTab() {
   const [principles, setPrinciples] = useState([])
   const [metric, setMetric] = useState(NO_METRIC)
   const [threshold, setThreshold] = useState(null)
+  const [starsOnly, setStarsOnly] = useState(false)
+  const [starred, setStarred] = useState(() => new Set())
   const [open, setOpen] = useState(null)      // { clip, drill } | { full: drill }
   const [toast, setToast] = useState('')
 
@@ -54,9 +114,16 @@ export default function VideoTab() {
 
   const clear = () => {
     setQ(''); setAthleteNames([]); setPrinciples([]); setMetric(NO_METRIC); setThreshold(null)
+    setStarsOnly(false)
   }
 
-  const active = !!q || !!athleteNames.length || !!principles.length || !!metric
+  const active = !!q || !!athleteNames.length || !!principles.length || !!metric || starsOnly
+
+  const toggleStar = id => setStarred(s => {
+    const next = new Set(s)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
 
   const matches = useMemo(() => sessionClips.filter(c => {
     const athlete = athleteById(c.athleteId)
@@ -67,43 +134,23 @@ export default function VideoTab() {
     if (athleteNames.length && !athleteNames.includes(athlete?.name)) return false
     if (principles.length && !principles.some(p => c.principles.includes(p))) return false
     if (m && threshold != null && c.peaks[m.key] < threshold) return false
+    if (starsOnly && !starred.has(c.id)) return false
     return true
-  }), [q, athleteNames, principles, metric, threshold])
+  }), [q, athleteNames, principles, metric, threshold, starsOnly, starred])
 
   // A drill is shown when it still has a matching clip. With no filters on,
   // every drill is shown and its full playback with it.
   const groups = videoDrills
-    .map(d => ({ drill: d, clips: matches.filter(c => c.drillId === d.id) }))
+    .map(d => ({
+      drill: d,
+      clips: matches.filter(c => c.drillId === d.id).sort((a, b) => a.at.localeCompare(b.at)),
+    }))
     .filter(g => !active || g.clips.length)
 
   const share = (target, clip) => setToast(shareMessage(target, clip))
 
   return (
     <Box>
-      {/* -------------------------------------------------------- header */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
-        gap: 2, mb: 2, flexWrap: 'wrap' }}>
-        <Box>
-          <Typography variant="h6">Video</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Clips are imported automatically from Hudl and grouped by the drill they were tagged against.
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
-          <Box sx={{ textAlign: 'right' }}>
-            <Chip size="small" label={HUDL.connected ? 'Hudl connected' : 'Hudl not connected'}
-              sx={{ height: 22, fontSize: 11, bgcolor: colors.green_100, color: colors.white }} />
-            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.25 }}>
-              Last synced {HUDL.lastSync}
-            </Typography>
-          </Box>
-          <Button variant="outlined" startIcon={<SyncIcon />}
-            onClick={() => setToast('Checking Hudl for new clips')}>
-            Sync from Hudl
-          </Button>
-        </Box>
-      </Box>
-
       {/* ------------------------------------------------------- filters */}
       <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2, mb: 2.5 }}>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -127,15 +174,13 @@ export default function VideoTab() {
                 valueLabelFormat={v => m.format(v)} aria-label={`Minimum ${m.label}`} />
             </Box>
           )}
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 2, mt: 1 }}>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {matches.length} of {sessionClips.length} clips
-            {active ? ' match the filters' : ' in this session'}
-          </Typography>
-          {active && <Button variant="text" size="small" onClick={clear}>Clear filters</Button>}
+          <Tooltip title={starsOnly ? 'Show every clip' : 'Show starred clips only'}>
+            <Button variant={starsOnly ? 'contained' : 'outlined'} startIcon={<StarIcon />}
+              onClick={() => setStarsOnly(v => !v)} sx={{ flexShrink: 0 }}>
+              Starred{starred.size ? ` (${starred.size})` : ''}
+            </Button>
+          </Tooltip>
+          {active && <Button variant="text" onClick={clear} sx={{ flexShrink: 0 }}>Clear filters</Button>}
         </Box>
       </Paper>
 
@@ -150,32 +195,27 @@ export default function VideoTab() {
               <Typography variant="subtitle1">{drill.name}</Typography>
               <Chip size="small" label={shortActivity(drill.activity)} sx={{ height: 22, fontSize: 11 }} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {drill.minutes} min · {clips.length} clip{clips.length === 1 ? '' : 's'}
+                {drill.minutes} min · {(DRILL_PARTICIPANTS[drill.id] || []).length} athletes
               </Typography>
-              <PrincipleChips principles={drill.principles} max={2} />
+              {/* The one place a drill's principles are stated. */}
+              <PrincipleChips principles={drill.principles} />
             </Box>
           </AccordionSummary>
           <Divider />
           <AccordionDetails sx={{ p: 2 }}>
             <FullDrillCard drill={drill} onOpen={() => setOpen({ full: drill })} />
 
-            <Typography variant="subtitle2" sx={{ mt: 2.5, mb: 1 }}>
-              Individual clips
-            </Typography>
-            {clips.length ? (
-              <Box sx={{ display: 'grid', gap: 2,
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)', xl: 'repeat(4, 1fr)' } }}>
-                {clips.map(c => (
-                  <ClipTile key={c.id} clip={c} onOpen={cl => setOpen({ clip: cl, drill })}
-                    onShare={share} highlightMetric={metric || undefined} />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
-                No individual clips from this drill match the filters. The full drill playback above is
-                still the whole team, uncut.
-              </Typography>
-            )}
+            <Box sx={{ mt: 2.5 }}>
+              {clips.length ? (
+                <ClipCarousel clips={clips} starred={starred} onStar={toggleStar}
+                  onOpen={cl => setOpen({ clip: cl, drill })} />
+              ) : (
+                <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>
+                  No individual clips from this drill match the filters. The full drill playback
+                  above is still the whole team, uncut.
+                </Typography>
+              )}
+            </Box>
           </AccordionDetails>
         </Accordion>
       ))}
@@ -193,13 +233,16 @@ export default function VideoTab() {
 
       {/* --------------------------------------------------------- player */}
       {open?.clip && (
-        <ClipDialog clip={open.clip} drill={open.drill} onClose={() => setOpen(null)} onShare={share} />
+        <ClipDialog clip={open.clip} drill={open.drill} onClose={() => setOpen(null)} onShare={share}
+          starred={starred.has(open.clip.id)} onStar={toggleStar} />
       )}
       {open?.full && (
         <ClipDialog onClose={() => setOpen(null)} onShare={share} drill={open.full}
+          starred={starred.has(`${open.full.id}-full`)} onStar={toggleStar}
           clip={{
             id: `${open.full.id}-full`,
             file: open.full.fullClip.file,
+            drillId: open.full.id,
             title: `${open.full.name} — full drill`,
             at: '00:00:00',
             duration: open.full.fullClip.duration,
