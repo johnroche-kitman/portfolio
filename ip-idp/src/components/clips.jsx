@@ -23,8 +23,8 @@ import colors from '../theme/tokens'
 import DistanceChart from './DistanceChart'
 import { athleteById, initialsOf, photoUrl } from '../data/athletes'
 import {
-  CHART_METRICS, CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSource, clipSourceLine,
-  clipSrc, clipWindow, distanceSeries, posterSrc, principleLabel, toSeconds,
+  CHART_METRICS, CLIPS, PEAK_METRICS, SHARE_TARGETS, clipSource, clipSourceLine,
+  clipSrc, clipWindow, distanceSeries, posterSrc, principleLabel, recordingFor, toSeconds,
 } from '../data/video'
 
 /* ------------------------------------------------------------------ pieces */
@@ -676,6 +676,9 @@ export const ClipDialog = ({
   const [metric, setMetric] = useState(CHART_METRICS[0].key)
 
   const win = useMemo(() => clipWindow(clip), [clip?.id])
+  // Which of the three recordings this clip plays. Stable per clip, so it is
+  // the same footage every time this one is opened.
+  const recording = useMemo(() => recordingFor(clip), [clip?.id])
   // The window's own length until the media reports its real duration, at which
   // point the player hands back the scaled span. The chart's x-axis is whichever
   // is current, so it always covers exactly what the player will play.
@@ -723,8 +726,8 @@ export const ClipDialog = ({
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
         <Box sx={{ display: 'grid', gap: 3, alignItems: 'start',
           gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.15fr) minmax(320px, 1fr)' } }}>
-          <ClipPlayer file={RECORDING.file} height={340}
-            window={win} nominalTotal={RECORDING.seconds}
+          <ClipPlayer file={recording.file} height={340}
+            window={win} nominalTotal={recording.seconds}
             fallbackDuration={win.out - win.in}
             at={time} onTime={setTime}
             onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />

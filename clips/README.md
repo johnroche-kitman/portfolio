@@ -14,10 +14,11 @@ The path switch is the one line in `src/data/video.js`:
 export const CLIPS = import.meta.env.PROD ? '/portfolio/clips/' : '/clips/'
 ```
 
-## One recording, not sixty-four clips
+## Three recordings, not sixty-four clips
 
-`drill-video.mp4` is the whole thing. Every clip on these pages is a **window**
-into it — an in point and an out point — which is how Hudl actually holds them:
+`drill-video.mp4`, `drill-video-2.mp4` and `drill-video-3.mp4`. Every clip on
+these pages is a **window**
+into one of them — an in point and an out point — which is how Hudl actually holds them:
 the analyst records the session once and a clip is a pair of marks into that
 recording. Nothing is cut per clip, and the player's scrubber is scoped to the
 window so a twelve-second clip reads as twelve seconds rather than as a slice of
@@ -28,12 +29,22 @@ a drill's clips are spread across its own segment in the order they happened. So
 a clip from late in the session plays from late in the recording, and the clips
 of one drill are moments inside that drill's stretch of it.
 
-### Swapping the recording
+Which recording a clip plays is derived from its id, so it is the same footage
+every time that clip is opened — variety across the set, not a lucky dip per
+click. All three are cut to the same 150 s on purpose: a clip's in and out
+points, and therefore the chart's x-axis and its playhead, are identical
+whichever recording it draws.
 
-Drop a different file in as `drill-video.mp4` and update one line:
+### Adding or swapping a recording
+
+Cut it to the same length and add it to the list:
 
 ```js
-export const RECORDING = { file: 'drill-video.mp4', seconds: 150 }
+export const RECORDINGS = [
+  { file: 'drill-video.mp4', seconds: 150 },
+  { file: 'drill-video-2.mp4', seconds: 150 },
+  { file: 'drill-video-3.mp4', seconds: 150 },
+]
 ```
 
 `seconds` is nominal — the player reads the media's real duration and scales

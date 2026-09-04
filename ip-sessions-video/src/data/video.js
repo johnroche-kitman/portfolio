@@ -26,7 +26,19 @@ export const CLIPS = import.meta.env.PROD ? '/portfolio/clips/' : '/clips/'
  * every window by the ratio, so dropping a longer recording in its place needs
  * no edit here — the same relative windows simply spread further apart.
  */
-export const RECORDING = { file: 'drill-video.mp4', seconds: 150 }
+export const RECORDINGS = [
+  { file: 'drill-video.mp4', seconds: 150 },
+  { file: 'drill-video-2.mp4', seconds: 150 },
+  { file: 'drill-video-3.mp4', seconds: 150 },
+]
+
+/**
+ * The nominal length every window is expressed against. All three recordings
+ * are cut to the same length on purpose, so a clip's in and out points — and
+ * therefore the chart's x-axis and its playhead — are identical whichever
+ * recording it happens to play.
+ */
+export const RECORDING = RECORDINGS[0]
 
 export const clipSrc = file => `${CLIPS}${file}`
 export const posterSrc = file => `${CLIPS}posters/${file.replace(/\.mp4$/, '.jpg')}`
@@ -398,6 +410,27 @@ videoDrills.forEach(drill => {
     windows.set(clip.id, { in: Math.max(0, start), out: Math.max(0, start) + len })
   })
 })
+
+/**
+ * Which recording a clip plays. Derived from the clip's id, not picked at
+ * random on open: a clip that showed different footage every time you opened it
+ * would read as a bug rather than as variety.
+ *
+ * This buckets off the raw hash rather than the [0,1) one used elsewhere, and
+ * drops the low byte first. The [0,1) form throws away entropy by taking a
+ * decimal modulus, which clumped the five full-drill playbacks onto one file;
+ * shifting past the low byte spreads all three across them.
+ */
+const bucket = (str, n) => {
+  let h = 2166136261
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return ((h >>> 0) >>> 8) % n
+}
+
+export const recordingFor = clip => RECORDINGS[bucket(String(clip?.id ?? ''), RECORDINGS.length)]
 
 /** "0:30" for a window, so the UI states the length it will actually play. */
 export const windowLabel = w => {
