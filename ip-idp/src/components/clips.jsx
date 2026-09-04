@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Avatar, Box, Button, Chip, Dialog, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper,
-  Tooltip, Typography,
+  TextField, Tooltip, Typography,
 } from '@mui/material'
 import PlayCircleIcon from '@mui/icons-material/PlayCircleOutline'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -22,6 +22,7 @@ import LinkIcon from '@mui/icons-material/LinkOutlined'
 import colors from '../theme/tokens'
 import DistanceChart from './DistanceChart'
 import { athleteById, initialsOf, photoUrl } from '../data/athletes'
+import { commentsFor } from '../data/comments'
 import {
   CHART_METRICS, CLIPS, PEAK_METRICS, SHARE_TARGETS, clipSource, clipSourceLine,
   clipSrc, clipWindow, distanceSeries, posterSrc, principleLabel, recordingFor, toSeconds,
@@ -141,7 +142,7 @@ export const ClipThumb = ({ file, duration, height = 108, badge, onClick }) => {
  */
 export const ClipPlayer = ({
   file, autoPlay, height = 420, window: win, nominalTotal, at = 0, onTime, onSpan,
-  fallbackDuration,
+  fallbackDuration, seekRef,
 }) => {
   const [failed, setFailed] = useState(false)
   const [stalled, setStalled] = useState(false)
@@ -255,6 +256,16 @@ export const ClipPlayer = ({
     v.currentTime = bounds.current.in + Math.min(Math.max(t, 0), span)
     report(Math.min(Math.max(t, 0), span))
   }
+
+  // The owner needs to be able to jump the video — a comment pinned to a moment
+  // is only useful if clicking it goes there. Handed over as a ref rather than
+  // lifted out: seeking needs the element and the scaled window bounds, both of
+  // which live here.
+  useEffect(() => {
+    if (!seekRef) return undefined
+    seekRef.current = seekTo
+    return () => { seekRef.current = null }
+  })
 
   /**
    * Until the recording is in place there is nothing to play, so the
@@ -429,6 +440,16 @@ const Scrubber = ({ at, span, onSeek }) => {
           bgcolor: colors.grey_200, boxShadow: `0 0 0 2px ${colors.white}` }} />
     </Box>
   )
+}
+
+/**
+ * Today, written out rather than via toLocaleDateString, which gives "Sept" in
+ * en-GB and would leave a new comment reading differently from the rest.
+ */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const today = () => {
+  const d = new Date()
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
 /** m:ss for the player's own readout. */
@@ -648,6 +669,106 @@ export function ClipCarousel({ clips, onOpen, starred, onStar, label = 'Individu
   )
 }
 
+/* ----------------------------------------------------------------- comments */
+
+/**
+ * The conversation on a clip.
+ *
+ * Every comment is pinned to a moment, and the moment is a button: clicking it
+ * puts the video there. That is the whole reason to comment on video rather
+ * than beside it.
+ *
+ * The stamp for a new comment is captured when the field is focused, not when
+ * it is submitted. Reading the playhead at submit time would stamp whatever
+ * frame the video had drifted to while the coach was typing, which is never the
+ * frame they meant.
+ */
+function Comments({ clip, span, at, onSeek }) {
+  const [added, setAdded] = useState([])
+  const [draft, setDraft] = useState('')
+  const [stamp, setStamp] = useState(null)
+
+  useEffect(() => { setAdded([]); setDraft(''); setStamp(null) }, [clip?.id])
+
+  const seeded = useMemo(() => commentsFor(clip, span), [clip?.id, span])
+  const all = useMemo(
+    () => [...seeded, ...added].sort((a, b) => a.at - b.at),
+    [seeded, added],
+  )
+
+  const pinned = stamp == null ? at : stamp
+  const drifted = stamp != null && Math.abs(at - stamp) > 1
+
+  const submit = () => {
+    const body = draft.trim()
+    if (!body) return
+    setAdded(list => [...list, {
+      id: `cm-new-${Date.now()}`,
+      author: 'Tom Hargreaves',
+      role: 'Head Coach',
+      date: today(),
+      at: Math.round(pinned),
+      body,
+    }])
+    setDraft('')
+    setStamp(null)
+  }
+
+  return (
+    <Box>
+      <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
+        Comments{all.length ? ` (${all.length})` : ''}
+      </Typography>
+
+      {all.map((c, i) => (
+        <Box key={c.id} sx={{ display: 'flex', gap: 1.5, py: 1.5,
+          borderTop: i ? `1px solid ${colors.neutral_200}` : 0 }}>
+          <Avatar sx={{ width: 30, height: 30, fontSize: 11, flexShrink: 0,
+            bgcolor: colors.neutral_300, color: colors.grey_100 }}>
+            {c.author.split(' ').map(w => w[0]).join('')}
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>{c.author}</Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>{c.date}</Typography>
+              <Tooltip title={`Jump to ${clock(c.at)}`}>
+                <Chip size="small" clickable icon={<PlayArrowIcon sx={{ fontSize: 14 }} />}
+                  label={clock(c.at)} onClick={() => onSeek(c.at)}
+                  sx={{ height: 20, fontSize: 11, fontWeight: 700, bgcolor: colors.blue_50,
+                    color: colors.blue_100, '& .MuiChip-icon': { color: colors.blue_100, ml: 0.5 } }} />
+              </Tooltip>
+            </Box>
+            <Typography variant="body2" sx={{ mt: 0.25 }}>{c.body}</Typography>
+          </Box>
+        </Box>
+      ))}
+
+      {!all.length && (
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          Nothing on this clip yet.
+        </Typography>
+      )}
+
+      <Box sx={{ mt: 2 }}>
+        <TextField fullWidth multiline minRows={2} label="Add a comment"
+          placeholder="What should they see here?"
+          value={draft} onChange={e => setDraft(e.target.value)}
+          onFocus={() => setStamp(s => (s == null ? at : s))} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+          <Button onClick={submit} disabled={!draft.trim()}>Comment</Button>
+          <Chip size="small" label={`Pinned at ${clock(pinned)}`}
+            sx={{ height: 22, fontSize: 11, bgcolor: colors.neutral_200 }} />
+          {drifted && (
+            <Button variant="text" size="small" onClick={() => setStamp(at)}>
+              Move to {clock(at)}
+            </Button>
+          )}
+        </Box>
+      </Box>
+    </Box>
+  )
+}
+
 /* ------------------------------------------------------------------- dialog */
 
 const MetaCell = ({ label, value }) => (
@@ -675,6 +796,7 @@ export const ClipDialog = ({
   const [measured, setMeasured] = useState(null)
   const [metric, setMetric] = useState(CHART_METRICS[0].key)
 
+  const seekRef = useRef(null)
   const win = useMemo(() => clipWindow(clip), [clip?.id])
   // Which of the three recordings this clip plays. Stable per clip, so it is
   // the same footage every time this one is opened.
@@ -726,7 +848,7 @@ export const ClipDialog = ({
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
         <Box sx={{ display: 'grid', gap: 3, alignItems: 'start',
           gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.15fr) minmax(320px, 1fr)' } }}>
-          <ClipPlayer file={recording.file} height={340}
+          <ClipPlayer file={recording.file} height={340} seekRef={seekRef}
             window={win} nominalTotal={recording.seconds}
             fallbackDuration={win.out - win.in}
             at={time} onTime={setTime}
@@ -761,6 +883,11 @@ export const ClipDialog = ({
             <PeakChips peaks={clip.peaks} />
           </Box>
         </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Comments clip={clip} span={span} at={time}
+          onSeek={t => seekRef.current?.(t)} />
       </Box>
     </Dialog>
   )
