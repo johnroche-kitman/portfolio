@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Avatar, Box, Button, Chip, Dialog, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper,
-  Slider, Tooltip, Typography,
+  Tooltip, Typography,
 } from '@mui/material'
 import PlayCircleIcon from '@mui/icons-material/PlayCircleOutline'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -358,9 +358,7 @@ export const ClipPlayer = ({
               '&:hover': { bgcolor: colors.grey_300 } }}>
             {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
-          <Slider size="small" value={Math.min(at, span)} min={0} max={Math.max(span, 0.1)} step={0.05}
-            onChange={(_, v) => seekTo(v)} aria-label="Clip position"
-            sx={{ flex: 1, '& .MuiSlider-thumb': { width: 12, height: 12 } }} />
+          <Scrubber at={at} span={span} onSeek={seekTo} />
           <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0,
             fontVariantNumeric: 'tabular-nums' }}>
             {clock(at)} / {clock(span)}
@@ -372,6 +370,66 @@ export const ClipPlayer = ({
 }
 
 const PER_PAGE = 3
+
+/**
+ * The clip's position, and the way to scrub it.
+ *
+ * This was a MUI Slider and it would not track playback: the readout and the
+ * chart's playhead both advanced off the same number while the thumb sat at
+ * zero. I could not reproduce it in any harness — driving the same value
+ * through `timeupdate`, through the frame loop, or through the Slider's own
+ * onChange all moved the thumb correctly — so rather than guess at MUI's
+ * internals a fourth time, the position is drawn here.
+ *
+ * The bar and the thumb are pure functions of `at`, with no state of their own
+ * and nothing to get stale. Keyboard support is the part a Slider was giving us,
+ * so it is kept explicitly: the track is focusable, arrows step, Home and End
+ * jump, and the aria attributes say what a slider's would.
+ */
+const Scrubber = ({ at, span, onSeek }) => {
+  const total = Math.max(span, 0.001)
+  const pct = Math.min(100, Math.max(0, (at / total) * 100))
+
+  const seekFromPointer = e => {
+    const box = e.currentTarget.getBoundingClientRect()
+    onSeek(((e.clientX - box.left) / box.width) * total)
+  }
+
+  const onKey = e => {
+    const step = e.shiftKey ? total / 10 : 1
+    const to = {
+      ArrowRight: at + step, ArrowLeft: at - step,
+      ArrowUp: at + step, ArrowDown: at - step,
+      Home: 0, End: total,
+    }[e.key]
+    if (to === undefined) return
+    e.preventDefault()
+    onSeek(Math.min(total, Math.max(0, to)))
+  }
+
+  return (
+    <Box
+      role="slider" tabIndex={0} aria-label="Clip position"
+      aria-valuemin={0} aria-valuemax={Math.round(total)} aria-valuenow={Math.round(at)}
+      aria-valuetext={`${clock(at)} of ${clock(span)}`}
+      onPointerDown={seekFromPointer} onKeyDown={onKey}
+      sx={{ flex: 1, position: 'relative', height: 20, display: 'flex', alignItems: 'center',
+        cursor: 'pointer', touchAction: 'none',
+        '&:focus-visible': { outline: `2px solid ${colors.grey_200}`, outlineOffset: 2, borderRadius: 1 } }}
+    >
+      <Box sx={{ position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 2,
+        bgcolor: colors.neutral_300 }} />
+      {/* The two moving parts take inline styles, not `sx`. A value that changes
+          on every frame would otherwise have emotion mint a new class per
+          percentage and inject it into the stylesheet sixty times a second. */}
+      <Box style={{ width: `${pct}%` }}
+        sx={{ position: 'absolute', left: 0, height: 4, borderRadius: 2, bgcolor: colors.grey_200 }} />
+      <Box style={{ left: `${pct}%` }}
+        sx={{ position: 'absolute', width: 12, height: 12, ml: '-6px', borderRadius: '50%',
+          bgcolor: colors.grey_200, boxShadow: `0 0 0 2px ${colors.white}` }} />
+    </Box>
+  )
+}
 
 /** m:ss for the player's own readout. */
 const clock = t => {
