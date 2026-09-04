@@ -41,12 +41,14 @@ const MarkCheckbox = ({ label, checked, onChange }) => (
 /* ------------------------------------------------------------ clip strip */
 
 /**
- * The clips Hudl tagged against this goal. Collapsed by default so a coach
- * scanning thirty goals is not looking at a wall of video, and the count is on
- * the toggle so they know whether there is anything to open.
+ * The clips Hudl tagged against this goal. The count stays on the toggle so a
+ * coach can see at a glance whether a goal has evidence, and collapse the ones
+ * they are not working on.
  */
 function GoalClips({ clips, onOpen }) {
-  const [open, setOpen] = useState(false)
+  // Open by default: the clips are the evidence, and a coach reading a goal
+  // should not have to ask for them one row at a time.
+  const [open, setOpen] = useState(true)
   if (!clips.length) {
     return (
       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.75 }}>

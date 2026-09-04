@@ -140,13 +140,13 @@ export const ClipThumb = ({ file, duration, height = 108, badge, onClick }) => {
  * in its place spreads the same windows further apart with no data edit.
  */
 export const ClipPlayer = ({
-  file, autoPlay, height = 420, window: win, nominalTotal, onTime, onSpan, fallbackDuration,
+  file, autoPlay, height = 420, window: win, nominalTotal, at = 0, onTime, onSpan,
+  fallbackDuration,
 }) => {
   const [failed, setFailed] = useState(false)
   const [stalled, setStalled] = useState(false)
   const [started, setStarted] = useState(false)
   const [playing, setPlaying] = useState(false)
-  const [at, setAt] = useState(0)
   const [span, setSpan] = useState(() => (win ? win.out - win.in : fallbackDuration || 0))
   const ref = useRef(null)
   const bounds = useRef({ in: win?.in ?? 0, out: win?.out ?? 0 })
@@ -164,7 +164,16 @@ export const ClipPlayer = ({
     return () => { live = false }
   }, [file])
 
-  const report = t => { setAt(t); onTime?.(t) }
+  /**
+   * The position is the owner's, not the player's.
+   *
+   * It used to be both: this component kept its own `at` state for the scrubber
+   * while the chart read the parent's copy. Two states fed from one loop is two
+   * states that can disagree, and they did — the scrubber sat at zero while the
+   * video, the readout and the chart's playhead all ran on. One number now, held
+   * by whoever owns the chart as well, so the three cannot drift apart.
+   */
+  const report = t => onTime?.(t)
 
   const raf = useRef(0)
   const stop = () => { cancelAnimationFrame(raf.current); raf.current = 0 }
@@ -266,7 +275,11 @@ export const ClipPlayer = ({
             onError={() => setFailed(true)}
             onLoadedMetadata={onMeta}
             onPlay={() => { setStarted(true); setPlaying(true); stop(); follow() }}
-            onPause={() => { setPlaying(false); stop() }}
+            onPause={() => {
+            setPlaying(false)
+            stop()
+            report(Math.max(0, (ref.current?.currentTime ?? 0) - bounds.current.in))
+          }}
             sx={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain',
               bgcolor: colors.grey_400, cursor: 'pointer' }} />
         )}
@@ -632,7 +645,8 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
           <ClipPlayer file={RECORDING.file} height={340}
             window={win} nominalTotal={RECORDING.seconds}
             fallbackDuration={win.out - win.in}
-            onTime={setTime} onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />
+            at={time} onTime={setTime}
+            onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />
           <DistanceChart series={series} duration={span} playhead={time}
             drillName={drill?.name || clipSource(clip).opposition} metrics={CHART_METRICS}
             metric={metric} onMetricChange={setMetric} />
