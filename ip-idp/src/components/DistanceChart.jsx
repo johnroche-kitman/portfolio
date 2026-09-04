@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, Typography } from '@mui/material'
+import { Box, Button, Menu, MenuItem, Typography } from '@mui/material'
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import colors from '../theme/tokens'
 
 /**
@@ -31,10 +32,10 @@ const mmss = t => {
  * smallest 1 / 2 / 2.5 / 5 x 10^n that fits the data in four or five ticks, and
  * the ceiling is the first multiple of it at or above the largest value.
  */
-const niceScale = v => {
+const niceScale = (v, minStep = 0) => {
   const target = Math.max(v, 1) / 4
   const pow = 10 ** Math.floor(Math.log10(target))
-  const step = ([1, 2, 2.5, 5, 10].find(m => m * pow >= target) ?? 10) * pow
+  const step = Math.max(([1, 2, 2.5, 5, 10].find(m => m * pow >= target) ?? 10) * pow, minStep)
   const max = Math.ceil(Math.max(v, 1) / step) * step
   const ticks = []
   for (let t = 0; t <= max + step / 2; t += step) ticks.push(Math.round(t * 100) / 100)
@@ -43,7 +44,10 @@ const niceScale = v => {
 
 const comma = n => n.toLocaleString('en-GB')
 
-export default function DistanceChart({ series, duration, playhead = null, drillName }) {
+export default function DistanceChart({
+  series, duration, playhead = null, drillName, metrics = [], metric, onMetricChange,
+}) {
+  const [metricEl, setMetricEl] = useState(null)
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(0)
   const [hidden, setHidden] = useState(() => new Set())
@@ -67,8 +71,15 @@ export default function DistanceChart({ series, duration, playhead = null, drill
     [series],
   )
 
+  const active = metrics.find(m => m.key === metric) || metrics[0]
+    || { key: 'distance', label: 'Distance covered', caption: 'Cumulative metres', unit: 'm' }
+  const suffix = active.unit ? ` ${active.unit}` : ''
+
   const shown = series.filter(s => !hidden.has(s.athleteId))
-  const { max: yMax, ticks: yTicks } = niceScale(Math.max(1, ...series.map(s => s.total)))
+  // A count metric steps in whole numbers; a distance can step in halves.
+  const { max: yMax, ticks: yTicks } = niceScale(
+    Math.max(1, ...series.map(s => s.total)), active.unit ? 0 : 1,
+  )
   const innerW = Math.max(120, width - M.left - M.right)
   const x = t => M.left + (t / Math.max(duration, 0.001)) * innerW
   const y = m => M.top + PLOT_H - (m / yMax) * PLOT_H
@@ -113,14 +124,30 @@ export default function DistanceChart({ series, duration, playhead = null, drill
 
   return (
     <Box ref={wrapRef} sx={{ width: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
-        <Box>
-          <Typography variant="subtitle1">Distance covered</Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Cumulative metres{drillName ? ` · ${drillName}` : ''}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
+        <Box sx={{ minWidth: 0 }}>
+          {/* The title is the metric picker. A caret that did not open anything
+              would promise a choice the chart could not honour. */}
+          <Button variant="text" onClick={e => setMetricEl(e.currentTarget)}
+            endIcon={<ArrowDropDownIcon />} disabled={!metrics.length}
+            sx={{ p: 0, minWidth: 0, fontSize: 16, fontWeight: 700, color: 'text.primary',
+              '& .MuiButton-endIcon': { ml: 0.25 }, '&.Mui-disabled': { color: 'text.primary' } }}>
+            {active.label}
+          </Button>
+          <Menu anchorEl={metricEl} open={!!metricEl} onClose={() => setMetricEl(null)}>
+            {metrics.map(m => (
+              <MenuItem key={m.key} selected={m.key === active.key} sx={{ minWidth: 240 }}
+                onClick={() => { setMetricEl(null); onMetricChange?.(m.key) }}>
+                {m.label}
+              </MenuItem>
+            ))}
+          </Menu>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+            {active.caption}{drillName ? ` · ${drillName}` : ''}
           </Typography>
         </Box>
-        <Button variant="text" size="small" onClick={() => setShowTable(v => !v)}>
+        <Button variant="text" size="small" onClick={() => setShowTable(v => !v)}
+          sx={{ flexShrink: 0 }}>
           {showTable ? 'Chart' : 'Table'}
         </Button>
       </Box>
@@ -149,7 +176,7 @@ export default function DistanceChart({ series, duration, playhead = null, drill
                   {s.name}
                 </td>
                 {[0.25, 0.5, 0.75, 1].map(f => (
-                  <td key={f}>{Math.round(valueAt(s, duration * f))} m</td>
+                  <td key={f}>{Math.round(valueAt(s, duration * f))}{suffix}</td>
                 ))}
               </tr>
             ))}
@@ -159,7 +186,8 @@ export default function DistanceChart({ series, duration, playhead = null, drill
         <Box sx={{ position: 'relative' }}>
           <Box component="svg" width={Math.max(width, 1)} height={M.top + PLOT_H + M.bottom}
             onPointerMove={onMove} onPointerLeave={() => setHoverT(null)}
-            role="img" aria-label={`Cumulative distance covered by ${shown.length} athletes over ${mmss(duration)}`}
+            role="img"
+            aria-label={`${active.label} for ${shown.length} athletes over ${mmss(duration)}`}
             sx={{ display: 'block', touchAction: 'none' }}>
             {/* Grid and axes: hairline, solid, one step off the surface. */}
             {yTicks.map(t => (
@@ -230,7 +258,7 @@ export default function DistanceChart({ series, duration, playhead = null, drill
                 <Box key={s.athleteId} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                   <Box sx={{ width: 10, height: 2, flexShrink: 0, bgcolor: colourOf[s.athleteId] }} />
                   <Typography variant="caption" sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                    {Math.round(valueAt(s, readout))} m
+                    {Math.round(valueAt(s, readout))}{suffix}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.secondary', ml: 'auto' }}>
                     {s.short}

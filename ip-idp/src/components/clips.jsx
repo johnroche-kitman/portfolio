@@ -21,8 +21,8 @@ import colors from '../theme/tokens'
 import DistanceChart from './DistanceChart'
 import { athleteById } from '../data/athletes'
 import {
-  CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSourceLine, clipSrc, clipWindow,
-  distanceSeries, drillWindow, posterSrc, principleLabel, toSeconds, windowLabel,
+  CHART_METRICS, CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSourceLine, clipSrc,
+  clipWindow, distanceSeries, posterSrc, principleLabel, toSeconds,
 } from '../data/video'
 
 /* ------------------------------------------------------------------ pieces */
@@ -475,6 +475,7 @@ const MetaCell = ({ label, value }) => (
 export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onStar }) => {
   const [time, setTime] = useState(0)
   const [measured, setMeasured] = useState(null)
+  const [metric, setMetric] = useState(CHART_METRICS[0].key)
 
   const win = useMemo(() => clipWindow(clip), [clip?.id])
   // The window's own length until the media reports its real duration, at which
@@ -486,9 +487,9 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
 
   const series = useMemo(
     () => (clip?.drillId
-      ? distanceSeries({ drillId: clip.drillId, athleteId: clip.athleteId, duration: span })
+      ? distanceSeries({ drillId: clip.drillId, athleteId: clip.athleteId, duration: span, metric })
       : []),
-    [clip?.drillId, clip?.athleteId, span],
+    [clip?.drillId, clip?.athleteId, span, metric],
   )
 
   if (!clip) return null
@@ -522,13 +523,14 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
             onTime={setTime} onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />
           {series.length ? (
             <DistanceChart series={series} duration={span} playhead={time}
-              drillName={drill?.name} />
+              drillName={drill?.name} metrics={CHART_METRICS} metric={metric}
+              onMetricChange={setMetric} />
           ) : (
             <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2 }}>
               <Typography variant="subtitle1">Distance covered</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                Distance is tracked per drill. This clip came from a game, so it has no drill
-                to plot against.
+                These metrics are tracked per drill. This clip came from a game, so it has no
+                drill to plot against.
               </Typography>
             </Paper>
           )}
@@ -569,7 +571,9 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
  * of its own, so the card cannot claim more footage than it will play.
  */
 export const FullDrillCard = ({ drill, onOpen }) => {
-  const label = windowLabel(drillWindow(drill.id))
+  // The drill's own length, not the window's. What the recording can spare for
+  // it is the player's business; the card describes the footage that exists.
+  const label = drill.fullClip.duration
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2, display: 'flex',
       gap: 2, alignItems: 'center', bgcolor: colors.blue_25 }}>

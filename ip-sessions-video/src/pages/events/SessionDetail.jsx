@@ -22,6 +22,7 @@ import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
+import { PrincipleChips } from '../../components/clips'
 import DevelopmentGoalsTab from './DevelopmentGoalsTab'
 import VideoTab from './VideoTab'
 import AddPanel from '../../components/AddPanel'
@@ -102,9 +103,16 @@ function DrillCard({ drill, index, onChange, onRemove, onOpenDetail, onOpenPrinc
           {DRILL_FIELDS.filter(f => drill[f.key] && f.key !== editing).map(f => (
             <Box key={f.key} sx={{ mt: 1 }}>
               <Typography variant="subtitle2">{f.label}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {Array.isArray(drill[f.key]) ? drill[f.key].join(', ') : drill[f.key]}
-              </Typography>
+              {/* Principles read as chips in the short form, the same as the
+                  Video tab — a run of full-form names set as body copy was two
+                  lines of parentheses saying what a chip says in one. */}
+              {f.key === 'principles' ? (
+                <Box sx={{ mt: 0.5 }}><PrincipleChips principles={drill.principles} /></Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {Array.isArray(drill[f.key]) ? drill[f.key].join(', ') : drill[f.key]}
+                </Typography>
+              )}
             </Box>
           ))}
 
@@ -317,10 +325,6 @@ export function CollectionTab() {
             <IconButton size="small" aria-label="Close collections" onClick={() => setRailOpen(false)}>
               <CloseIcon fontSize="small" />
             </IconButton>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pb: 1 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>Collections</Typography>
-            <IconButton size="small" aria-label="Add collection"><AddIcon fontSize="small" /></IconButton>
           </Box>
           <Divider />
           <List disablePadding>

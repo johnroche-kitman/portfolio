@@ -174,8 +174,8 @@ export default function DevelopmentGoalsTab() {
 
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden' }}>
+      {/* No section title: the tab is already called Development goals. */}
       <Box sx={{ p: 3, pb: 2 }}>
-        <Typography variant="subtitle1" sx={{ fontSize: 20, mb: 2 }}>Development Goals</Typography>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
           <SearchInput label="Search" value={q} onChange={e => setQ(e.target.value)} sx={{ width: 190 }} />
           <MultiSelect label="Athlete" options={athleteOptions} value={athleteNames}

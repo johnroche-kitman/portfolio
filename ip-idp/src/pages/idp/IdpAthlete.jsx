@@ -274,7 +274,8 @@ export default function IdpAthlete() {
 
       <Box sx={{ p: 3 }}>
         {/* ------------------------------------------------ development goals */}
-        <Accordion defaultExpanded disableGutters elevation={0}
+        <Accordion disableGutters elevation={0}
+          TransitionProps={{ unmountOnExit: true }}
           sx={{ border: `1px solid ${colors.neutral_300}`, borderRadius: 1, mb: 2,
             '&::before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 3, py: 1 }}>

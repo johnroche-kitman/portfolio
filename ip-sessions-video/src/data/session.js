@@ -64,12 +64,14 @@ export const sessionDrills = videoDrills.map(d => ({
 }))
 
 /** The squad selected for the session — the same people the clips are cut for. */
+/** The squad selected for the session. The zero RPE belongs to the one athlete
+    who did not take part, so it lines up with their zero minutes. */
 export const sessionAthletes = athletesInSquad(videoSession.squad).map((a, i) => ({
   ...a,
   participation: a.availability === 'Unavailable' ? 'No Participation' : 'Full',
   groupCalcs: a.availability !== 'Unavailable',
   selected: a.availability !== 'Unavailable',
-  rpe: [6, 7, 5, 7, 6, 8, 7, 6, 0, 8, 7, 7, 8, 6][i] ?? 7,
+  rpe: [6, 7, 5, 7, 6, 8, 7, 6, 7, 8, 7, 7, 8, 0][i] ?? 7,
   minutes: a.availability === 'Unavailable' ? 0 : 90,
 }))
 
