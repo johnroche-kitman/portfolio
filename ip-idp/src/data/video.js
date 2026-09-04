@@ -15,6 +15,19 @@ import { athletes as ATHLETES } from './athletes'
 
 export const CLIPS = import.meta.env.PROD ? '/portfolio/clips/' : '/clips/'
 
+/**
+ * The session recording.
+ *
+ * Every clip on these pages is a window into this one file, which is how Hudl
+ * actually holds them: the analyst records the session once and a "clip" is a
+ * pair of in and out points into that recording. Nothing is cut per clip.
+ *
+ * `seconds` is nominal. The player reads the media's real duration and scales
+ * every window by the ratio, so dropping a longer recording in its place needs
+ * no edit here — the same relative windows simply spread further apart.
+ */
+export const RECORDING = { file: 'drill-video.mp4', seconds: 150 }
+
 export const clipSrc = file => `${CLIPS}${file}`
 export const posterSrc = file => `${CLIPS}posters/${file.replace(/\.mp4$/, '.jpg')}`
 
@@ -82,31 +95,31 @@ export const videoDrills = [
     id: 'd1', order: 1, name: 'Rondo 4v2', activity: 'Warmup (Conditioning)',
     principles: ['Ball Retention', 'Forward Passing'],
     minutes: 12, areaSize: '12 x 12m',
-    fullClip: { file: 'drill-01-full.mp4', duration: '11:48', angle: 'Tactical wide' },
+    fullClip: { angle: 'Tactical wide' },
   },
   {
     id: 'd2', order: 2, name: 'Breaking lines — 6v4 middle third', activity: 'Transition (Football Based)',
     principles: ['Breaking Lines', 'Forward Passing'],
     minutes: 18, areaSize: '40 x 44m',
-    fullClip: { file: 'drill-02-full.mp4', duration: '17:32', angle: 'Tactical wide' },
+    fullClip: { angle: 'Tactical wide' },
   },
   {
     id: 'd3', order: 3, name: 'Wide overloads and crossing', activity: 'Attack (Football Based)',
     principles: ['Wide Play and Crossing', 'Creating Space', 'Finishing'],
     minutes: 20, areaSize: 'Half pitch',
-    fullClip: { file: 'drill-03-full.mp4', duration: '19:05', angle: 'High behind goal' },
+    fullClip: { angle: 'High behind goal' },
   },
   {
     id: 'd4', order: 4, name: 'Counter-press transition', activity: 'Defence (Football Based)',
     principles: ['Pressing', 'Screening'],
     minutes: 16, areaSize: '60 x 44m',
-    fullClip: { file: 'drill-04-full.mp4', duration: '15:21', angle: 'Tactical wide' },
+    fullClip: { angle: 'Tactical wide' },
   },
   {
     id: 'd5', order: 5, name: '11v11 phase of play', activity: 'Games (Football Based)',
     principles: ['Breaking Lines', 'Switching Play', 'Rotations'],
     minutes: 24, areaSize: 'Full pitch',
-    fullClip: { file: 'drill-05-full.mp4', duration: '23:40', angle: 'Tactical wide' },
+    fullClip: { angle: 'Tactical wide' },
   },
 ]
 
@@ -322,6 +335,55 @@ export const clips = [...CURATED, ...generated]
 export const clipsForDrill = id => clips
   .filter(c => c.drillId === id)
   .sort((a, b) => a.at.localeCompare(b.at))
+
+/* ---------------------------------------------------------------- windows
+   Where each clip sits inside the recording. Drills take equal segments of it
+   in their running order; a drill's clips are spread across its segment in the
+   order they happened, each holding its own stated length. So a clip from late
+   in the session plays from late in the recording, and the clips of one drill
+   are moments inside that drill's stretch of it — the same relationship the
+   real footage would have. */
+
+const toSecondsOf = str => String(str).split(':').map(Number).reduce((a, n) => a * 60 + n, 0)
+
+const SEGMENT = RECORDING.seconds / videoDrills.length
+
+export const drillWindow = drillId => {
+  const drill = drillById(drillId)
+  if (!drill) return { in: 0, out: RECORDING.seconds }
+  const start = (drill.order - 1) * SEGMENT
+  return { in: start, out: start + SEGMENT }
+}
+
+const windows = new Map()
+
+videoDrills.forEach(drill => {
+  const seg = drillWindow(drill.id)
+  const inDrill = clips
+    .filter(c => c.drillId === drill.id)
+    .sort((a, b) => a.at.localeCompare(b.at))
+
+  inDrill.forEach((clip, i) => {
+    const len = Math.min(toSecondsOf(clip.duration), SEGMENT)
+    // Spread the in-points evenly, leaving room for the last clip to run out.
+    const room = Math.max(0, SEGMENT - len)
+    const start = seg.in + (inDrill.length > 1 ? (i / (inDrill.length - 1)) * room : room / 2)
+    windows.set(clip.id, { in: start, out: start + len })
+  })
+})
+
+/** "0:30" for a window, so the UI states the length it will actually play. */
+export const windowLabel = w => {
+  const s = Math.round(w.out - w.in)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+/** The in and out points for a clip, in seconds into the recording. */
+export const clipWindow = clip => {
+  if (!clip) return { in: 0, out: RECORDING.seconds }
+  if (clip.window) return clip.window
+  return windows.get(clip.id) || drillWindow(clip.drillId)
+}
 
 export const clipById = id => clips.find(c => c.id === id)
 export const clipsForGoal = goalId => clips.filter(c => c.goals.includes(goalId))

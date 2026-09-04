@@ -15,8 +15,8 @@ import {
 } from '../../components/clips'
 import { athleteById } from '../../data/athletes'
 import {
-  DRILL_PARTICIPANTS, PEAK_METRICS, PRINCIPLE_NAMES, clippedAthleteIds, peakMetric, sessionClips,
-  videoDrills,
+  DRILL_PARTICIPANTS, PEAK_METRICS, PRINCIPLE_NAMES, clippedAthleteIds, drillWindow, peakMetric,
+  sessionClips, videoDrills, windowLabel,
 } from '../../data/video'
 
 /** Chip label for a drill's activity — "Attack (Football Based)" reads as "Attack". */
@@ -241,11 +241,11 @@ export default function VideoTab() {
           starred={starred.has(`${open.full.id}-full`)} onStar={toggleStar}
           clip={{
             id: `${open.full.id}-full`,
-            file: open.full.fullClip.file,
+            file: `${open.full.id}-full.mp4`,
             drillId: open.full.id,
             title: `${open.full.name} — full drill`,
             at: '00:00:00',
-            duration: open.full.fullClip.duration,
+            duration: windowLabel(drillWindow(open.full.id)),
             principles: open.full.principles,
             peaks: squadPeaks(open.full.id),
             athleteId: null,

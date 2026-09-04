@@ -34,7 +34,6 @@ export const shortActivity = a => a.replace(/\s*\(.*\)$/, '')
 /** The fields a planned drill can have added to it, in the live page's order. */
 export const DRILL_FIELDS = [
   { key: 'duration', label: 'Duration', editLabel: 'Duration (mins):', type: 'number' },
-  { key: 'areaSize', label: 'Area size', editLabel: 'Area size:', type: 'text' },
   { key: 'note', label: 'Note', editLabel: 'Note:', type: 'multiline' },
   { key: 'principles', label: 'Principles', panel: true },
 ]
@@ -133,9 +132,7 @@ export const collections = [
 export const sessionMeta = session => [
   ['Squad', session.squad || videoSession.squad],
   ['Date', videoSession.date],
-  ['Type', session.sessionType || videoSession.sessionType],
   ['Game day', videoSession.gameDay],
-  ['Surface type', videoSession.surface],
 ]
 
 /* --------------------------------------------------------- session importer */
