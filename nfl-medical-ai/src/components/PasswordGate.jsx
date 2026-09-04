@@ -52,8 +52,8 @@ export default function PasswordGate({ children }) {
     >
       <Box
         component="img"
-        src={`${import.meta.env.BASE_URL}nfl-logo.png`}
-        alt="NFL"
+        src={`${import.meta.env.BASE_URL}pl-logo.svg`}
+        alt="Premier League"
         sx={{ width: 48, height: 48, mb: 3, objectFit: 'contain' }}
       />
       <Typography variant="h1" sx={{ mb: 1, textAlign: 'center' }}>

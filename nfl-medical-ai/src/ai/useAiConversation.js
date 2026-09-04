@@ -219,7 +219,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
     })
   }
 
-  // A bare first/last name can match more than one roster athlete (e.g. two
+  // A bare first/last name can match more than one squad athlete (e.g. two
   // "Tyler"s) — offer a picker instead of guessing, then resume whichever
   // flow asked for the athlete in the first place.
   function askWhichAthlete(parsed, candidates, kind) {
@@ -362,7 +362,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
     if (pendingAction?.kind === 'awaiting-athlete-for-injury') {
       const match = resolveAthleteMatch(text, athletes)
       if (!match) {
-        pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this injury for?` })
+        pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the squad. Who is this injury for?` })
         return
       }
       if (match.candidates) {
@@ -376,7 +376,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
     if (pendingAction?.kind === 'awaiting-athlete-for-note') {
       const match = resolveAthleteMatch(text, athletes)
       if (!match) {
-        pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this note for?` })
+        pushMessage('assistant', { text: `I still couldn't find an athlete matching "${text}" on the squad. Who is this note for?` })
         return
       }
       if (match.candidates) {
@@ -397,7 +397,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
       const match = resolveAthleteMatch(text, athletes)
       if (!match) {
         pushMessage('assistant', {
-          text: `I still couldn't find an athlete matching "${text}" on the roster. Who is this rehab program for?`,
+          text: `I still couldn't find an athlete matching "${text}" on the squad. Who is this rehab program for?`,
         })
         return
       }
@@ -419,7 +419,7 @@ export function useAiConversation({ onNavigateAway } = {}) {
       const match = resolveAthleteMatch(text, athletes)
       if (!match) {
         pushMessage('assistant', {
-          text: `I still couldn't find an athlete matching "${text}" on the roster. Who would you like a summary for?`,
+          text: `I still couldn't find an athlete matching "${text}" on the squad. Who would you like a summary for?`,
         })
         return
       }

@@ -2,7 +2,7 @@ export const athletes = [
   {
     id: 'ath-george-frederick',
     name: 'George Frederick',
-    position: 'Wide receiver',
+    position: 'Winger',
     photoUrl: null,
     status: 'Out',
     statusDuration: '34 days',
@@ -11,7 +11,7 @@ export const athletes = [
   {
     id: 'ath-felix-andrew',
     name: 'Felix Andrew',
-    position: 'Cornerback',
+    position: 'Right-back',
     photoUrl: null,
     status: 'Limited',
     statusDuration: '34 days',
@@ -20,7 +20,7 @@ export const athletes = [
   {
     id: 'ath-brian-charles',
     name: 'Brian Charles',
-    position: 'Tight end',
+    position: 'Striker',
     photoUrl: null,
     status: 'Out',
     statusDuration: '34 days',
@@ -29,7 +29,7 @@ export const athletes = [
   {
     id: 'ath-adam-benjamin',
     name: 'Adam Benjamin',
-    position: 'Safety',
+    position: 'Center-back',
     photoUrl: null,
     status: 'Out',
     statusDuration: '34 days',
@@ -38,7 +38,7 @@ export const athletes = [
   {
     id: 'ath-tyler-held',
     name: 'Tyler Held',
-    position: 'Linebacker',
+    position: 'Central midfielder',
     photoUrl: null,
     status: 'Available',
     statusDuration: null,
@@ -47,7 +47,7 @@ export const athletes = [
   {
     id: 'ath-marcus-lee',
     name: 'Marcus Lee',
-    position: 'Running back',
+    position: 'Forward',
     photoUrl: null,
     status: 'Available',
     statusDuration: null,
@@ -75,7 +75,7 @@ function wordMatches(token, lower) {
 // first or last name resolves without requiring the full name — but only
 // when it's unambiguous. Returns:
 //   { athlete }              exactly one match
-//   { candidates: [...] }    2+ roster athletes share that mention
+//   { candidates: [...] }    2+ squad athletes share that mention
 //   null                     no match at all
 export function resolveAthleteMatch(text, list = athletes) {
   const lower = (text || '').trim().toLowerCase()

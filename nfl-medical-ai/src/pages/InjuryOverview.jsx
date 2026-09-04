@@ -28,7 +28,7 @@ const DETAIL_TABS = [
 // right page (e.g. a refresh or a direct link has no history to pop).
 const BACK_LINKS = {
   'review-queue': { label: 'Back to review queue', path: '/medical/review-queue' },
-  roster: { label: 'Back to roster', path: '/medical/roster' },
+  squad: { label: 'Back to squad', path: '/medical/squad' },
 }
 
 function Field({ label, value, emphasizeMissing }) {
@@ -53,7 +53,7 @@ export default function InjuryOverview() {
   const { injuryId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const backLink = BACK_LINKS[location.state?.from] || BACK_LINKS.roster
+  const backLink = BACK_LINKS[location.state?.from] || BACK_LINKS.squad
   const [searchParams] = useSearchParams()
   const requestedTab = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState(
@@ -67,8 +67,8 @@ export default function InjuryOverview() {
     return (
       <Box sx={{ p: 4 }}>
         <Typography variant="h2">Injury not found</Typography>
-        <Button sx={{ mt: 2 }} onClick={() => navigate('/medical/roster')}>
-          Back to roster
+        <Button sx={{ mt: 2 }} onClick={() => navigate('/medical/squad')}>
+          Back to squad
         </Button>
       </Box>
     )

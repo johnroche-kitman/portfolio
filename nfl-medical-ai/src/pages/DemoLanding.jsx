@@ -8,9 +8,9 @@ const OPTIONS = [
   {
     key: 'desktop',
     label: 'Desktop view',
-    description: 'Browse the full Medical roster, review queue, and injury records.',
+    description: 'Browse the full Medical squad, review queue, and injury records.',
     icon: 'desktop',
-    to: '/medical/roster',
+    to: '/medical/squad',
   },
   {
     key: 'mobile',
@@ -35,12 +35,12 @@ export default function DemoLanding() {
     >
       <Box
         component="img"
-        src={`${import.meta.env.BASE_URL}nfl-logo.png`}
-        alt="NFL"
+        src={`${import.meta.env.BASE_URL}pl-logo.svg`}
+        alt="Premier League"
         sx={{ width: 56, height: 56, mb: 3, objectFit: 'contain' }}
       />
       <Typography variant="h1" sx={{ mb: 1, textAlign: 'center' }}>
-        NFL Medical AI
+        Premier League Medical AI
       </Typography>
       <Typography variant="body1" sx={{ color: 'var(--grey-100)', mb: 5, textAlign: 'center' }}>
         Choose how you'd like to view the demo.

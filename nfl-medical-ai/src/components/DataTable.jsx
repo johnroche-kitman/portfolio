@@ -6,7 +6,7 @@ import TableRow from '@mui/material/TableRow'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
-// Generic table shell shared by Roster and Review Queue: columns describe headers
+// Generic table shell shared by Squad and Review Queue: columns describe headers
 // + a render function, rows are plain data objects.
 export default function DataTable({ columns, rows, getRowKey, onRowClick, emptyMessage, stickyTop }) {
   if (!rows.length) {

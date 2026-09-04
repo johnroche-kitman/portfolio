@@ -28,7 +28,7 @@ const FILTER_CONTROL_SX = {
 const TOP_STRIP_HEIGHT = 54
 
 const MEDICAL_TABS = [
-  { value: 'roster', label: 'Roster' },
+  { value: 'squad', label: 'Squad' },
   { value: 'notes', label: 'Notes', disabled: true },
   { value: 'diagnostics', label: 'Diagnostics', disabled: true },
   { value: 'procedures', label: 'Procedures', disabled: true },
@@ -38,7 +38,7 @@ const MEDICAL_TABS = [
   { value: 'daily-status-report', label: 'Daily status report', disabled: true },
 ]
 
-export default function Roster() {
+export default function Squad() {
   const { athletes, getInjuriesByAthlete, athleteNotes, pendingInjuries, pendingNotes } = useAppData()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -155,7 +155,7 @@ export default function Roster() {
                     variant="body1"
                     onClick={(e) => {
                       e.stopPropagation()
-                      navigate(`/medical/injury/${inj.id}`, { state: { from: 'roster' } })
+                      navigate(`/medical/injury/${inj.id}`, { state: { from: 'squad' } })
                     }}
                     sx={{
                       textDecoration: 'underline',
@@ -238,10 +238,10 @@ export default function Roster() {
           </Tooltip>
         </Box>
 
-        <PageTabs tabs={MEDICAL_TABS} value="roster" onChange={() => {}} />
+        <PageTabs tabs={MEDICAL_TABS} value="squad" onChange={() => {}} />
 
         <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mt: 3, mb: 2 }}>
-          <Typography variant="h2">Roster</Typography>
+          <Typography variant="h2">Squad</Typography>
           <Box display="flex" gap={1.5}>
             <Button endIcon={<Icon name="expandMore" fontSize="small" />}>Add</Button>
             <Button
@@ -274,8 +274,8 @@ export default function Roster() {
             }}
           />
           <Select size="small" value="active" sx={{ width: 160, ...FILTER_CONTROL_SX }}>
-            <MenuItem value="active">Active roster</MenuItem>
-            <MenuItem value="practice-squad">Practice squad</MenuItem>
+            <MenuItem value="active">Active squad</MenuItem>
+            <MenuItem value="development-squad">Development squad</MenuItem>
           </Select>
           <Select
             size="small"
@@ -285,7 +285,7 @@ export default function Roster() {
           >
             {positions.map((pos) => (
               <MenuItem key={pos} value={pos}>
-                {pos === 'all' ? 'Roster position' : pos}
+                {pos === 'all' ? 'Squad position' : pos}
               </MenuItem>
             ))}
           </Select>

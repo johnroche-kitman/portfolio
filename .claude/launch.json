@@ -33,6 +33,17 @@
         "ip-idp"
       ],
       "port": 5230
+    },
+    {
+      "name": "nfl-medical-ai",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "nfl-medical-ai"
+      ],
+      "port": 5190
     }
   ]
 }

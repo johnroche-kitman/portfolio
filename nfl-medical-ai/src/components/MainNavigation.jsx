@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import Icon from './Icon'
 
 const NAV_ITEMS = [
-  { key: 'medical', name: 'medical', label: 'Medical', to: '/medical/roster' },
+  { key: 'medical', name: 'medical', label: 'Medical', to: '/medical/squad' },
   { key: 'chart', name: 'chart', label: 'Performance' },
   { key: 'clipboard', name: 'clipboard', label: 'Reports' },
-  { key: 'groups', name: 'groups', label: 'Roster' },
+  { key: 'groups', name: 'groups', label: 'Squad' },
   { key: 'calendar', name: 'calendar', label: 'Schedule' },
   { key: 'settings', name: 'settings', label: 'Settings' },
 ]
@@ -23,7 +23,7 @@ export default function MainNavigation({ active = 'medical' }) {
         width: 'var(--nav-width)',
         flexShrink: 0,
         height: '100vh',
-        backgroundColor: 'var(--color-primary-dark)',
+        backgroundColor: 'var(--nav-bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -35,15 +35,13 @@ export default function MainNavigation({ active = 'medical' }) {
         <ButtonBase onClick={() => navigate('/')} sx={{ borderRadius: '8px', p: 1, my: 1 }}>
           <Box
             component="img"
-            src={`${import.meta.env.BASE_URL}nfl-logo.png`}
-            alt="NFL"
+            src={`${import.meta.env.BASE_URL}pl-logo.svg`}
+            alt="Premier League"
             sx={{
               width: 34,
               height: 34,
               display: 'block',
               objectFit: 'contain',
-              filter:
-                'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)',
             }}
           />
         </ButtonBase>
@@ -64,9 +62,9 @@ export default function MainNavigation({ active = 'medical' }) {
                     height: 32,
                     justifyContent: 'center',
                     color: isActive ? '#ffffff' : '#ffffffcc',
-                    backgroundColor: isActive ? 'var(--color-error)' : 'transparent',
+                    backgroundColor: isActive ? 'var(--nav-active-bg)' : 'transparent',
                     '&:hover': {
-                      backgroundColor: isActive ? 'var(--color-error)' : '#ffffff1a',
+                      backgroundColor: isActive ? 'var(--nav-active-bg)' : '#ffffff1a',
                     },
                     '&.Mui-disabled': {
                       color: isActive ? '#ffffff' : '#ffffffcc',

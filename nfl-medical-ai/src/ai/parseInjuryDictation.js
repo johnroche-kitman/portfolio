@@ -71,7 +71,7 @@ function findSide(text) {
 }
 
 function findSessionType(text) {
-  const match = text.match(/\b(practice|game|walkthrough|training|scrimmage)\b/i)
+  const match = text.match(/\b(practice|game|walkthrough|training|friendly)\b/i)
   return match ? match[1].toLowerCase() : null
 }
 

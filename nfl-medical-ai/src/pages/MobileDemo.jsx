@@ -23,7 +23,7 @@ export default function MobileDemo() {
 
       <Typography
         variant="body2"
-        onClick={() => navigate('/medical/roster')}
+        onClick={() => navigate('/medical/squad')}
         sx={{
           color: 'var(--color-primary)',
           textDecoration: 'underline',

@@ -26,7 +26,7 @@ export default function TopStrip({ breadcrumb = 'Medical' }) {
       <Box display="flex" alignItems="center" gap={1.5}>
         <Box display="flex" alignItems="center" gap={0.5} sx={{ cursor: 'pointer' }}>
           <Typography variant="body1" fontWeight={600}>
-            Active roster
+            Active squad
           </Typography>
           <Icon name="expandMore" fontSize="small" sx={{ color: 'var(--grey-100)' }} />
         </Box>

@@ -1,7 +1,7 @@
 // Shared plain-text helpers for the rule-based dictation parsers.
 
 // Best-effort fallback for display purposes only (e.g. "couldn't find an
-// athlete matching ..."), used when no roster name was found in the text.
+// athlete matching ..."), used when no squad name was found in the text.
 // Case-insensitive and accepts "for"/"to" since real dictation is often all
 // lowercase and doesn't reliably use one fixed connector word.
 export function extractAthleteNameMention(text) {

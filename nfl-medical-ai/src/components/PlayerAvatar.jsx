@@ -10,7 +10,7 @@ function initialsFor(name = '') {
     .toUpperCase()
 }
 
-// Photo-or-initials avatar for an athlete, reused across the roster table and injury overview header.
+// Photo-or-initials avatar for an athlete, reused across the squad table and injury overview header.
 export default function PlayerAvatar({ athlete, size = 40 }) {
   if (!athlete) return <Avatar sx={{ width: size, height: size }} />
   return (

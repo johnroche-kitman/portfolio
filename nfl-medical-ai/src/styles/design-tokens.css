@@ -22,6 +22,11 @@
 
   --nav-width: 60px;
   --nav-width-expanded: 232px;
+
+  /* Left main-nav rail only — matches the Premier League crest, not the
+     wider Kitman palette above, so it stays scoped to MainNavigation. */
+  --nav-bg: #370145;
+  --nav-active-bg: #ffffff26;
 }
 
 /* Bouncing dots for AiThinkingIndicator's fake "typing" delay. */

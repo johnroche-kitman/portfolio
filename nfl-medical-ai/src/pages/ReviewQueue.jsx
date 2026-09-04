@@ -267,14 +267,14 @@ export default function ReviewQueue() {
   return (
     <Box>
       <Box
-        onClick={() => navigate('/medical/roster')}
+        onClick={() => navigate('/medical/squad')}
         display="flex"
         alignItems="center"
         gap={0.5}
         sx={{ cursor: 'pointer', color: 'var(--grey-100)', mb: 1, width: 'fit-content' }}
       >
         <Icon name="back" fontSize="small" />
-        <Typography variant="body1">Back to roster</Typography>
+        <Typography variant="body1">Back to squad</Typography>
       </Box>
 
       <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>

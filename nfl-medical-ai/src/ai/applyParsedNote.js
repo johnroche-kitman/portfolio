@@ -5,7 +5,7 @@ export function applyParsedNote(parsed, { createNoteFromParsed }) {
     return {
       ok: false,
       error: parsed.athleteName
-        ? `I couldn't find an athlete named "${parsed.athleteName}" on the roster.`
+        ? `I couldn't find an athlete named "${parsed.athleteName}" on the squad.`
         : "I couldn't tell which athlete this note is for. Try including their full name.",
     }
   }
