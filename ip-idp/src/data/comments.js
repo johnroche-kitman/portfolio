@@ -40,14 +40,17 @@ const bucket = (str, n) => {
 }
 
 /**
- * The thread on a clip: none, one or two comments, stamped inside its length.
- * Most clips carry nothing, which is what a real library looks like — a coach
- * writes on the handful worth arguing about.
+ * The thread on a clip: one to three comments, stamped inside its length.
+ *
+ * Every clip carries at least one. A real library would have most of them empty
+ * — a coach writes on the handful worth arguing about — but a demo where you
+ * have to hunt for a clip that has a conversation on it shows the feature
+ * badly, so they all do.
  */
 export const commentsFor = (clip, span) => {
   if (!clip) return []
   const id = String(clip.id)
-  const count = [0, 0, 1, 1, 2][bucket(`${id}-n`, 5)]
+  const count = [1, 1, 2, 2, 3][bucket(`${id}-n`, 5)]
   const length = Math.max(span || 0, 1)
 
   return Array.from({ length: count }, (_, i) => {

@@ -697,7 +697,6 @@ function Comments({ clip, span, at, onSeek }) {
   )
 
   const pinned = stamp == null ? at : stamp
-  const drifted = stamp != null && Math.abs(at - stamp) > 1
 
   const submit = () => {
     const body = draft.trim()
@@ -749,21 +748,18 @@ function Comments({ clip, span, at, onSeek }) {
         </Typography>
       )}
 
+      {/* No button: Enter posts. The moment it will pin to is in the
+          placeholder rather than on a chip, so the position is still visible
+          without a control sitting under the field to say it. */}
       <Box sx={{ mt: 2 }}>
         <TextField fullWidth multiline minRows={2} label="Add a comment"
-          placeholder="What should they see here?"
+          placeholder={`What should they see at ${clock(pinned)}?`}
+          helperText="Enter to post · Shift + Enter for a new line"
           value={draft} onChange={e => setDraft(e.target.value)}
-          onFocus={() => setStamp(s => (s == null ? at : s))} />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-          <Button onClick={submit} disabled={!draft.trim()}>Comment</Button>
-          <Chip size="small" label={`Pinned at ${clock(pinned)}`}
-            sx={{ height: 22, fontSize: 11, bgcolor: colors.neutral_200 }} />
-          {drifted && (
-            <Button variant="text" size="small" onClick={() => setStamp(at)}>
-              Move to {clock(at)}
-            </Button>
-          )}
-        </Box>
+          onFocus={() => setStamp(s => (s == null ? at : s))}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
+          }} />
       </Box>
     </Box>
   )
