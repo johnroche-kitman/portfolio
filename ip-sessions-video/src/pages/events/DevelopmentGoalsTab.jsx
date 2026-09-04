@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
-  Box, Button, Checkbox, Chip, Collapse, Divider, FormControlLabel, Menu, MenuItem, Paper,
-  Snackbar, Typography,
+  Accordion, AccordionDetails, AccordionSummary, Box, Button, Checkbox, Chip, Collapse,
+  FormControlLabel, Paper, Snackbar, Typography,
 } from '@mui/material'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import VideocamIcon from '@mui/icons-material/VideocamOutlined'
 import colors from '../../theme/tokens'
 import AthleteCell from '../../components/AthleteCell'
@@ -86,33 +85,6 @@ function GoalClips({ clips, onOpen }) {
   )
 }
 
-/* ---------------------------------------------------------------- markers */
-
-const MarkAllMenu = ({ label = 'Mark all', onMark }) => {
-  const [el, setEl] = useState(null)
-  return (
-    <>
-      <Button variant="text" size="small" endIcon={<KeyboardArrowDownIcon />}
-        onClick={e => setEl(e.currentTarget)}>{label}</Button>
-      <Menu anchorEl={el} open={!!el} onClose={() => setEl(null)}>
-        {MARKS.map(m => (
-          <MenuItem key={m.key} sx={{ minWidth: 200 }}
-            onClick={() => { setEl(null); onMark(m.key, true) }}>
-            Mark {m.label}
-          </MenuItem>
-        ))}
-        <Divider />
-        {MARKS.map(m => (
-          <MenuItem key={`${m.key}-off`} sx={{ minWidth: 200 }}
-            onClick={() => { setEl(null); onMark(m.key, false) }}>
-            Clear {m.label}
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
-  )
-}
-
 /* ------------------------------------------------------------------- page */
 
 export default function DevelopmentGoalsTab() {
@@ -162,17 +134,6 @@ export default function DevelopmentGoalsTab() {
   const isMarked = (a, g, k) => !!marked[`${a}:${g}:${k}`]
   const setMark = (a, g, k, v) => setMarked(m => ({ ...m, [`${a}:${g}:${k}`]: v }))
 
-  const markAll = (k, v, scope) => {
-    setMarked(m => {
-      const next = { ...m }
-      shown
-        .filter(r => !scope || r.athlete.id === scope)
-        .forEach(r => r.goals.forEach(g => { next[`${r.athlete.id}:${g.goalId}:${k}`] = v }))
-      return next
-    })
-    setToast(v ? `Marked ${MARKS.find(x => x.key === k).label}` : `Cleared ${MARKS.find(x => x.key === k).label}`)
-  }
-
   const clear = () => { setQ(''); setAthleteNames([]); setPos([]); setTypes([]); setPrinciples([]) }
 
   return (
@@ -190,60 +151,76 @@ export default function DevelopmentGoalsTab() {
           <MultiSelect label="Principle" options={principleOptions} value={principles}
             onChange={setPrinciples} selectAll sx={{ width: 195 }} />
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
-          {active && <Button variant="text" size="small" onClick={clear}>Clear filters</Button>}
-          <MarkAllMenu onMark={(k, v) => markAll(k, v)} />
-        </Box>
+        {active && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+            <Button variant="text" size="small" onClick={clear}>Clear filters</Button>
+          </Box>
+        )}
       </Box>
 
-      {shown.map(({ athlete, goals }) => (
-        <Box key={athlete.id}>
-          {/* Athlete group header, as the live page renders it. */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2,
-            px: 3, py: 1.25, bgcolor: colors.neutral_100, borderTop: `1px solid ${colors.neutral_300}`,
-            borderBottom: `1px solid ${colors.neutral_300}` }}>
-            <AthleteCell athlete={athlete} size={34} />
-            <MarkAllMenu onMark={(k, v) => markAll(k, v, athlete.id)} />
-          </Box>
-
-          {goals.map((g, i) => (
-            <Box key={g.goalId} sx={{ px: 3, py: 2,
-              borderBottom: i < goals.length - 1 ? `1px solid ${colors.neutral_200}` : 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{g.title}</Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                    {g.description}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, mt: 0.75, flexWrap: 'wrap' }}>
-                    <Chip size="small" label={principleLabel(g.principle)}
-                      sx={{ height: 22, fontSize: 11, bgcolor: colors.blue_50, color: colors.blue_100 }} />
-                    <Chip size="small" label={g.status}
-                      sx={{ height: 22, fontSize: 11,
-                        bgcolor: g.status === 'Achieved' ? colors.green_100
-                          : g.status === 'Needs work' ? colors.orange_100 : colors.neutral_300,
-                        color: g.status === 'On track' ? colors.grey_200 : colors.white }} />
-                  </Box>
-                  <GoalClips clips={g.clips} onOpen={setClip} />
-                </Box>
-
-                <Box sx={{ width: 210, flexShrink: 0, pt: 0.25 }}>
-                  <Chip size="small" label={GOAL_PLAN}
-                    sx={{ height: 22, fontSize: 11, bgcolor: colors.blue_50, color: colors.blue_100 }} />
-                </Box>
-
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  {MARKS.map(mk => (
-                    <MarkCheckbox key={mk.key} label={mk.label}
-                      checked={isMarked(athlete.id, g.goalId, mk.key)}
-                      onChange={v => setMark(athlete.id, g.goalId, mk.key, v)} />
-                  ))}
-                </Box>
+      {/* One accordion per athlete, all closed. Thirty goals laid flat is a
+          page nobody reads; the header carries enough — who, their position,
+          how many goals, how much evidence — to pick the athlete you want. */}
+      {shown.map(({ athlete, goals }) => {
+        const clipCount = goals.reduce((n, g) => n + g.clips.length, 0)
+        return (
+          <Accordion key={athlete.id} disableGutters elevation={0} square
+            TransitionProps={{ unmountOnExit: true }}
+            sx={{ '&::before': { display: 'none' },
+              borderTop: `1px solid ${colors.neutral_300}` }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}
+              sx={{ px: 3, bgcolor: colors.neutral_100 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: 2, width: '100%', pr: 2 }}>
+                <AthleteCell athlete={athlete} size={34} />
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {goals.length} goal{goals.length === 1 ? '' : 's'}
+                  {clipCount ? ` · ${clipCount} clip${clipCount === 1 ? '' : 's'}` : ' · no clips yet'}
+                </Typography>
               </Box>
-            </Box>
-          ))}
-        </Box>
-      ))}
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0, borderTop: `1px solid ${colors.neutral_300}` }}>
+              {goals.map((g, i) => (
+                <Box key={g.goalId} sx={{ px: 3, py: 2,
+                  borderBottom: i < goals.length - 1 ? `1px solid ${colors.neutral_200}` : 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{g.title}</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                        {g.description}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 0.5, mt: 0.75, flexWrap: 'wrap' }}>
+                        <Chip size="small" label={principleLabel(g.principle)}
+                          sx={{ height: 22, fontSize: 11, bgcolor: colors.blue_50, color: colors.blue_100 }} />
+                        <Chip size="small" label={g.status}
+                          sx={{ height: 22, fontSize: 11,
+                            bgcolor: g.status === 'Achieved' ? colors.green_100
+                              : g.status === 'Needs work' ? colors.orange_100 : colors.neutral_300,
+                            color: g.status === 'On track' ? colors.grey_200 : colors.white }} />
+                      </Box>
+                      <GoalClips clips={g.clips} onOpen={setClip} />
+                    </Box>
+
+                    <Box sx={{ width: 210, flexShrink: 0, pt: 0.25 }}>
+                      <Chip size="small" label={GOAL_PLAN}
+                        sx={{ height: 22, fontSize: 11, bgcolor: colors.blue_50, color: colors.blue_100 }} />
+                    </Box>
+
+                    <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column',
+                      alignItems: 'flex-end' }}>
+                      {MARKS.map(mk => (
+                        <MarkCheckbox key={mk.key} label={mk.label}
+                          checked={isMarked(athlete.id, g.goalId, mk.key)}
+                          onChange={v => setMark(athlete.id, g.goalId, mk.key, v)} />
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+              ))}
+            </AccordionDetails>
+          </Accordion>
+        )
+      })}
 
       {!shown.length && (
         <Box sx={{ py: 6, textAlign: 'center', borderTop: `1px solid ${colors.neutral_300}` }}>
