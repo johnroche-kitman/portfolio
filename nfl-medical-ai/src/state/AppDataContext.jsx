@@ -3,7 +3,11 @@ import { athletes as seedAthletes } from '../data/athletes'
 import { injuries as seedInjuries, seedNotes, seedRehabByInjury } from '../data/injuries'
 import { backgroundScreenQuestions } from '../data/backgroundScreenQuestions'
 
-const STORAGE_KEY = 'nfl-medical-ai-state-v1'
+// Bumped to v2 for the soccer rebrand — a v1 blob in a returning visitor's
+// localStorage still has the old NFL seed data (athletes, positions), and
+// since loadInitialState below trusts a cached blob over the fresh seed,
+// nothing short of a new key would pick up the rebranded data for them.
+const STORAGE_KEY = 'nfl-medical-ai-state-v2'
 
 function loadInitialState() {
   try {
