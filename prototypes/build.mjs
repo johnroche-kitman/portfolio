@@ -81,8 +81,12 @@ const page = `<!doctype html>
   .brands { display:flex; align-items:center; justify-content:center; gap:26px;
             margin:0 0 44px }
   .brand { display:inline-flex; align-items:center; gap:10px }
+  /* The ring mark is drawn to sit on the app's dark nav rail; on white it reads
+     as a thin floating outline, so it keeps its dark holder here. */
+  .brand-mark { width:34px; height:34px; border-radius:50%; background:var(--deep);
+                display:grid; place-items:center; flex-shrink:0 }
+  .brand-mark img { display:block }
   .brand-word { font-size:19px; font-weight:700; letter-spacing:-.01em; color:var(--ink) }
-  .brand img { display:block }
   .hudl { height:26px; width:auto; display:block }
   .brand-split { width:1px; height:26px; background:var(--rule) }
 
