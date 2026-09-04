@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Box, Button, Chip, Dialog, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper,
+  Avatar, Box, Button, Chip, Dialog, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper,
   Slider, Tooltip, Typography,
 } from '@mui/material'
 import PlayCircleIcon from '@mui/icons-material/PlayCircleOutline'
@@ -21,7 +21,7 @@ import BadgeIcon from '@mui/icons-material/BadgeOutlined'
 import LinkIcon from '@mui/icons-material/LinkOutlined'
 import colors from '../theme/tokens'
 import DistanceChart from './DistanceChart'
-import { athleteById } from '../data/athletes'
+import { athleteById, initialsOf, photoUrl } from '../data/athletes'
 import {
   CHART_METRICS, CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSource, clipSourceLine,
   clipSrc, clipWindow, distanceSeries, posterSrc, principleLabel, toSeconds,
@@ -489,7 +489,16 @@ export const ClipTile = ({ clip, onOpen, starred = false, onStar, showSource }) 
             sx={{ height: 18, fontSize: 10, fontWeight: 700, color: colors.white,
               bgcolor: source.type === 'Game' ? colors.blue_100 : colors.green_200 }} />
         ) : undefined} />
-      <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start', gap: 0.5, flex: 1 }}>
+      <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1.25, flex: 1 }}>
+        {/* Whose clip this is, before you read a word of it. The full-drill
+            playback has no single athlete, so it gets no avatar. */}
+        {athlete && (
+          <Avatar src={photoUrl(athlete)} alt=""
+            sx={{ width: 32, height: 32, mt: 0.25, flexShrink: 0,
+              bgcolor: colors.neutral_300, color: colors.grey_100, fontSize: 12 }}>
+            {initialsOf(athlete.name)}
+          </Avatar>
+        )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle2" sx={{ lineHeight: 1.35 }}>{clip.title}</Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>

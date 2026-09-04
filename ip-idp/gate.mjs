@@ -42,6 +42,16 @@ const key = await wc.subtle.deriveKey(
 const ct = await wc.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(code))
 const b64 = b => Buffer.from(b).toString('base64')
 
+/**
+ * Build stamp. GitHub Pages serves this HTML with max-age=600, so a browser can
+ * hold a previous build for ten minutes — long enough to test a fix and see the
+ * bug. This prints on every load and shows on the unlock card, so which build a
+ * tab is running is a fact rather than a guess.
+ */
+const BUILD_STAMP = new Date().toLocaleString('en-GB', {
+  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+})
+
 const page = `<!doctype html>
 <html lang="en">
 <head>
@@ -78,6 +88,7 @@ const page = `<!doctype html>
   #gate .err, #gate .busy { margin:14px 0 0; font-size:13px }
   #gate .err { color:#b3402f }
   #gate .busy { color:var(--dim) }
+  #gate .stamp { margin:20px 0 0; font-size:11px; color:var(--dim) }
   body.gated { margin:0; background:#f7f8f9 }
 </style>
 </head>
@@ -92,11 +103,13 @@ const page = `<!doctype html>
     <button id="go" type="submit">Unlock</button>
     <p id="err" class="err" role="alert" hidden>That passphrase did not work.</p>
     <p id="busy" class="busy" hidden>Decrypting…</p>
+    <p class="stamp">Build ${BUILD_STAMP}</p>
   </form>
 </div>
 <div id="root"></div>
 <script>
 (function(){
+  console.info('build ${BUILD_STAMP}');
   var SALT="${b64(salt)}",IV="${b64(iv)}",CT="${b64(ct)}",ITER=${ITER},KEY='kl_ip_proto';
   function bytes(b){var s=atob(b),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a}
   var f=document.getElementById('f'),pw=document.getElementById('pw'),

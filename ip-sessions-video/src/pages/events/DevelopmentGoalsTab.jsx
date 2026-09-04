@@ -7,7 +7,9 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import VideocamIcon from '@mui/icons-material/VideocamOutlined'
+import OpenInNewIcon from '@mui/icons-material/OpenInNewOutlined'
 import colors from '../../theme/tokens'
+import { idpUrl } from '../../links'
 import AthleteCell from '../../components/AthleteCell'
 import { MultiSelect, SearchInput } from '../../components/form'
 import { ClipDialog, ClipThumb, shareMessage } from '../../components/clips'
@@ -226,6 +228,15 @@ export default function DevelopmentGoalsTab() {
                   </Box>
                 </Paper>
               ))}
+
+              {/* The way through to the whole season. This tab is one session's
+                  worth of a goal; the plan is where the rest of the evidence,
+                  the coach's notes and the two reviews live. */}
+              <Button variant="text" endIcon={<OpenInNewIcon />} component="a"
+                href={idpUrl(athlete.id)} target="_blank" rel="noopener"
+                sx={{ mt: 2, ml: -0.5 }}>
+                Open {athlete.first || athlete.name.split(',')[1]?.trim()}’s development plan
+              </Button>
             </AccordionDetails>
           </Accordion>
         )

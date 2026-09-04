@@ -16,6 +16,7 @@ import WidgetsIcon from '@mui/icons-material/WidgetsOutlined'
 import DoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight'
 import DoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft'
 import colors from '../theme/tokens'
+import { PROTOTYPES_URL } from '../links'
 
 export const RAIL_COLLAPSED = 60
 export const RAIL_EXPANDED = 240
@@ -32,12 +33,9 @@ const BUILT = new Set(['/calendar'])
 
 const isBuilt = path => BUILT.has(path)
 
-/**
- * The logo goes back to the prototype landing page, the way it goes to the
- * dashboard in the live app. Absolute rather than relative: each prototype is
- * built against its own base, and the landing sits above both of them.
- */
-export const PROTOTYPES_URL = 'https://johnroche-kitman.github.io/portfolio/prototypes/'
+// The logo goes back to the prototype landing page, the way it goes to the
+// dashboard in the live app.
+export { PROTOTYPES_URL } from '../links'
 
 // Mirrors mainNavBarDesktop in the live app: same items, same order, same routes.
 const NAV_ITEMS = [
