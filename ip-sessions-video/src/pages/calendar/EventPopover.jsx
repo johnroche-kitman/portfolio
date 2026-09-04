@@ -12,10 +12,13 @@ const LONG_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satu
  * recurrence line, then Delete / Edit / More details.
  */
 /** Each event type has its own detail page. */
-const detailPath = ev =>
-  ev.type === EVENT_TYPES.GAME ? `/games/${ev.id}`
-    : ev.type === EVENT_TYPES.SESSION ? `/sessions/${ev.id}`
-    : `/events/${ev.id}`
+/**
+ * Only sessions open. Games and plain events keep their popover — a calendar
+ * with two of its three event types missing would not read as this club's
+ * week — but there is nothing built behind them for this demo, so More details
+ * is not offered rather than leading somewhere half-made.
+ */
+const detailPath = ev => (ev.type === EVENT_TYPES.SESSION ? `/sessions/${ev.id}` : null)
 
 export default function EventPopover({ event, anchorEl, onClose }) {
   const navigate = useNavigate()
@@ -65,7 +68,9 @@ export default function EventPopover({ event, anchorEl, onClose }) {
         <Button variant="text" color="error" size="small" onClick={onClose}>Delete</Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="text" size="small" onClick={() => go(`/events/${event.id}/edit`)}>Edit</Button>
-          <Button size="small" onClick={() => go(detailPath(event))}>More details</Button>
+          {!!detailPath(event) && (
+            <Button size="small" onClick={() => go(detailPath(event))}>More details</Button>
+          )}
         </Box>
       </Box>
     </Popover>

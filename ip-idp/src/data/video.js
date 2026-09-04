@@ -190,6 +190,10 @@ const CURATED = [
     title: 'Castellanos — first-time cross from the overlap',
     principles: ['Wide Play and Crossing'],
     peaks: { speed: 30.1, acceleration: 4.0, heartRate: 184 }, goals: ['g-overlap-cross'] },
+  { id: 'c19', file: 'session-13.mp4', drillId: 'd3', athleteId: 440559, at: '00:45:38', duration: '00:29',
+    title: 'Ellery — overlaps and delivers first time',
+    principles: ['Wide Play and Crossing'],
+    peaks: { speed: 29.8, acceleration: 4.1, heartRate: 186 }, goals: ['g-overlap-cross'] },
   { id: 'c09', file: 'session-09.mp4', drillId: 'd3', athleteId: 448120, at: '00:47:51', duration: '00:19',
     title: 'McAllister — left-foot finish at the near post',
     principles: ['Finishing'],
@@ -264,7 +268,11 @@ export const clipSourceLine = clip => {
 
 
 /* --------------------------------------------------------- participation
-   Everyone who took part in each drill. A clip exists for every one of them,
+   Everyone who took part in each drill, in the order the chart draws them: the
+   clip's own athlete leads and the next four fill the five lines, so a place
+   near the front of the list is what keeps someone on the chart.
+
+   A clip exists for every one of them,
    because that is how the Hudl tag actually works: the analyst cuts the drill
    once and every athlete on the pitch comes back with their own angle of it.
    Yamamoto is out injured, so he is in no drill and has no clips. */
@@ -273,11 +281,11 @@ const OUT = 449902
 const took_part = ids => ids.filter(id => id !== OUT)
 
 export const DRILL_PARTICIPANTS = {
-  d1: took_part([431887, 440316, 454521, 114397, 162023, 427191, 441234, 434584, 448120, 453803, 113734, 440559]),
-  d2: took_part([114397, 431887, 453803, 440316, 454521, 162023, 427191, 441234, 114416, 440559]),
-  d3: took_part([441234, 427191, 448120, 434584, 454521, 162023, 440559, 431887, 440316, 113734, 114397]),
-  d4: took_part([454521, 434584, 431887, 453803, 441234, 448120, 162023, 427191, 114397, 440316, 440559, 114416]),
-  d5: took_part([162023, 431887, 114397, 453803, 441234, 434584, 448120, 427191, 440316, 454521, 113734, 440559, 114416]),
+  d1: took_part([431887, 440559, 440316, 454521, 114397, 162023, 427191, 441234, 434584, 448120, 453803, 113734]),
+  d2: took_part([114397, 440559, 431887, 453803, 440316, 454521, 162023, 427191, 441234, 114416]),
+  d3: took_part([441234, 440559, 427191, 448120, 434584, 454521, 162023, 431887, 440316, 113734, 114397]),
+  d4: took_part([454521, 440559, 434584, 431887, 453803, 441234, 448120, 162023, 427191, 114397, 440316, 114416]),
+  d5: took_part([162023, 440559, 431887, 114397, 453803, 441234, 434584, 448120, 427191, 440316, 454521, 113734, 114416]),
 }
 
 /* ------------------------------------------------------ generated clips

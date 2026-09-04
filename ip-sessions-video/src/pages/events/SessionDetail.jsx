@@ -709,7 +709,7 @@ const tabSlug = t => t.toLowerCase().replace(/\s+/g, '-')
  * simply do not respond — the ripple is off and the cursor stays default, so
  * nothing invites the click in the first place.
  */
-const LOCKED_TABS = new Set(['Athlete selection', 'Staff selection', 'Imported data'])
+const LOCKED_TABS = new Set(['Athlete selection', 'Staff selection', 'Collection', 'Imported data'])
 
 export default function SessionDetail() {
   const { id } = useParams()

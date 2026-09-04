@@ -22,7 +22,7 @@ import { PRINCIPLE_NAMES, clipSource, drillById, principleLabel } from '../../da
  * lists only the athletes who both took part and have a goal set, which is why
  * this is a fixed roster rather than everyone selected.
  */
-const GOAL_ROSTER = [431887, 440316, 454521, 114397, 453803, 441234, 427191, 448120, 434584, 162023]
+const GOAL_ROSTER = [431887, 440559, 440316, 454521, 114397, 453803, 441234, 427191, 448120, 434584, 162023]
 
 /** The two ways a goal gets worked on, and what the checkboxes mark off. */
 const MARKS = [
