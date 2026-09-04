@@ -23,7 +23,10 @@ export default function AthleteCell({ athlete, onClick, status, size = 34 }) {
         alignItems: 'center',
         gap: 1.5,
         minWidth: 0,
-        cursor: onClick ? 'pointer' : 'default',
+        // Inherit rather than force 'default': inside a clickable table row the
+        // cell would otherwise kill the row's hand cursor exactly where the
+        // reader is aiming — at the athlete's name.
+        cursor: onClick ? 'pointer' : 'inherit',
       }}
     >
       <Box sx={{ position: 'relative', flexShrink: 0 }}>

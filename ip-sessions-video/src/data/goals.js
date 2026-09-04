@@ -9,7 +9,9 @@
  * The catalogue holds the wording; `athleteGoals` holds one athlete's instance
  * of it, with their own progress and their own coach commentary.
  */
-import { clips } from './video'
+import {
+  GAMES, clips, drillById, principleLabel, seeded, videoDrills, videoSession, windowFor,
+} from './video'
 
 /** The review the goals were set under — the chip on every goal row. */
 export const GOAL_PLAN = '2026/27 Development Plan'
@@ -228,15 +230,95 @@ export const athleteGoals = [
 
 export const GOAL_STATUSES = ['On track', 'Needs work', 'Achieved']
 
-/** An athlete's goals, resolved against the catalogue and their tagged clips. */
-export const goalsForAthlete = athleteId =>
+/* ---------------------------------------------------------------- evidence
+   The clips filed against one athlete's goal.
+
+   The hand-written tags in `video.js` are the ones with a story worth telling,
+   but a goal set in August and reviewed in September should have gathered more
+   than one. The rest are generated: the athlete's own session clips where the
+   drill worked the goal's principle, plus game clips drawn across the season's
+   fixtures. Everything derives from the athlete and the goal, so a reload never
+   reshuffles a plan.
+
+   Each generated clip carries its own window into the recording, so it plays
+   its own stretch rather than the whole file. */
+
+const SESSION_PHRASES = [
+  'works the picture in the drill', 'gets it right under pressure', 'repeats it on the far side',
+  'holds the detail late in the drill', 'first look is the right one',
+]
+
+const GAME_PHRASES = [
+  'the same picture in the game', 'takes it into the game', 'holds up against a real press',
+  'under pressure in the second half', 'from the first phase',
+]
+
+const secs = t => `00:${String(t).padStart(2, '0')}`
+
+const hhmmss = total => [Math.floor(total / 3600), Math.floor((total % 3600) / 60), Math.floor(total % 60)]
+  .map(n => String(n).padStart(2, '0')).join(':')
+
+const surname = name => String(name).split(',')[0]
+
+/** A generated clip filed against one athlete's goal. */
+const evidenceClip = ({ athleteId, athleteName, goal, index, fromGame }) => {
+  const seed = `${athleteId}-${goal.id}-${index}`
+  const r = seeded(seed)
+  const length = 20 + Math.floor(seeded(`${seed}-len`) * 30)
+  const drill = videoDrills[Math.floor(seeded(`${seed}-drill`) * videoDrills.length)]
+  const game = GAMES[Math.floor(seeded(`${seed}-game`) * GAMES.length)]
+  const phrases = fromGame ? GAME_PHRASES : SESSION_PHRASES
+
+  return {
+    id: `ev-${seed}`,
+    file: `ev-${seed}.mp4`,
+    drillId: fromGame ? null : drill.id,
+    athleteId,
+    at: hhmmss(Math.floor(r * (fromGame ? 5400 : 5000)) + 120),
+    duration: secs(length),
+    title: `${surname(athleteName)} — ${phrases[index % phrases.length]}`,
+    principles: [goal.principle],
+    peaks: {
+      speed: Math.round((21 + r * 13) * 10) / 10,
+      acceleration: Math.round((2.3 + seeded(`${seed}-a`) * 2.4) * 10) / 10,
+      heartRate: Math.round(155 + seeded(`${seed}-h`) * 45),
+    },
+    goals: [goal.id],
+    window: windowFor(seed, length),
+    ...(fromGame ? { source: { type: 'Game', ...game } } : {}),
+  }
+}
+
+/**
+ * Five to eight clips per goal, mixed session and game, with the hand-written
+ * ones first so the moments that were actually chosen lead the evidence.
+ */
+const evidenceFor = (athleteId, athleteName, goal) => {
+  const tagged = clips.filter(c => c.athleteId === athleteId && c.goals.includes(goal.id))
+  const want = 5 + Math.floor(seeded(`${athleteId}-${goal.id}-n`) * 4)
+  const extra = []
+  for (let i = 0; extra.length + tagged.length < want; i += 1) {
+    // Alternate, starting with a game clip: a plan that was all training
+    // footage would not be evidence a coach could argue from.
+    extra.push(evidenceClip({
+      athleteId, athleteName, goal, index: i, fromGame: i % 2 === 0,
+    }))
+  }
+  return [...tagged, ...extra]
+}
+
+/** An athlete's goals, resolved against the catalogue and their evidence. */
+export const goalsForAthlete = (athleteId, athleteName = '') =>
   athleteGoals
     .filter(g => g.athleteId === athleteId)
-    .map(g => ({
-      ...g,
-      ...goalById(g.goalId),
-      clips: clips.filter(c => c.athleteId === athleteId && c.goals.includes(g.goalId)),
-    }))
+    .map(g => {
+      const goal = goalById(g.goalId)
+      return {
+        ...g,
+        ...goal,
+        clips: evidenceFor(athleteId, athleteName, goal),
+      }
+    })
 
 /** Athletes who have goals, in the order the squad list shows them. */
 export const goalAthleteIds = [...new Set(athleteGoals.map(g => g.athleteId))]
@@ -244,3 +326,7 @@ export const goalAthleteIds = [...new Set(athleteGoals.map(g => g.athleteId))]
 /** Clips tagged to one athlete's instance of a goal. */
 export const clipsForAthleteGoal = (athleteId, goalId) =>
   clips.filter(c => c.athleteId === athleteId && c.goals.includes(goalId))
+
+/** Only this session's clips for a goal — what a session page should show. */
+export const sessionClipsForGoal = (athleteId, goalId) =>
+  clips.filter(c => c.athleteId === athleteId && c.goals.includes(goalId) && c.drillId)

@@ -7,12 +7,14 @@ import {
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import LockIcon from '@mui/icons-material/LockOutlined'
+import EditIcon from '@mui/icons-material/EditOutlined'
+import AddIcon from '@mui/icons-material/Add'
 import colors from '../../theme/tokens'
 import AppShell from '../../components/AppShell'
-import { ClipDialog, ClipThumb, shareMessage } from '../../components/clips'
+import { ClipCarousel, ClipDialog, shareMessage } from '../../components/clips'
 import { athleteById, initialsOf, photoUrl } from '../../data/athletes'
 import { GOAL_PLAN, goalsForAthlete } from '../../data/goals'
-import { clipSource, drillById, principleLabel } from '../../data/video'
+import { drillById, principleLabel } from '../../data/video'
 
 const STATUS_TONE = {
   'Needs work': { bg: colors.orange_200, fg: colors.white },
@@ -34,11 +36,19 @@ const today = () => {
 /* ---------------------------------------------------------------- evidence */
 
 /**
- * The clips Hudl tagged against this goal, with where each one came from. The
- * source line is the point of the section: a coach arguing that a goal is
- * progressing wants the game and the date, not just the footage.
+ * The clips filed against one goal, on the same carousel the Video tab uses.
+ * A goal gathers five to eight over a season, which is too many to lay flat
+ * under three of them on a page.
+ *
+ * Starred clips lead the order. A coach who has picked out the two clips that
+ * make the argument should find them first, not on page three.
  */
-const Evidence = ({ clips, onOpen }) => {
+const Evidence = ({ clips, onOpen, starred, onStar }) => {
+  const ordered = useMemo(() => {
+    const rank = c => (starred.has(c.id) ? 0 : 1)
+    return [...clips].sort((a, b) => rank(a) - rank(b))
+  }, [clips, starred])
+
   if (!clips.length) {
     return (
       <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, bgcolor: colors.neutral_100,
@@ -51,31 +61,8 @@ const Evidence = ({ clips, onOpen }) => {
     )
   }
   return (
-    <Box sx={{ display: 'grid', gap: 2,
-      gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' } }}>
-      {clips.map(c => {
-        const s = clipSource(c)
-        return (
-          <Paper key={c.id} variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden' }}>
-            <ClipThumb file={c.file} duration={c.duration} height={112} onClick={() => onOpen(c)}
-              badge={<Chip size="small" label={s.type}
-                sx={{ height: 18, fontSize: 10, fontWeight: 700, color: colors.white,
-                  bgcolor: s.type === 'Game' ? colors.blue_100 : colors.green_200 }} />} />
-            <Box sx={{ p: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ lineHeight: 1.35 }}>{c.title}</Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.25 }}>
-                {s.type === 'Game'
-                  ? `${s.opposition} · ${s.competition}`
-                  : `${s.sessionName} · ${s.competition}`}
-              </Typography>
-              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                {s.date} · {c.at}
-              </Typography>
-            </Box>
-          </Paper>
-        )
-      })}
-    </Box>
+    <ClipCarousel clips={ordered} onOpen={onOpen} starred={starred} onStar={onStar}
+      label="Tagged clips" showSource />
   )
 }
 
@@ -153,14 +140,23 @@ function Commentary({ notes, composing, onCompose, onCancel, onSave }) {
 
 /* ------------------------------------------------------------------- goal */
 
-const GoalCard = ({ goal, index, composing, onCompose, onCancel, onSave, onOpenClip }) => {
+const GoalCard = ({ goal, index, composing, onCompose, onCancel, onSave, onOpenClip,
+  starred, onStar }) => {
   const tone = STATUS_TONE[goal.status] || STATUS_TONE['On track']
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 3, mb: 2.5 }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 1 }}>
         <Typography variant="h6" sx={{ color: colors.grey_150, lineHeight: 1.4 }}>{index + 1}</Typography>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{ fontSize: 18 }}>{goal.title}</Typography>
+        {/* Hovering the title and description shows a pencil, so it is clear the
+            wording is editable. Not wired up: editing a goal is its own panel. */}
+        <Box sx={{ flex: 1, minWidth: 0, '&:hover .goal-edit': { opacity: 1 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography variant="subtitle1" sx={{ fontSize: 18 }}>{goal.title}</Typography>
+            <Tooltip title="Edit the goal title and description">
+              <EditIcon className="goal-edit"
+                sx={{ fontSize: 17, color: colors.grey_100, opacity: 0, transition: 'opacity .15s' }} />
+            </Tooltip>
+          </Box>
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.25 }}>
             {goal.description}
           </Typography>
@@ -179,10 +175,8 @@ const GoalCard = ({ goal, index, composing, onCompose, onCancel, onSave, onOpenC
       </Box>
 
       <Divider sx={{ my: 2 }} />
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Tagged clips {goal.clips.length ? `(${goal.clips.length})` : ''}
-      </Typography>
-      <Evidence clips={goal.clips} onOpen={onOpenClip} />
+      {/* No heading here: the carousel states "Tagged clips 1–3 of 8" itself. */}
+      <Evidence clips={goal.clips} onOpen={onOpenClip} starred={starred} onStar={onStar} />
 
       <Divider sx={{ my: 2 }} />
       <Commentary notes={goal.notes} composing={composing} onCompose={onCompose}
@@ -205,10 +199,17 @@ export default function IdpAthlete() {
   const athlete = athleteById(id)
 
   // Notes live in page state so a note added in the prototype stays on screen.
-  const [goals, setGoals] = useState(() => goalsForAthlete(Number(id)))
+  const [goals, setGoals] = useState(() => goalsForAthlete(Number(id), athlete?.name))
   const [composing, setComposing] = useState(null)   // goalId
+  const [starred, setStarred] = useState(() => new Set())
   const [clip, setClip] = useState(null)
   const [toast, setToast] = useState('')
+
+  const toggleStar = id => setStarred(s2 => {
+    const next = new Set(s2)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
 
   const totals = useMemo(() => ({
     clips: new Set(goals.flatMap(g => g.clips.map(c => c.id))).size,
@@ -290,6 +291,7 @@ export default function IdpAthlete() {
           <AccordionDetails sx={{ p: 3, bgcolor: colors.neutral_100 }}>
             {goals.length ? goals.map((g, i) => (
               <GoalCard key={g.goalId} goal={g} index={i} onOpenClip={setClip}
+                starred={starred} onStar={toggleStar}
                 composing={composing === g.goalId}
                 onCompose={() => setComposing(g.goalId)}
                 onCancel={() => setComposing(null)}
@@ -301,20 +303,28 @@ export default function IdpAthlete() {
                 </Typography>
               </Paper>
             )}
+
+            {/* Outlined, not contained: the page's one primary is the Add note
+                button on whichever commentary is open. */}
+            <Button variant="outlined" startIcon={<AddIcon />}
+              onClick={() => setToast('Opens the goal panel in the built product')}>
+              Add goal
+            </Button>
           </AccordionDetails>
         </Accordion>
 
         {/* --------------------------------------------- the two stub sections */}
+        {/* Named but not built. Left at full contrast rather than disabled: a
+            faded panel reads as broken, where a lock reads as "not this time".
+            Controlled to expanded={false}, so it cannot open. */}
         {STUB_SECTIONS.map(s => (
-          <Accordion key={s.key} disabled disableGutters elevation={0}
+          <Accordion key={s.key} expanded={false} disableGutters elevation={0}
             sx={{ border: `1px solid ${colors.neutral_300}`, borderRadius: 1, mb: 2,
-              '&::before': { display: 'none' },
-              '&.Mui-disabled': { bgcolor: colors.white, opacity: 1 } }}>
-            <AccordionSummary expandIcon={<LockIcon fontSize="small" />} sx={{ px: 3, py: 1 }}>
+              '&::before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<LockIcon fontSize="small" />} disableRipple
+              sx={{ px: 3, py: 1, cursor: 'default' }}>
               <Box>
-                <Typography variant="subtitle1" sx={{ fontSize: 18, color: colors.grey_100 }}>
-                  {s.title}
-                </Typography>
+                <Typography variant="subtitle1" sx={{ fontSize: 18 }}>{s.title}</Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   {s.hint} Not built in this prototype.
                 </Typography>

@@ -73,16 +73,7 @@ const page = `<!doctype html>
   body.gated { background:#f7f8f9 }
 
   /* ---- page */
-  .masthead { display:flex; align-items:center; gap:14px; padding:16px 32px;
-              border-bottom:1px solid var(--rule) }
-  .mark { width:34px; height:34px; border-radius:50%; background:var(--navy); color:#fff;
-          display:grid; place-items:center; font-weight:700; font-size:15px; flex-shrink:0 }
-  .masthead .eyebrow { margin:0; font-size:11px; font-weight:700; letter-spacing:.08em;
-                       text-transform:uppercase; color:var(--dim) }
-  .masthead h1 { margin:0; font-size:20px; font-weight:700 }
-
-  .wrap { max-width:1000px; margin:0 auto; padding:40px 32px 64px }
-  .lede { margin:0 0 32px; font-size:15px; line-height:1.65; color:var(--dim); max-width:70ch }
+  .wrap { max-width:1000px; margin:0 auto; padding:48px 32px 64px }
 
   .cards { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)) }
   .card { display:flex; flex-direction:column; border:1px solid var(--rule); border-radius:8px;
@@ -112,11 +103,8 @@ const page = `<!doctype html>
         background:var(--navy); color:#fff; font-size:14px; font-weight:600 }
   .card:hover .go { filter:brightness(1.12) }
 
-  .note { margin:40px 0 0; padding-top:24px; border-top:1px solid var(--rule);
-          font-size:13px; line-height:1.65; color:var(--dim); max-width:80ch }
-
   @media (max-width:520px) {
-    .wrap { padding:28px 20px 48px }
+    .wrap { padding:32px 20px 48px }
     .cards { grid-template-columns:1fr }
   }
 </style>

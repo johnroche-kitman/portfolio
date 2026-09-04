@@ -4,6 +4,8 @@ import {
   Slider, Tooltip, Typography,
 } from '@mui/material'
 import PlayCircleIcon from '@mui/icons-material/PlayCircleOutline'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PauseIcon from '@mui/icons-material/Pause'
 import CloseIcon from '@mui/icons-material/Close'
@@ -21,8 +23,8 @@ import colors from '../theme/tokens'
 import DistanceChart from './DistanceChart'
 import { athleteById } from '../data/athletes'
 import {
-  CHART_METRICS, CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSourceLine, clipSrc,
-  clipWindow, distanceSeries, posterSrc, principleLabel, toSeconds,
+  CHART_METRICS, CLIPS, PEAK_METRICS, RECORDING, SHARE_TARGETS, clipSource, clipSourceLine,
+  clipSrc, clipWindow, distanceSeries, posterSrc, principleLabel, toSeconds,
 } from '../data/video'
 
 /* ------------------------------------------------------------------ pieces */
@@ -76,15 +78,20 @@ export const placeholderSrc = file => {
   return `${CLIPS}placeholders/hudl-0${n + 1}.jpg`
 }
 
-const HudlBackdrop = ({ file, mark = '42%' }) => (
+const HudlBackdrop = ({ file, mark = '42%', corner = false }) => (
   <Box sx={{ position: 'absolute', inset: 0, bgcolor: colors.grey_400, overflow: 'hidden' }}>
     <Box component="img" src={placeholderSrc(file)} alt="" aria-hidden
       sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
     {/* Scrim: the watermark has to read over a bright pitch as well as a dark one. */}
     <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(13,27,48,0.42)' }} />
     {!!mark && (
-      <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-        <HudlMark width={mark} />
+      // Centred on a thumbnail, where it is the only thing on the still. Down in
+      // the corner behind a player's preview, where the play button owns the
+      // middle and two glyphs stacked on each other read as a mistake.
+      <Box sx={corner
+        ? { position: 'absolute', left: 14, bottom: 12 }
+        : { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+        <HudlMark width={corner ? 76 : mark} />
       </Box>
     )}
   </Box>
@@ -137,6 +144,7 @@ export const ClipPlayer = ({
 }) => {
   const [failed, setFailed] = useState(false)
   const [stalled, setStalled] = useState(false)
+  const [started, setStarted] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [at, setAt] = useState(0)
   const [span, setSpan] = useState(() => (win ? win.out - win.in : fallbackDuration || 0))
@@ -207,6 +215,8 @@ export const ClipPlayer = ({
     if (autoPlay) v.play().catch(() => {})
   }
 
+  useEffect(() => { setStarted(false) }, [file, win?.in])
+
   const toggle = () => {
     const v = ref.current
     if (!v) return
@@ -255,12 +265,25 @@ export const ClipPlayer = ({
             playsInline preload="metadata" onClick={toggle}
             onError={() => setFailed(true)}
             onLoadedMetadata={onMeta}
-            onPlay={() => { setPlaying(true); stop(); follow() }}
+            onPlay={() => { setStarted(true); setPlaying(true); stop(); follow() }}
             onPause={() => { setPlaying(false); stop() }}
             sx={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain',
               bgcolor: colors.grey_400, cursor: 'pointer' }} />
         )}
-        {!failed && stalled && (
+        {/* The still, watermarked, until the coach asks for the video. Nothing
+            plays on open: a modal that starts talking the moment it appears is
+            a modal you fight, and the chart is worth reading first. */}
+        {!failed && !started && (
+          <Box onClick={toggle}
+            sx={{ position: 'absolute', inset: 0, cursor: 'pointer' }}>
+            <HudlBackdrop file={file} corner />
+            <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+              <PlayCircleIcon sx={{ fontSize: 64, color: colors.white,
+                filter: 'drop-shadow(0 2px 8px rgba(13,27,48,.6))' }} />
+            </Box>
+          </Box>
+        )}
+        {!failed && stalled && !started && (
           <Box sx={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', px: 4,
             bgcolor: 'rgba(13,27,48,.72)' }}>
             <Paper variant="outlined" sx={{ borderColor: colors.neutral_400, p: 2.5, maxWidth: 420,
@@ -322,6 +345,8 @@ export const ClipPlayer = ({
     </Box>
   )
 }
+
+const PER_PAGE = 3
 
 /** m:ss for the player's own readout. */
 const clock = t => {
@@ -429,10 +454,16 @@ export const shareMessage = (target, clip) => {
  */
 export const ClipTile = ({ clip, onOpen, starred = false, onStar, showSource }) => {
   const athlete = athleteById(clip.athleteId)
+  const source = clipSource(clip)
   return (
     <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, overflow: 'hidden',
       display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <ClipThumb file={clip.file} duration={clip.duration} onClick={() => onOpen(clip)} />
+      <ClipThumb file={clip.file} duration={clip.duration} onClick={() => onOpen(clip)}
+        badge={showSource ? (
+          <Chip size="small" label={source.type}
+            sx={{ height: 18, fontSize: 10, fontWeight: 700, color: colors.white,
+              bgcolor: source.type === 'Game' ? colors.blue_100 : colors.green_200 }} />
+        ) : undefined} />
       <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start', gap: 0.5, flex: 1 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="subtitle2" sx={{ lineHeight: 1.35 }}>{clip.title}</Typography>
@@ -449,6 +480,79 @@ export const ClipTile = ({ clip, onOpen, starred = false, onStar, showSource }) 
         {onStar && <StarButton on={starred} onToggle={() => onStar(clip.id)} />}
       </Box>
     </Paper>
+  )
+}
+
+/* ---------------------------------------------------------------- carousel */
+
+/**
+ * A drill has a clip for every athlete who took part, which is ten to thirteen
+ * of them. A grid of thirteen tiles buries the next drill; three at a time with
+ * arrows keeps every drill on screen and still reachable.
+ *
+ * Paging is clamped to the last page that still has clips, so narrowing a
+ * filter never leaves the reader looking at an empty page three. The pages sit
+ * on a sliding track — see below for why they are all mounted.
+ */
+export function ClipCarousel({ clips, onOpen, starred, onStar, label = 'Individual clips', showSource }) {
+  const [page, setPage] = useState(0)
+  const pages = Math.max(1, Math.ceil(clips.length / PER_PAGE))
+  const current = Math.min(page, pages - 1)
+  const first = current * PER_PAGE + 1
+  const last = Math.min(clips.length, first + PER_PAGE - 1)
+
+  // Every page is mounted and the whole track slides, so the page leaving and
+  // the page arriving both move. Rendering one page at a time would only ever
+  // animate the arrival, and would re-fetch each thumbnail on the way back.
+  const groups = Array.from({ length: pages }, (_, i) => clips.slice(i * PER_PAGE, (i + 1) * PER_PAGE))
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2">
+          {label}
+          <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400, ml: 1 }}>
+            {first}–{last} of {clips.length}
+          </Box>
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" aria-label="Previous clips" disabled={current === 0}
+            onClick={() => setPage(current - 1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label="More clips" disabled={current >= pages - 1}
+            onClick={() => setPage(current + 1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Box sx={{ overflow: 'hidden' }}>
+        <Box sx={{
+          display: 'flex',
+          width: `${pages * 100}%`,
+          transform: `translateX(-${(current * 100) / pages}%)`,
+          transition: 'transform .34s cubic-bezier(.4, 0, .2, 1)',
+          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+        }}>
+          {groups.map((group, i) => (
+            <Box key={i} aria-hidden={i !== current}
+              sx={{ width: `${100 / pages}%`, flexShrink: 0, display: 'grid', gap: 2,
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: `repeat(${PER_PAGE}, 1fr)` },
+                alignContent: 'start',
+                // A page off to the side must not be reachable by tab or click.
+                pointerEvents: i === current ? 'auto' : 'none' }}>
+              {group.map(c => (
+                <ClipTile key={c.id} clip={c} onOpen={onOpen} showSource={showSource}
+                  starred={starred.has(c.id)} onStar={onStar} />
+              ))}
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
   )
 }
 
@@ -486,10 +590,18 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
   useEffect(() => { setTime(0); setMeasured(null) }, [clip?.id])
 
   const series = useMemo(
-    () => (clip?.drillId
-      ? distanceSeries({ drillId: clip.drillId, athleteId: clip.athleteId, duration: span, metric })
+    () => (clip
+      ? distanceSeries({
+        drillId: clip.drillId,
+        athleteId: clip.athleteId,
+        duration: span,
+        metric,
+        // Game clips have no drill to seed on, so the source stands in and the
+        // same clip keeps the same lines every time it is opened.
+        scope: clip.drillId || clipSourceLine(clip),
+      })
       : []),
-    [clip?.drillId, clip?.athleteId, span, metric],
+    [clip?.id, clip?.drillId, clip?.athleteId, span, metric],
   )
 
   if (!clip) return null
@@ -517,23 +629,13 @@ export const ClipDialog = ({ clip, drill, onClose, onShare, starred = false, onS
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 3 }}>
         <Box sx={{ display: 'grid', gap: 3, alignItems: 'start',
           gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.15fr) minmax(320px, 1fr)' } }}>
-          <ClipPlayer file={RECORDING.file} autoPlay height={340}
+          <ClipPlayer file={RECORDING.file} height={340}
             window={win} nominalTotal={RECORDING.seconds}
             fallbackDuration={win.out - win.in}
             onTime={setTime} onSpan={d => Number.isFinite(d) && d > 0 && setMeasured(d)} />
-          {series.length ? (
-            <DistanceChart series={series} duration={span} playhead={time}
-              drillName={drill?.name} metrics={CHART_METRICS} metric={metric}
-              onMetricChange={setMetric} />
-          ) : (
-            <Paper variant="outlined" sx={{ borderColor: colors.neutral_300, p: 2 }}>
-              <Typography variant="subtitle1">Distance covered</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                These metrics are tracked per drill. This clip came from a game, so it has no
-                drill to plot against.
-              </Typography>
-            </Paper>
-          )}
+          <DistanceChart series={series} duration={span} playhead={time}
+            drillName={drill?.name || clipSource(clip).opposition} metrics={CHART_METRICS}
+            metric={metric} onMetricChange={setMetric} />
         </Box>
 
         <Divider sx={{ my: 3 }} />

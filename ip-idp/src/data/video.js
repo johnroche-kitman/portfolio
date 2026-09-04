@@ -344,6 +344,21 @@ export const clipsForDrill = id => clips
   .filter(c => c.drillId === id)
   .sort((a, b) => a.at.localeCompare(b.at))
 
+/* ------------------------------------------------------------------ games
+   The season so far. Game evidence is drawn from these, which is what makes a
+   development goal read as a season's worth rather than one afternoon. */
+export const GAMES = [
+  { date: '30 Aug 2026', opposition: 'Riverside Athletic (Home)', competition: 'Premier League 2' },
+  { date: '23 Aug 2026', opposition: 'Carrick Town (Away)', competition: 'Premier League 2' },
+  { date: '16 Aug 2026', opposition: 'Northgate United (Away)', competition: 'Premier League 2' },
+  { date: '9 Aug 2026', opposition: 'Ashford Rangers (Home)', competition: 'EFL Youth Alliance' },
+  { date: '2 Aug 2026', opposition: 'Denholm City (Away)', competition: 'Premier League 2' },
+  { date: '26 Jul 2026', opposition: 'Westbrook Park (Home)', competition: 'Friendly' },
+]
+
+/** Deterministic pseudo-random in [0,1) from a string, for generated fixtures. */
+export const seeded = hash
+
 /* ---------------------------------------------------------------- windows
    Where each clip sits inside the recording. Drills take equal segments of it
    in their running order; a drill's clips are spread across its segment in the
@@ -390,11 +405,31 @@ export const windowLabel = w => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-/** The in and out points for a clip, in seconds into the recording. */
+/**
+ * A distinct window of `seconds` inside the recording, derived from a seed, so
+ * an evidence clip generated elsewhere still plays its own stretch rather than
+ * the whole file. Deterministic: the same clip always plays the same footage.
+ */
+export const windowFor = (seed, seconds) => {
+  const len = Math.min(seconds, RECORDING.seconds)
+  const start = hash(`${seed}-win`) * (RECORDING.seconds - len)
+  return { in: start, out: start + len }
+}
+
+/**
+ * The in and out points for a clip, in seconds into the recording.
+ *
+ * A clip with no drill — a game clip — still gets a window of its own length
+ * rather than the whole recording, which is what made the player read 2:30 for
+ * a twelve-second clip.
+ */
 export const clipWindow = clip => {
   if (!clip) return { in: 0, out: RECORDING.seconds }
   if (clip.window) return clip.window
-  return windows.get(clip.id) || drillWindow(clip.drillId)
+  const known = windows.get(clip.id)
+  if (known) return known
+  if (clip.drillId) return drillWindow(clip.drillId)
+  return windowFor(clip.id, toSecondsOf(clip.duration || '0:20'))
 }
 
 export const clipById = id => clips.find(c => c.id === id)
@@ -499,9 +534,17 @@ export const chartMetric = key => CHART_METRICS.find(m => m.key === key) || CHAR
  */
 export const distanceSeries = ({
   drillId, athleteId, duration, samples = 48, lines = DISTANCE_LINES, metric = 'distance',
+  scope,
 }) => {
   const { share } = chartMetric(metric)
-  const pool = DRILL_PARTICIPANTS[drillId] || []
+  // A drill has a known participant list. A game clip does not, so the pool is
+  // the squad — the point of the chart is this athlete against team-mates over
+  // the same stretch either way.
+  const pool = DRILL_PARTICIPANTS[drillId]
+    || ATHLETES.filter(a => a.squad === videoSession.squad).map(a => a.id)
+  // Seeding on the drill (or the game) keeps a clip's lines stable across
+  // reloads and different between contexts.
+  const seedScope = drillId || scope || 'game'
   const ordered = [
     ...(athleteId && pool.includes(athleteId) ? [athleteId] : []),
     ...pool.filter(id => id !== athleteId),
@@ -511,8 +554,8 @@ export const distanceSeries = ({
 
   return ordered.map(id => {
     const athlete = ATHLETES.find(a => a.id === id)
-    const base = baseRate(drillId, id)
-    const k = shape(drillId, id)
+    const base = baseRate(seedScope, id)
+    const k = shape(seedScope, id)
     // The metric's share scales the whole curve, so the shape — where in the
     // clip this athlete worked hardest — survives the switch.
     const factor = share(id)

@@ -11,7 +11,7 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibraryOutlined'
 import colors from '../../theme/tokens'
 import { MultiSelect, SearchInput, SelectField } from '../../components/form'
 import {
-  ClipDialog, ClipTile, FullDrillCard, PrincipleChips, shareMessage,
+  ClipCarousel, ClipDialog, FullDrillCard, PrincipleChips, shareMessage,
 } from '../../components/clips'
 import { athleteById } from '../../data/athletes'
 import {
@@ -23,80 +23,6 @@ import {
 const shortActivity = a => a.replace(/\s*\(.*\)$/, '')
 
 const NO_METRIC = ''
-const PER_PAGE = 3
-
-/* ---------------------------------------------------------------- carousel */
-
-/**
- * A drill has a clip for every athlete who took part, which is ten to thirteen
- * of them. A grid of thirteen tiles buries the next drill; three at a time with
- * arrows keeps every drill on screen and still reachable.
- *
- * Paging is clamped to the last page that still has clips, so narrowing a
- * filter never leaves the reader looking at an empty page three. The pages sit
- * on a sliding track — see below for why they are all mounted.
- */
-function ClipCarousel({ clips, onOpen, starred, onStar }) {
-  const [page, setPage] = useState(0)
-  const pages = Math.max(1, Math.ceil(clips.length / PER_PAGE))
-  const current = Math.min(page, pages - 1)
-  const first = current * PER_PAGE + 1
-  const last = Math.min(clips.length, first + PER_PAGE - 1)
-
-  // Every page is mounted and the whole track slides, so the page leaving and
-  // the page arriving both move. Rendering one page at a time would only ever
-  // animate the arrival, and would re-fetch each thumbnail on the way back.
-  const groups = Array.from({ length: pages }, (_, i) => clips.slice(i * PER_PAGE, (i + 1) * PER_PAGE))
-
-  return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="subtitle2">
-          Individual clips
-          <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400, ml: 1 }}>
-            {first}–{last} of {clips.length}
-          </Box>
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton size="small" aria-label="Previous clips" disabled={current === 0}
-            onClick={() => setPage(current - 1)}
-            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
-            <ChevronLeftIcon fontSize="small" />
-          </IconButton>
-          <IconButton size="small" aria-label="More clips" disabled={current >= pages - 1}
-            onClick={() => setPage(current + 1)}
-            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      </Box>
-
-      <Box sx={{ overflow: 'hidden' }}>
-        <Box sx={{
-          display: 'flex',
-          width: `${pages * 100}%`,
-          transform: `translateX(-${(current * 100) / pages}%)`,
-          transition: 'transform .34s cubic-bezier(.4, 0, .2, 1)',
-          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-        }}>
-          {groups.map((group, i) => (
-            <Box key={i} aria-hidden={i !== current}
-              sx={{ width: `${100 / pages}%`, flexShrink: 0, display: 'grid', gap: 2,
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: `repeat(${PER_PAGE}, 1fr)` },
-                alignContent: 'start',
-                // A page off to the side must not be reachable by tab or click.
-                pointerEvents: i === current ? 'auto' : 'none' }}>
-              {group.map(c => (
-                <ClipTile key={c.id} clip={c} onOpen={onOpen}
-                  starred={starred.has(c.id)} onStar={onStar} />
-              ))}
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Box>
-  )
-}
 
 /* ------------------------------------------------------------------- page */
 

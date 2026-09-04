@@ -13,7 +13,7 @@ import AthleteCell from '../../components/AthleteCell'
 import { MultiSelect, SearchInput } from '../../components/form'
 import { ClipDialog, ClipThumb, shareMessage } from '../../components/clips'
 import { athleteById, positions } from '../../data/athletes'
-import { GOAL_TYPES, GOAL_PLAN, goalsForAthlete } from '../../data/goals'
+import { GOAL_TYPES, GOAL_PLAN, goalsForAthlete, sessionClipsForGoal } from '../../data/goals'
 import { PRINCIPLE_NAMES, clipSource, drillById, principleLabel } from '../../data/video'
 
 /**
@@ -123,14 +123,15 @@ export default function DevelopmentGoalsTab() {
   const [clip, setClip] = useState(null)
   const [toast, setToast] = useState('')
 
-  // Session-scoped: a goal shows the clips tagged to it from *this* session.
-  // The game evidence for the same goal lives in the athlete's development
-  // plan, where a whole season is the point.
+  // Session-scoped: a goal shows only the clips tagged to it from *this*
+  // session, not the season's evidence. That whole body of clips — other
+  // sessions, every game — belongs to the athlete's development plan, where a
+  // season is the point.
   const rows = useMemo(() => GOAL_ROSTER.map(id => ({
     athlete: athleteById(id),
     goals: goalsForAthlete(id).map(g => ({
       ...g,
-      clips: g.clips.filter(c => clipSource(c).type === 'Session'),
+      clips: sessionClipsForGoal(id, g.goalId),
     })),
   })).filter(r => r.athlete), [])
 
