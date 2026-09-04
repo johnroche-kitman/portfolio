@@ -94,6 +94,7 @@ export default function DevelopmentGoalsTab() {
   const [types, setTypes] = useState([])
   const [principles, setPrinciples] = useState([])
   const [marked, setMarked] = useState({})   // `${athleteId}:${goalId}:${markKey}` -> true
+  const [starred, setStarred] = useState(() => new Set())
   const [clip, setClip] = useState(null)
   const [toast, setToast] = useState('')
 
@@ -135,6 +136,12 @@ export default function DevelopmentGoalsTab() {
   const setMark = (a, g, k, v) => setMarked(m => ({ ...m, [`${a}:${g}:${k}`]: v }))
 
   const clear = () => { setQ(''); setAthleteNames([]); setPos([]); setTypes([]); setPrinciples([]) }
+
+  const toggleStar = id => setStarred(s2 => {
+    const next = new Set(s2)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
 
   return (
     <Box>
@@ -178,10 +185,13 @@ export default function DevelopmentGoalsTab() {
               </Box>
             </AccordionSummary>
             <Divider />
-            <AccordionDetails sx={{ p: 0 }}>
+            {/* The same light grey field the development plan uses, with each
+                goal on a white card on top of it. */}
+            <AccordionDetails sx={{ p: 2, bgcolor: colors.neutral_100 }}>
               {goals.map((g, i) => (
-                <Box key={g.goalId} sx={{ px: 2, py: 2,
-                  borderBottom: i < goals.length - 1 ? `1px solid ${colors.neutral_200}` : 0 }}>
+                <Paper key={g.goalId} variant="outlined"
+                  sx={{ borderColor: colors.neutral_300, px: 2, py: 2,
+                    mb: i < goals.length - 1 ? 2 : 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{g.title}</Typography>
@@ -214,7 +224,7 @@ export default function DevelopmentGoalsTab() {
                       ))}
                     </Box>
                   </Box>
-                </Box>
+                </Paper>
               ))}
             </AccordionDetails>
           </Accordion>
@@ -234,6 +244,7 @@ export default function DevelopmentGoalsTab() {
       {clip && (
         <ClipDialog clip={clip} drill={clip.drillId ? drillById(clip.drillId) : null}
           onClose={() => setClip(null)}
+          starred={starred.has(clip.id)} onStar={toggleStar}
           onShare={(t, c) => setToast(shareMessage(t, c))} />
       )}
       <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast('')} message={toast} />

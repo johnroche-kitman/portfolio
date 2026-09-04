@@ -154,7 +154,9 @@ export default function VideoTab() {
             </Box>
           </AccordionSummary>
           <Divider />
-          <AccordionDetails sx={{ p: 2 }}>
+          {/* The same light grey field the development plan uses when it opens,
+              so an expanded panel reads the same way everywhere. */}
+          <AccordionDetails sx={{ p: 2, bgcolor: colors.neutral_100 }}>
             <FullDrillCard drill={drill} onOpen={() => setOpen({ full: drill })} />
 
             <Box sx={{ mt: 2.5 }}>

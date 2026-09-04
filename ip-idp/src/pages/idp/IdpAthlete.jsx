@@ -336,7 +336,9 @@ export default function IdpAthlete() {
 
       {clip && (
         <ClipDialog clip={clip} drill={clip.drillId ? drillById(clip.drillId) : null}
-          onClose={() => setClip(null)} onShare={(t, c) => setToast(shareMessage(t, c))} />
+          onClose={() => setClip(null)}
+          starred={starred.has(clip.id)} onStar={toggleStar}
+          onShare={(t, c) => setToast(shareMessage(t, c))} />
       )}
       <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast('')} message={toast} />
     </AppShell>
