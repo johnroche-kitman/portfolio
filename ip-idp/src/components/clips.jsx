@@ -669,6 +669,101 @@ export function ClipCarousel({ clips, onOpen, starred, onStar, label = 'Individu
   )
 }
 
+/* ---------------------------------------------------------------- scroller */
+
+/**
+ * Every clip on one athlete, on one rail.
+ *
+ * The carousel above pages, because a drill's clips divide neatly into pages of
+ * three and the reader wants to know they have seen all thirteen. A season's
+ * evidence does not divide into anything: it is a long tail you skim. So this
+ * one scrolls freely — trackpad, shift-wheel, drag on touch — and the arrows
+ * are there for the mouse-only reader rather than as the only way through.
+ *
+ * Scroll snapping stops a card half off the edge, and the arrows disable at
+ * each end so the control tells you where you are without a page counter.
+ */
+export function ClipScroller({ clips, onOpen, starred, onStar, label = 'Tagged clips', showSource = true, width = 260 }) {
+  const rail = useRef(null)
+  const [edges, setEdges] = useState({ start: true, end: false })
+
+  // Read from the element rather than tracking an index: the reader can scroll
+  // this by four different means, and only the element knows where it ended up.
+  const measure = () => {
+    const el = rail.current
+    if (!el) return
+    const max = el.scrollWidth - el.clientWidth
+    setEdges({ start: el.scrollLeft <= 1, end: el.scrollLeft >= max - 1 })
+  }
+
+  useEffect(() => {
+    measure()
+    const el = rail.current
+    if (!el) return undefined
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [clips.length])
+
+  // A nudge moves by whole cards, and by most of a screenful when the rail is
+  // wide, so a click always lands somewhere new.
+  const nudge = dir => {
+    const el = rail.current
+    if (!el) return
+    const step = Math.max(width + 16, Math.floor(el.clientWidth / (width + 16)) * (width + 16))
+    el.scrollBy({ left: dir * step, behavior: 'smooth' })
+  }
+
+  return (
+    // minWidth 0, or the rail's intrinsic width — every card laid end to end —
+    // would push the whole page wider instead of scrolling inside itself.
+    <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2">
+          {label}
+          <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400, ml: 1 }}>
+            {clips.length}
+          </Box>
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" aria-label="Scroll back" disabled={edges.start}
+            onClick={() => nudge(-1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label="Scroll forward" disabled={edges.end}
+            onClick={() => nudge(1)}
+            sx={{ border: `1px solid ${colors.neutral_400}`, borderRadius: 1 }}>
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Box ref={rail} onScroll={measure}
+        sx={{ display: 'flex', gap: 2, overflowX: 'auto', overflowY: 'hidden',
+          scrollSnapType: 'x mandatory', pb: 1,
+          // The rail is the scroll container, so its scrollbar is the one the
+          // page shows. A thin one keeps it visible without a chunky gutter.
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { height: 8 },
+          '&::-webkit-scrollbar-thumb': { bgcolor: colors.neutral_400, borderRadius: 4 },
+          '@media (prefers-reduced-motion: reduce)': { scrollBehavior: 'auto' } }}>
+        {clips.map(c => (
+          <Box key={c.id} sx={{ width, flexShrink: 0, scrollSnapAlign: 'start' }}>
+            <ClipTile clip={c} onOpen={onOpen} showSource={showSource}
+              starred={starred.has(c.id)} onStar={onStar} />
+          </Box>
+        ))}
+        {clips.length === 0 && (
+          <Typography variant="body2" sx={{ color: 'text.secondary', py: 3 }}>
+            No clips tagged yet.
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  )
+}
+
 /* ----------------------------------------------------------------- comments */
 
 /**

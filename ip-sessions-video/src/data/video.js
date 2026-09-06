@@ -365,9 +365,13 @@ export const clipsForDrill = id => clips
   .sort((a, b) => a.at.localeCompare(b.at))
 
 /* ------------------------------------------------------------------ games
-   The season so far. Game evidence is drawn from these, which is what makes a
-   development goal read as a season's worth rather than one afternoon. */
+   The season so far, newest first. Game evidence is drawn from these, which is
+   what makes a development goal read as a season's worth rather than one
+   afternoon, and the season dashboard plots a form line across them. */
 export const GAMES = [
+  { date: '20 Sep 2026', opposition: 'Halton Vale (Away)', competition: 'Premier League 2' },
+  { date: '13 Sep 2026', opposition: 'Marsden Rovers (Home)', competition: 'Premier League 2' },
+  { date: '6 Sep 2026', opposition: 'Northgate United (Home)', competition: 'EFL Youth Alliance' },
   { date: '30 Aug 2026', opposition: 'Riverside Athletic (Home)', competition: 'Premier League 2' },
   { date: '23 Aug 2026', opposition: 'Carrick Town (Away)', competition: 'Premier League 2' },
   { date: '16 Aug 2026', opposition: 'Northgate United (Away)', competition: 'Premier League 2' },

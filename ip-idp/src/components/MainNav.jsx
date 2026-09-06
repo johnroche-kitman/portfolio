@@ -27,7 +27,7 @@ const FLYOUT = 246
  * shown greyed and does not navigate, so it is obvious what is built and what is
  * only listed for completeness. Keep in step with App.jsx.
  */
-const BUILT = new Set(['/individual_development_plans'])
+const BUILT = new Set(['/analysis', '/individual_development_plans'])
 const isBuilt = path => BUILT.has(path)
 
 /**
@@ -39,13 +39,10 @@ export const PROTOTYPES_URL = 'https://johnroche-kitman.github.io/portfolio/prot
 
 // Mirrors mainNavBarDesktop in the live app: same items, same order, same routes.
 const NAV_ITEMS = [
-  {
-    key: 'analysis', label: 'Analysis', icon: <BarChartIcon />,
-    // Analysis is being sunset; League Benchmark Reporting is the one surface carried over.
-    children: [
-      ['/analysis/benchmark_report', 'League Benchmark Reporting'],
-    ],
-  },
+  // In the live app Analysis opens a submenu. Here it is a single destination:
+  // the prototype has one report under it, and a flyout holding one item asks
+  // for a second click to tell you nothing.
+  { key: 'analysis', label: 'Analysis', icon: <BarChartIcon />, path: '/analysis' },
   {
     key: 'athletes', label: 'Athletes', icon: <GroupsIcon />,
     children: [
